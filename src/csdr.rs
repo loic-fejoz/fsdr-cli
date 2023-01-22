@@ -27,33 +27,75 @@ impl CsdrParser {
             .with("repeat", "False");
         csdr_parser.push_block(stdin_source);
         csdr_parser.connect(src_name, "0", block_name.as_str(), "0");
-        let sink_name = "blocks_file_sink_0";
-        let stdout_sink = BlockInstance::new(sink_name, "blocks_file_sink")
-            .with("file", "-")
-            .with("type", &output_type);
-        csdr_parser.push_block(stdout_sink);
-        csdr_parser.connect(&block_name, "0", sink_name, "0");
+        if let Some(output_type) = output_type {
+            let sink_name = "blocks_file_sink_0";
+            let stdout_sink = BlockInstance::new(sink_name, "blocks_file_sink")
+                .with("file", "-")
+                .with("type", &output_type);
+            csdr_parser.push_block(stdout_sink);
+            csdr_parser.connect(&block_name, "0", sink_name, "0");
+        }
         csdr_parser.build()
     }
 
     pub fn parse_one_command<A>(
         &mut self,
         mut args: Peekable<A>,
-    ) -> Result<(String, String, String)>
+    ) -> Result<(String, String, Option<String>)>
     where
         A: Iterator<Item = String>,
     {
         let cmd_name = args.next().expect("no command");
         match &cmd_name[..] {
-            "realpart_cf" => {
+            "clipdetect_ff" => {
                 let parameters = BTreeMap::new();
-                let block_name = self.push_block_instance("realpart_cf".into(), parameters);
-                Ok((block_name, "c32".to_string(), "f32".to_string()))
+                let block_name = self.push_block_instance("clipdetect_ff".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
             },
             "convert_u8_f" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_u8_f".into(), parameters);
-                Ok((block_name, "u8".to_string(), "f32".to_string()))
+                Ok((block_name, "u8".to_string(), Some("f32".to_string())))
+            },
+            "convert_s8_f" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("convert_s8_f".into(), parameters);
+                Ok((block_name, "i8".to_string(), Some("f32".to_string())))
+            },
+            "convert_s16_f" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("convert_s16_f".into(), parameters);
+                Ok((block_name, "i16".to_string(), Some("f32".to_string())))
+            },
+            "convert_f_u8" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("convert_f_u8".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("u8".to_string())))
+            },
+            "convert_f_s8" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("convert_f_s8".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("i8".to_string())))
+            },
+            "convert_f_s16" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("convert_f_s16".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("i16".to_string())))
+            },
+            "dump_u8" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("dump_u8".into(), parameters);
+                Ok((block_name, "u8".to_string(), None))
+            },
+            "dump_f" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("dump_f".into(), parameters);
+                Ok((block_name, "f32".to_string(), None))
+            },
+            "realpart_cf" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("realpart_cf".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("f32".to_string())))
             },
             _ => todo!("parse_command"),
         }

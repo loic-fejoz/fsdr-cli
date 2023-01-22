@@ -1,7 +1,7 @@
 use futuresdr::anyhow::Result;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
-use futuresdr::blocks::{Apply, FileSource, FileSink};
+use futuresdr::blocks::{Apply, FileSource, FileSink, Sink};
 use crate::grc::Grc;
 use futuresdr::runtime::Block;
 use std::collections::BTreeMap;
@@ -23,7 +23,6 @@ impl Grc2FutureSdr {
                 names_to_id.insert(name.clone(), idx);
             }
         }
-        println!("{names_to_id:?}");
         for connection in grc.connections {
             let src_name = connection[0].clone();
             let src_block = *names_to_id.get(&src_name).expect("no source block id found for");
@@ -34,7 +33,6 @@ impl Grc2FutureSdr {
             let src_port = Self::adapt_src_port(&connection[1]);
             let dst_port = Self::adapt_dst_port(&connection[3]);
 
-            println!("{src_block} {src_port} {dst_block} {dst_port}");
             fg.connect_stream(src_block, src_port, dst_block, dst_port)?;
         }
         Ok(fg)
@@ -77,8 +75,47 @@ impl Grc2FutureSdr {
                 let realpart_blk = Apply::new(|i: &Complex32| -> f32 { i.re});
                 Ok(Some(realpart_blk))
             },
+            "clipdetect_ff" => {
+                let blk = Apply::new(|i: &f32| -> f32 {
+                    if *i < 1.0 {
+                        eprintln!("csdr clipdetect_ff: Signal value below -1.0!")
+                    } else if *i > 1.0 {
+                        eprintln!("csdr clipdetect_ff: Signal value above -1.0!")
+                    };
+                    *i
+                });
+                Ok(Some(blk))
+            },
             "convert_u8_f" => {
-                let blk = TypeConvertersBuilder::convert::<u8, f32>().build();
+                let blk = TypeConvertersBuilder::scale_convert::<u8, f32>().build();
+                Ok(Some(blk))
+            },
+            "convert_s8_f" => {
+                let blk = TypeConvertersBuilder::scale_convert::<i8, f32>().build();
+                Ok(Some(blk))
+            },
+            "convert_s16_f" => {
+                let blk = TypeConvertersBuilder::scale_convert::<i16, f32>().build();
+                Ok(Some(blk))
+            },
+            // "convert_f_u8" => {
+            //     let blk = TypeConvertersBuilder::scale_convert::<f32, u8>().build();
+            //     Ok(Some(blk))
+            // },
+            // "convert_f_s8" => {
+            //     let blk = TypeConvertersBuilder::scale_convert::<f32, i8>().build();
+            //     Ok(Some(blk))
+            // },
+            // "convert_f_s16" => {
+            //     let blk = TypeConvertersBuilder::scale_convert::<f32, i16>().build();
+            //     Ok(Some(blk))
+            // },
+            "dump_u8" => {
+                let blk = Sink::new(|x: &u8| print!("{:02x} ", *x));
+                Ok(Some(blk))
+            },
+            "dump_f" => {
+                let blk = Sink::new(|x: &f32| print!("{:e} ", *x));
                 Ok(Some(blk))
             },
             "blocks_file_source" => {
