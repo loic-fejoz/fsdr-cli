@@ -51,52 +51,52 @@ impl CsdrParser {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("clipdetect_ff".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("f32".to_string())))
-            },
+            }
             "convert_u8_f" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_u8_f".into(), parameters);
                 Ok((block_name, "u8".to_string(), Some("f32".to_string())))
-            },
+            }
             "convert_s8_f" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_s8_f".into(), parameters);
                 Ok((block_name, "i8".to_string(), Some("f32".to_string())))
-            },
+            }
             "convert_s16_f" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_s16_f".into(), parameters);
                 Ok((block_name, "i16".to_string(), Some("f32".to_string())))
-            },
+            }
             "convert_f_u8" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_f_u8".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("u8".to_string())))
-            },
+            }
             "convert_f_s8" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_f_s8".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("i8".to_string())))
-            },
+            }
             "convert_f_s16" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("convert_f_s16".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("i16".to_string())))
-            },
+            }
             "dump_u8" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_u8".into(), parameters);
                 Ok((block_name, "u8".to_string(), None))
-            },
+            }
             "dump_f" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_f".into(), parameters);
                 Ok((block_name, "f32".to_string(), None))
-            },
+            }
             "realpart_cf" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("realpart_cf".into(), parameters);
                 Ok((block_name, "c32".to_string(), Some("f32".to_string())))
-            },
+            }
             _ => todo!("parse_command"),
         }
     }

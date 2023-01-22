@@ -1,5 +1,5 @@
-use serde_yaml::{self};
 use fsdr_cli::grc::Grc;
+use serde_yaml::{self};
 
 #[test]
 pub fn load_realpart_cf_grc() {

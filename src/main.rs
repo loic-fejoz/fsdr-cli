@@ -1,6 +1,6 @@
 use std::env;
 
-use futuresdr::anyhow::{bail,Result};
+use futuresdr::anyhow::{bail, Result};
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 mod grc;
@@ -23,8 +23,8 @@ fn load() -> Result<Grc> {
         usage()?;
     }
     let mut args = env::args();
-    let _cmd_line =args.next().expect("");
-    let first_arg =args.next().expect("");
+    let _cmd_line = args.next().expect("");
+    let first_arg = args.next().expect("");
     if "grc" == first_arg {
         if arg_count <= 2 {
             usage()?;
@@ -32,7 +32,7 @@ fn load() -> Result<Grc> {
             let filename = args.next().expect("");
             return grc::GrcParser::load(filename);
         }
-    } else if  "--help" == first_arg || "help" == first_arg {
+    } else if "--help" == first_arg || "help" == first_arg {
         if arg_count <= 2 {
             usage()?;
         } else {
