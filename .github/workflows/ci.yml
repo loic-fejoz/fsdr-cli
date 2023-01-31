@@ -1,0 +1,79 @@
+on: [push, pull_request]
+
+name: CI
+
+jobs:
+  lints:
+    name: Lints
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout FutureSDR
+        uses: actions/checkout@v3
+        with:
+          repository: FutureSDR/FutureSDR
+          path: '../FutureSDR'
+      - name: Checkout fsdr-blocks
+        uses: actions/checkout@v3
+        with:
+          repository: FutureSDR/fsdr-blocks
+          path: '../fsdr-blocks'
+
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
+          target: wasm32-unknown-unknown
+
+      - name: Install ZeroMQ
+        run: sudo apt-get install -y libzmq3-dev
+
+      # - name: Install alsalibs
+      #   run: sudo apt-get -y install libasound2-dev
+
+      # - name: Install LTTng
+      #   run: sudo apt-get -y install liblttng-ust-dev
+
+      # - name: Install Soapy
+      #   run: sudo apt-get -y install libsoapysdr-dev
+
+      - name: Run cargo fmt (FutureSDR)
+        run: cargo fmt --all -- --check
+
+      - name: Run cargo clippy (main)
+        run: cargo clippy --all-targets --workspace -- -D warnings
+
+  test-linux:
+    name: Unit Tests Linux
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: sudo apt-get install -y libzmq3-dev
+      - run: sudo apt-get -y install libasound2-dev
+      - run: sudo apt-get -y install liblttng-ust-dev
+      - run: sudo apt-get -y install libsoapysdr-dev
+      - run: cargo test --all-targets --workspace
+
+  test-macos:
+    name: Unit Tests macOS
+    runs-on: macos-latest
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo test --all-targets --workspace
+
+  test-windows:
+    name: Unit Test Windows
+    runs-on: windows-latest
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo test --all-targets --workspace
