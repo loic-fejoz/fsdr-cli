@@ -22,6 +22,7 @@ jobs:
         with:
           repository: FutureSDR/fsdr-blocks
           path: './fsdr-blocks'
+          ref: 'feature/type-converters'
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
