@@ -11,41 +11,58 @@ pub struct CsdrParser {
 }
 
 impl CsdrParser {
-    pub fn parse_command<A>(args: Peekable<A>) -> Result<Grc>
+    pub fn parse_command<A, S>(args: &mut Peekable<A>) -> Result<Grc>
     where
-        A: Iterator<Item = String>,
+        A: Iterator<Item = S>,
+        S: Into<String>,
     {
         let mut csdr_parser = CsdrParser::default();
         let (block_name, input_type, output_type) = csdr_parser
             .parse_one_command(args)
             .context("invalid csdr command")
             .expect("valid csdr command");
-        let src_name = "blocks_file_source_0";
-        let stdin_source = BlockInstance::new(src_name, "blocks_file_source")
-            .with("file", "-")
-            .with("type", &input_type)
-            .with("repeat", "False");
-        csdr_parser.push_block(stdin_source);
-        csdr_parser.connect(src_name, "0", block_name.as_str(), "0");
-        if let Some(output_type) = output_type {
-            let sink_name = "blocks_file_sink_0";
-            let stdout_sink = BlockInstance::new(sink_name, "blocks_file_sink")
-                .with("file", "-")
-                .with("type", &output_type);
-            csdr_parser.push_block(stdout_sink);
-            csdr_parser.connect(&block_name, "0", sink_name, "0");
-        }
+        csdr_parser.add_source_and_maybe_sink(
+            block_name.as_str(),
+            input_type.as_str(),
+            Some(block_name.as_str()),
+            output_type,
+        );
         csdr_parser.build()
     }
 
-    pub fn parse_one_command<A>(
+    fn add_source_and_maybe_sink(
         &mut self,
-        mut args: Peekable<A>,
+        first_block: &str,
+        first_block_type: &str,
+        last_block: Option<impl Into<String>>,
+        last_block_type: Option<impl Into<String>>,
+    ) {
+        let src_name = "blocks_file_source_0";
+        let stdin_source = BlockInstance::new(src_name, "blocks_file_source")
+            .with("file", "-")
+            .with("type", first_block_type)
+            .with("repeat", "False");
+        self.push_block(stdin_source);
+        self.connect(src_name, "0", first_block, "0");
+        if let Some(last_block_type) = last_block_type {
+            let sink_name = "blocks_file_sink_0";
+            let stdout_sink = BlockInstance::new(sink_name, "blocks_file_sink")
+                .with("file", "-")
+                .with("type", last_block_type.into().as_str());
+            self.push_block(stdout_sink);
+            self.connect(last_block.expect("").into().as_str(), "0", sink_name, "0");
+        }
+    }
+
+    pub fn parse_one_command<A, S>(
+        &mut self,
+        args: &mut Peekable<A>,
     ) -> Result<(String, String, Option<String>)>
     where
-        A: Iterator<Item = String>,
+        A: Iterator<Item = S>,
+        S: Into<String>,
     {
-        let cmd_name = args.next().expect("no command");
+        let cmd_name = args.next().expect("no command").into();
         match &cmd_name[..] {
             "clipdetect_ff" => {
                 let parameters = BTreeMap::new();
@@ -82,6 +99,11 @@ impl CsdrParser {
                 let block_name = self.push_block_instance("convert_f_s16".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("i16".to_string())))
             }
+            "convert_ff_c" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("convert_ff_c".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("c32".to_string())))
+            }
             "dump_u8" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_u8".into(), parameters);
@@ -97,7 +119,87 @@ impl CsdrParser {
                 let block_name = self.push_block_instance("realpart_cf".into(), parameters);
                 Ok((block_name, "c32".to_string(), Some("f32".to_string())))
             }
-            _ => todo!("parse_command"),
+            "shift_addition_cc" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                let rate = args
+                    .next()
+                    .expect("missing mandatory <rate> parameters for shift_addition_cc");
+                let rate = rate.into();
+                parameters.insert("freq".to_string(), rate);
+                parameters.insert("sample_rate".to_string(), "1".to_string());
+                let block_name = self.push_block_instance("blocks_freqshift_cc".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("c32".to_string())))
+            }
+            "fmdemod_quadri_cf" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                parameters.insert("gain".to_string(), "1.0".to_string());
+                let block_name =
+                    self.push_block_instance("analog_quadrature_demod_cf".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("f32".to_string())))
+            }
+            "fractional_decimator_ff" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                let resamp_ratio = args
+                    .next()
+                    .expect("missing mandatory <decim> parameters for fractional_decimator_ff");
+                let resamp_ratio = resamp_ratio.into();
+                parameters.insert("decim".to_string(), resamp_ratio);
+                parameters.insert("interp".to_string(), "1".to_string());
+                let block_name =
+                    self.push_block_instance("rational_resampler_xxx".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
+            "deemphasis_wfm_ff" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                {
+                    let sample_rate = args
+                        .next()
+                        .expect("missing mandatory <sample_rate> parameters for deemphasis_wfm_ff");
+                    let sample_rate = sample_rate.into();
+                    parameters.insert("samp_rate".to_string(), sample_rate);
+                }
+                {
+                    let tau = args
+                        .next()
+                        .expect("missing mandatory <tau> parameters for deemphasis_wfm_ff");
+                    let tau = tau.into();
+                    parameters.insert("tau".to_string(), tau);
+                }
+                let block_name = self.push_block_instance("analog_fm_deemph".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
+            "throttle_ff" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                let rate = args
+                    .next()
+                    .expect("missing mandatory <rate> parameters for throttle_ff");
+                let rate = rate.into();
+                parameters.insert("samples_per_second".to_string(), rate);
+                parameters.insert("type".to_string(), "float".to_string());
+                let block_name = self.push_block_instance("blocks_throttle".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
+            "throttle_cc" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                let rate = args
+                    .next()
+                    .expect("missing mandatory <rate> parameters for throttle_cc");
+                let rate = rate.into();
+                parameters.insert("samples_per_second".to_string(), rate);
+                parameters.insert("type".to_string(), "complex".to_string());
+                let block_name = self.push_block_instance("blocks_throttle".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("c32".to_string())))
+            }
+            // "file_source_u8" => {
+            //     let mut parameters = BTreeMap::<String, String>::new();
+            //     let filename = args.next().expect("missing mandatory <filename> parameters for file_source");
+            //     let filename = filename.into();
+            //     parameters.insert("file".to_string(), rate);
+            //     parameters.insert("type".to_string(), "u8".to_string());
+            //     let block_name = self.push_block_instance("blocks_file_source".into(), parameters);
+            //     Ok((block_name, "c32".to_string(), Some("u8".to_string())))
+            // },
+            _ => todo!("parse_command {cmd_name}"),
         }
     }
 
@@ -139,8 +241,53 @@ impl CsdrParser {
         self.connections.push(connection);
     }
 
-    pub fn parse_multiple_commands() -> Result<Grc> {
-        todo!("parse_multiple_commands");
+    pub fn parse_multiple_commands<A, S>(args: &mut Peekable<A>) -> Result<Grc>
+    where
+        A: Iterator<Item = S>,
+        S: Into<String> + Clone,
+    {
+        let mut csdr_parser = CsdrParser::default();
+        let mut first_block_name: Option<String> = None;
+        let mut first_block_type: Option<String> = None;
+        let mut last_block_name: Option<String> = None;
+        let mut last_block_type: Option<String> = None;
+        loop {
+            let next = args.peek().cloned();
+            if next.is_none() {
+                break;
+            }
+            let next = next.expect("msg");
+            let next: String = next.into();
+            if next.eq("csdr") || next.eq("|") {
+                args.next();
+                continue;
+            } else {
+                let (block_name, input_type, output_type) = csdr_parser
+                    .parse_one_command(args)
+                    .context("invalid csdr command")
+                    .expect("valid csdr command");
+                if first_block_name.is_none() {
+                    first_block_name = Some(block_name.clone());
+                    first_block_type = Some(input_type);
+                } else {
+                    csdr_parser.connect(
+                        last_block_name.expect("").as_str(),
+                        "0",
+                        block_name.as_str(),
+                        "0",
+                    );
+                }
+                last_block_name = Some(block_name);
+                last_block_type = output_type;
+            }
+        }
+        csdr_parser.add_source_and_maybe_sink(
+            first_block_name.expect("").as_str(),
+            first_block_type.expect("").as_str(),
+            last_block_name,
+            last_block_type,
+        );
+        csdr_parser.build()
     }
 
     pub fn build(self) -> Result<Grc> {

@@ -30,6 +30,7 @@ pub struct Parameters {
 pub struct States {
     bus_sink: bool,
     bus_source: bool,
+    pub state: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -60,6 +61,7 @@ impl BlockInstance {
             states: States {
                 bus_sink: false,
                 bus_source: false,
+                state: "enabled".to_string(),
             },
         }
     }

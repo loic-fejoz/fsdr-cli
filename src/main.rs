@@ -40,11 +40,11 @@ fn load() -> Result<Grc> {
             todo!("Display help for {cmd_name}");
         }
     } else if "csdr" == first_arg {
-        return CsdrParser::parse_multiple_commands();
+        return CsdrParser::parse_multiple_commands(&mut args.peekable());
     } else {
         let args = env::args();
         let args = args.skip(1);
-        return CsdrParser::parse_command(args.peekable());
+        return CsdrParser::parse_command(&mut args.peekable());
     }
     todo!();
 }
