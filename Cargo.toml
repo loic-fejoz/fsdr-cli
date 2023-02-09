@@ -13,6 +13,7 @@ audio = ["futuresdr/audio"]
 
 [dependencies]
 futuresdr = { path="../FutureSDR", version = "0.0.27", features=['audio']}
+async-trait = "0.1.52"
 fsdr-blocks = { path="../fsdr-blocks", version="0.1.0"}
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}

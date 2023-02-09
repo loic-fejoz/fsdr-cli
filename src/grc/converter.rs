@@ -1,7 +1,9 @@
+use crate::blocks::OctaveComplex;
 use crate::grc::Grc;
 use fsdr_blocks::stdinout::*;
 use fsdr_blocks::stream::Deinterleave;
 use fsdr_blocks::type_converters::*;
+use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::audio::AudioSink;
 use futuresdr::blocks::ApplyNM;
@@ -398,6 +400,23 @@ impl Grc2FutureSdr {
             "blocks_float_to_complex" => {
                 let blk =
                     Combine::new(|v1: &f32, v2: &f32| -> Complex32 { Complex32::new(*v1, *v2) });
+                Ok(Some(blk))
+            }
+            "octave_complex_c" => {
+                let samples_to_plot = blk_def
+                    .parameters
+                    .get("samples_to_plot")
+                    .expect("samples_to_plot must be defined")
+                    .parse::<usize>()?;
+                let out_of_n_samples = blk_def
+                    .parameters
+                    .get("out_of_n_samples")
+                    .expect("out_of_n_samples must be defined")
+                    .parse::<usize>()?;
+                if out_of_n_samples < samples_to_plot {
+                    return Err(anyhow!("out_of_n_samples should be < samples_to_plot"));
+                }
+                let blk = OctaveComplex::new(samples_to_plot, out_of_n_samples);
                 Ok(Some(blk))
             }
             _ => {

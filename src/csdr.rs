@@ -190,6 +190,21 @@ impl CsdrParser {
                 let block_name = self.push_block_instance("blocks_throttle".into(), parameters);
                 Ok((block_name, "c32".to_string(), Some("c32".to_string())))
             }
+            "octave_complex_c" => {
+                let samples_to_plot = args
+                    .next()
+                    .expect("missing mandatory <samples_to_plot> parameters for octave_complex_c");
+                let samples_to_plot = samples_to_plot.into();
+                let out_of_n_samples = args
+                    .next()
+                    .expect("missing mandatory <out_of_n_samples> parameters for octave_complex_c");
+                let out_of_n_samples = out_of_n_samples.into();
+                let mut parameters = BTreeMap::<String, String>::new();
+                parameters.insert("samples_to_plot".to_string(), samples_to_plot);
+                parameters.insert("out_of_n_samples".to_string(), out_of_n_samples);
+                let block_name = self.push_block_instance("octave_complex_c".into(), parameters);
+                Ok((block_name, "c32".to_string(), None))
+            }
             // "file_source_u8" => {
             //     let mut parameters = BTreeMap::<String, String>::new();
             //     let filename = args.next().expect("missing mandatory <filename> parameters for file_source");
