@@ -12,8 +12,9 @@ homepage = "https://fsdr-cli.github.io"
 audio = ["futuresdr/audio"]
 
 [dependencies]
-futuresdr = { path="../FutureSDR", version = "0.0.27", features=['audio']}
+futuresdr = { git="https://github.com/FutureSDR/FutureSDR", version = "0.0.31", features=['audio']}
 async-trait = "0.1.52"
-fsdr-blocks = { path="../fsdr-blocks", version="0.1.0"}
+fsdr-blocks = { git="https://github.com/FutureSDR/fsdr-blocks"}
+#fsdr-blocks = { path="../fsdr-blocks" }
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}

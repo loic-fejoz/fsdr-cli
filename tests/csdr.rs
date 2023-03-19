@@ -35,3 +35,15 @@ pub fn parse_multiple_commands() {
     assert_eq!(7, grc.blocks.len());
     assert_eq!(6, grc.connections.len());
 }
+
+#[test]
+pub fn parse_shift_addition_cc_1256() {
+    let mut cmds = "shift_addition_cc 1256".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_freqshift_cc", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}

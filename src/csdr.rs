@@ -121,12 +121,12 @@ impl CsdrParser {
             }
             "shift_addition_cc" => {
                 let mut parameters = BTreeMap::<String, String>::new();
-                let rate = args
+                let phase_rate = args
                     .next()
                     .expect("missing mandatory <rate> parameters for shift_addition_cc");
-                let rate = rate.into();
-                parameters.insert("freq".to_string(), rate);
-                parameters.insert("sample_rate".to_string(), "1".to_string());
+                let phase_rate = phase_rate.into();
+                parameters.insert("freq".to_string(), phase_rate);
+                parameters.insert("sample_rate".to_string(), "6.283185307179586".to_string());
                 let block_name = self.push_block_instance("blocks_freqshift_cc".into(), parameters);
                 Ok((block_name, "c32".to_string(), Some("c32".to_string())))
             }
