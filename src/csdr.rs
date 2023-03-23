@@ -1,6 +1,7 @@
 use crate::grc::*;
 use futuresdr::anyhow::{Context, Result};
 use std::collections::BTreeMap;
+//use std::default::{default, self};
 use std::iter::Peekable;
 
 #[derive(Default)]
@@ -14,7 +15,7 @@ impl CsdrParser {
     pub fn parse_command<A, S>(args: &mut Peekable<A>) -> Result<Grc>
     where
         A: Iterator<Item = S>,
-        S: Into<String>,
+        S: Into<String> + Clone,
     {
         let mut csdr_parser = CsdrParser::default();
         let (block_name, input_type, output_type) = csdr_parser
@@ -60,7 +61,7 @@ impl CsdrParser {
     ) -> Result<(String, String, Option<String>)>
     where
         A: Iterator<Item = S>,
-        S: Into<String>,
+        S: Into<String> + Clone,
     {
         let cmd_name = args.next().expect("no command").into();
         match &cmd_name[..] {
@@ -113,6 +114,27 @@ impl CsdrParser {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_f".into(), parameters);
                 Ok((block_name, "f32".to_string(), None))
+            }
+            "limit_ff" => {
+                let mut parameters = BTreeMap::new();
+                let next_arg = args.peek().cloned();
+                let mut default_value = true;
+                if let Some(next_arg) = next_arg {
+                    let hi: String = next_arg.into();
+                    if "|" != hi {
+                        let _ = args.next();
+                        let lo: String = "-".to_owned() + &hi;
+                        parameters.insert("lo".into(), lo);
+                        parameters.insert("hi".into(), hi);
+                        default_value = false;
+                    }
+                }
+                if default_value {
+                    parameters.insert("lo".into(), "-1.0".into());
+                    parameters.insert("hi".into(), "1.0".into());
+                }
+                let block_name = self.push_block_instance("analog_rail_ff".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
             }
             "realpart_cf" => {
                 let parameters = BTreeMap::new();
