@@ -12,7 +12,7 @@ homepage = "https://fsdr-cli.github.io"
 audio = ["futuresdr/audio"]
 
 [dependencies]
-futuresdr = { git="https://github.com/FutureSDR/FutureSDR", version = "0.0.32", features=['audio']}
+futuresdr = { git="https://github.com/FutureSDR/FutureSDR", version = "0.0", features=['audio']}
 async-trait = "0.1.52"
 fsdr-blocks = { git="https://github.com/FutureSDR/fsdr-blocks"}
 #fsdr-blocks = { path="../fsdr-blocks" }
