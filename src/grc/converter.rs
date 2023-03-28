@@ -116,7 +116,7 @@ impl Grc2FutureSdr {
         }
     }
 
-    fn convert_add_block(
+    pub fn convert_add_block(
         fg: &mut Flowgraph,
         blk_def: &BlockInstance,
         grc: &Grc,
@@ -138,6 +138,30 @@ impl Grc2FutureSdr {
             "realpart_cf" => {
                 let realpart_blk = Apply::new(|i: &Complex32| -> f32 { i.re });
                 Ok(Some(realpart_blk))
+            }
+            "analog_rail_ff" => {
+                let default_low_threshold = "-1.0".to_string();
+                let low_threshold = blk_def
+                    .parameters
+                    .get("lo")
+                    .or(Some(&default_low_threshold));
+                let low_threshold = low_threshold
+                    .expect("")
+                    .parse::<f32>()
+                    .expect("invalid low_threshold");
+                let default_max_threshold = "1.0".to_string();
+                let max_threshold = blk_def
+                    .parameters
+                    .get("lo")
+                    .or(Some(&default_max_threshold));
+                let max_threshold = max_threshold
+                    .expect("")
+                    .parse::<f32>()
+                    .expect("invalid max_threshold");
+
+                let rail_blk =
+                    Apply::new(move |i: &f32| -> f32 { i.max(low_threshold).min(max_threshold) });
+                Ok(Some(rail_blk))
             }
             "blocks_complex_to_real" => {
                 // TODO: should do an analysis on how many outputs are really used,
