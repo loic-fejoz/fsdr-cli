@@ -14,29 +14,47 @@ cargo-test:
 usage: $(FSDR_CLI)
 	$(FSDR_CLI)
 
+csdr-compare: csdr-compare-realpart-c-f csdr-compare-dump-u8 
+
 define csdr_compare_cmd
 
 	export CSDR_FIXED_BUFSIZE=$(3) && \
-	head -c $(2) /dev/random > /tmp/fsdr-test.bin && \
-	csdr $(1) > /tmp/csdr-output.bin < /tmp/fsdr-test.bin && \
-	$(FSDR_CLI) $(1) > /tmp/fsdr-output.bin < /tmp/fsdr-test.bin && \
+	head -c $(2) ./tests/france-culture-extract.c32 > /tmp/fsdr-test.bin && \
+	csdr $(1)        < /tmp/fsdr-test.bin | head -c $(3)  > /tmp/csdr-output.bin && \
+	$(FSDR_CLI) $(1) < /tmp/fsdr-test.bin | head -c $(3)  > /tmp/fsdr-output.bin   && \
+	ls -al /tmp/fsdr-test.bin /tmp/fsdr-output.bin /tmp/csdr-output.bin && \
+	cmp -l /tmp/csdr-output.bin /tmp/fsdr-output.bin
+
+endef
+
+define csdr_compare_cmd_c32
+
+	export CSDR_FIXED_BUFSIZE=$(3) && \
+	rm -f /tmp/fsdr-test.bin && \
+	head -c $(2) ./tests/france-culture-extract.c32 > /tmp/fsdr-test.bin && \
+	csdr $(1)        < /tmp/fsdr-test.bin | head -c $(3) > /tmp/csdr-output.bin && \
+	$(FSDR_CLI) $(1) < /tmp/fsdr-test.bin | head -c $(3) > /tmp/fsdr-output.bin && \
+	ls -al /tmp/fsdr-test.bin /tmp/fsdr-output.bin /tmp/csdr-output.bin && \
 	cmp -l /tmp/csdr-output.bin /tmp/fsdr-output.bin
 
 endef
 
 csdr-compare-convert-u8-f: $(FSDR_CLI)
-	$(call csdr_compare_cmd,convert_u8_f,32,128)
+	$(call csdr_compare_cmd,convert_u8_f,128,128)
 
 csdr-compare-realpart-c-f: $(FSDR_CLI)
-	$(call csdr_compare_cmd,realpart_cf,128,16)
+	$(call csdr_compare_cmd,realpart_cf,1024,512)
 
 csdr-compare-clone: $(FSDR_CLI)
 	$(call csdr_compare_cmd,clone,32,32)
 
 csdr-compare-dump-u8: $(FSDR_CLI)
-	$(call csdr_compare_cmd,dump_u8,32,32)
+	$(call csdr_compare_cmd,dump_u8,64,32)
 
 csdr-compare-dump-f: $(FSDR_CLI)
 	$(call csdr_compare_cmd,dump_f,64,16)
 
-.PHONY: csdr-compare cargo-test
+csdr-compare-shift-addition-cc : $(FSDR_CLI)
+	$(call csdr_compare_cmd,shift_addition_cc 1256,1024,1024)
+
+.PHONY: csdr-compare cargo-test csdr-compare-realpart-c-f csdr-compare-dump-u8

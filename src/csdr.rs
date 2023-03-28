@@ -121,12 +121,12 @@ impl CsdrParser {
             }
             "shift_addition_cc" => {
                 let mut parameters = BTreeMap::<String, String>::new();
-                let rate = args
+                let phase_rate = args
                     .next()
                     .expect("missing mandatory <rate> parameters for shift_addition_cc");
-                let rate = rate.into();
-                parameters.insert("freq".to_string(), rate);
-                parameters.insert("sample_rate".to_string(), "1".to_string());
+                let phase_rate = phase_rate.into();
+                parameters.insert("freq".to_string(), phase_rate);
+                parameters.insert("sample_rate".to_string(), "6.283185307179586".to_string());
                 let block_name = self.push_block_instance("blocks_freqshift_cc".into(), parameters);
                 Ok((block_name, "c32".to_string(), Some("c32".to_string())))
             }
@@ -189,6 +189,21 @@ impl CsdrParser {
                 parameters.insert("type".to_string(), "complex".to_string());
                 let block_name = self.push_block_instance("blocks_throttle".into(), parameters);
                 Ok((block_name, "c32".to_string(), Some("c32".to_string())))
+            }
+            "octave_complex_c" => {
+                let samples_to_plot = args
+                    .next()
+                    .expect("missing mandatory <samples_to_plot> parameters for octave_complex_c");
+                let samples_to_plot = samples_to_plot.into();
+                let out_of_n_samples = args
+                    .next()
+                    .expect("missing mandatory <out_of_n_samples> parameters for octave_complex_c");
+                let out_of_n_samples = out_of_n_samples.into();
+                let mut parameters = BTreeMap::<String, String>::new();
+                parameters.insert("samples_to_plot".to_string(), samples_to_plot);
+                parameters.insert("out_of_n_samples".to_string(), out_of_n_samples);
+                let block_name = self.push_block_instance("octave_complex_c".into(), parameters);
+                Ok((block_name, "c32".to_string(), None))
             }
             // "file_source_u8" => {
             //     let mut parameters = BTreeMap::<String, String>::new();

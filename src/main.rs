@@ -1,3 +1,6 @@
+#[macro_use]
+pub extern crate async_trait;
+
 use std::env;
 
 use futuresdr::anyhow::{bail, Result};
@@ -8,6 +11,7 @@ use grc::Grc;
 mod csdr;
 use csdr::CsdrParser;
 use grc::converter::Grc2FutureSdr;
+pub mod blocks;
 
 fn usage() -> Result<Grc> {
     let msg = "Usage:\n\

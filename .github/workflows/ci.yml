@@ -10,19 +10,6 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v3
-        with:
-          path: './fsdr-cli'
-      - name: Checkout FutureSDR
-        uses: actions/checkout@v3
-        with:
-          repository: FutureSDR/FutureSDR
-          path: './FutureSDR'
-      - name: Checkout fsdr-blocks
-        uses: actions/checkout@v3
-        with:
-          repository: FutureSDR/fsdr-blocks
-          path: './fsdr-blocks'
-          ref: 'feature/type-converters'
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
@@ -32,8 +19,8 @@ jobs:
       - name: Install ZeroMQ
         run: sudo apt-get install -y libzmq3-dev
 
-      # - name: Install alsalibs
-      #   run: sudo apt-get -y install libasound2-dev
+      - name: Install alsalibs
+        run: sudo apt-get -y install libasound2-dev
 
       # - name: Install LTTng
       #   run: sudo apt-get -y install liblttng-ust-dev

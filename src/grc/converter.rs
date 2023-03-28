@@ -1,11 +1,16 @@
+use crate::blocks::OctaveComplex;
 use crate::grc::Grc;
+use fsdr_blocks::math::FrequencyShifter;
 use fsdr_blocks::stdinout::*;
 use fsdr_blocks::stream::Deinterleave;
 use fsdr_blocks::type_converters::*;
+use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::audio::AudioSink;
 use futuresdr::blocks::ApplyNM;
-use futuresdr::blocks::{Apply, Combine, FileSink, FileSource, FirBuilder, Sink, Throttle};
+use futuresdr::blocks::{
+    Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
+};
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Block;
 use futuresdr::runtime::Flowgraph;
@@ -398,6 +403,51 @@ impl Grc2FutureSdr {
             "blocks_float_to_complex" => {
                 let blk =
                     Combine::new(|v1: &f32, v2: &f32| -> Complex32 { Complex32::new(*v1, *v2) });
+                Ok(Some(blk))
+            }
+            "octave_complex_c" => {
+                let samples_to_plot = blk_def
+                    .parameters
+                    .get("samples_to_plot")
+                    .expect("samples_to_plot must be defined")
+                    .parse::<usize>()?;
+                let out_of_n_samples = blk_def
+                    .parameters
+                    .get("out_of_n_samples")
+                    .expect("out_of_n_samples must be defined")
+                    .parse::<usize>()?;
+                if out_of_n_samples < samples_to_plot {
+                    return Err(anyhow!("out_of_n_samples should be < samples_to_plot"));
+                }
+                let blk = OctaveComplex::build(samples_to_plot, out_of_n_samples);
+                Ok(Some(blk))
+            }
+            "blocks_freqshift_cc" => {
+                let sample_rate = blk_def
+                    .parameters
+                    .get("sample_rate")
+                    .expect("sample_rate must be defined")
+                    .parse::<f32>()?;
+                let freq = blk_def
+                    .parameters
+                    .get("freq")
+                    .expect("freq must be defined")
+                    .parse::<f32>()?;
+                let blk = FrequencyShifter::<Complex32>::new(freq, sample_rate);
+                Ok(Some(blk))
+            }
+            "blocks_null_sink" => {
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("item type must be defined");
+                let blk = match &(item_type[..]) {
+                    "char" => NullSink::<u8>::new(),
+                    "short" => NullSink::<i16>::new(),
+                    "float" => NullSink::<f32>::new(),
+                    "complex" => NullSink::<Complex32>::new(),
+                    _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
+                };
                 Ok(Some(blk))
             }
             _ => {
