@@ -443,7 +443,7 @@ impl Grc2FutureSdr {
                 if out_of_n_samples < samples_to_plot {
                     return Err(anyhow!("out_of_n_samples should be < samples_to_plot"));
                 }
-                let blk = OctaveComplex::new(samples_to_plot, out_of_n_samples);
+                let blk = OctaveComplex::build(samples_to_plot, out_of_n_samples);
                 Ok(Some(blk))
             }
             "blocks_freqshift_cc" => {

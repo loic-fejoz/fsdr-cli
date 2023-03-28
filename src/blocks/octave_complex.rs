@@ -17,7 +17,7 @@ pub struct OctaveComplex {
 }
 
 impl OctaveComplex {
-    pub fn new(samples_to_plot: usize, out_of_n_samples: usize) -> Block {
+    pub fn build(samples_to_plot: usize, out_of_n_samples: usize) -> Block {
         assert!(samples_to_plot <= out_of_n_samples);
         Block::new(
             BlockMetaBuilder::new("OctaveComplex".to_string()).build(),
