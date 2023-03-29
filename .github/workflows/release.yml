@@ -54,7 +54,7 @@ jobs:
       - name: Install Rust
         run: rustup update 1.67.1 --no-self-update && rustup default 1.67.1
       - name: Install cargo-dist
-        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.5/cargo-dist-v0.0.5-installer.sh | sh
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.0.5/cargo-dist-v0.0.5-installer.sh | sh     
       - id: create-release
         run: |
           cargo dist manifest --tag=${{ github.ref_name }} --artifacts=all --no-local-paths --output-format=json > dist-manifest.json
@@ -102,8 +102,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Rust
         run: rustup update 1.67.1 --no-self-update && rustup default 1.67.1
+      - if: ${{ contains(matrix.os, 'ubuntu')  }}       
+        run: sudo apt-get -y install libasound2-dev libzmq3-dev libsoapysdr-dev
       - name: Install cargo-dist
-        run: ${{ matrix.install-dist }}
+        run: ${{ matrix.install-dist }}        
       - name: Run cargo-dist
         # This logic is a bit janky because it's trying to be a polyglot between
         # powershell and bash since this will run on windows, macos, and linux!
