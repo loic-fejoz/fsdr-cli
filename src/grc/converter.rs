@@ -6,7 +6,7 @@ use fsdr_blocks::stream::Deinterleave;
 use fsdr_blocks::type_converters::*;
 use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::Result;
-use futuresdr::blocks::audio::AudioSink;
+use crate::blocks::AudioSink;
 use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::{
     Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
