@@ -156,8 +156,8 @@ impl Kernel for AudioSink {
                             for (target, source) in
                                 data.chunks_exact_mut(duplicate_time).zip(v.iter())
                             {
-                                for dup in 0..duplicate_time {
-                                    target[dup] = *source
+                                for t in target.iter_mut().take(duplicate_time) {
+                                    *t = *source;
                                 }
                             }
                         }
