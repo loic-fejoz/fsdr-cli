@@ -103,7 +103,7 @@ jobs:
       - name: Install Rust
         run: rustup update 1.67.1 --no-self-update && rustup default 1.67.1
       - if: ${{ contains(matrix.os, 'ubuntu')  }}       
-        run: sudo apt-get -y install libasound2-dev libzmq3-dev libsoapysdr-dev
+        run: sudo apt-get update && sudo apt-get -y install libasound2-dev libzmq3-dev libsoapysdr-dev
       - name: Install cargo-dist
         run: ${{ matrix.install-dist }}        
       - name: Run cargo-dist
