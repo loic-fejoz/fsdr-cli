@@ -1,3 +1,4 @@
+use crate::blocks::AudioSink;
 use crate::blocks::OctaveComplex;
 use crate::grc::Grc;
 use fsdr_blocks::math::FrequencyShifter;
@@ -6,7 +7,6 @@ use fsdr_blocks::stream::Deinterleave;
 use fsdr_blocks::type_converters::*;
 use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::Result;
-use crate::blocks::AudioSink;
 use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::{
     Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,

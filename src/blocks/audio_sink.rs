@@ -115,15 +115,22 @@ impl Kernel for AudioSink {
         if let Ok(configs) = device.supported_output_configs() {
             for c in configs {
                 // println!("{:?}", c);
-                if actual_channels.is_none() && c.min_sample_rate().0 >= self.sample_rate &&  self.sample_rate <= c.max_sample_rate().0 {
+                if actual_channels.is_none()
+                    && c.min_sample_rate().0 >= self.sample_rate
+                    && self.sample_rate <= c.max_sample_rate().0
+                {
                     actual_channels = Some(c.channels());
                     break;
                 }
             }
-        }            
+        }
 
         let config = StreamConfig {
-            channels: if let Some(actual_channels) = actual_channels { actual_channels } else { self.channels},
+            channels: if let Some(actual_channels) = actual_channels {
+                actual_channels
+            } else {
+                self.channels
+            },
             sample_rate: SampleRate(self.sample_rate),
             buffer_size: BufferSize::Default,
         };
@@ -140,19 +147,21 @@ impl Kernel for AudioSink {
                     while let Some(mut v) =
                         iter.take().or_else(|| rx.try_next().ok().and_then(|x| x))
                     {
-                        let n = std::cmp::min(v.len(), data.len()/duplicate_time - i);
+                        let n = std::cmp::min(v.len(), data.len() / duplicate_time - i);
                         if duplicate_time == 1 {
                             // Case where channels was compatible
                             data[i..i + n].copy_from_slice(&v[..n]);
                         } else {
                             // Case where we need to duplicate inputs so as to match channels number
-                            for (target, source) in data.chunks_exact_mut(duplicate_time).zip(v.iter()) {
+                            for (target, source) in
+                                data.chunks_exact_mut(duplicate_time).zip(v.iter())
+                            {
                                 for dup in 0..duplicate_time {
                                     target[dup] = *source
                                 }
                             }
                         }
-                        
+
                         i += n;
 
                         if n < v.len() {
