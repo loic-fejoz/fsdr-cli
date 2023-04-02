@@ -12,6 +12,7 @@ use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::{
     AgcBuilder, Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
 };
+use futuresdr::futuredsp::{firdes, windows};
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Block;
 use futuresdr::runtime::Flowgraph;
@@ -161,8 +162,9 @@ impl Grc2FutureSdr {
                     .get("type")
                     .expect("type must be defined");
 
-                let blk = match  &(item_type[..]) {
+                let blk = match &(item_type[..]) {
                     "float" => AgcBuilder::<f32>::new()
+                        .squelch(0.0)
                         .reference_power(reference)
                         .max_gain(max_gain)
                         .adjustment_rate(rate)
@@ -184,7 +186,7 @@ impl Grc2FutureSdr {
                 let default_max_threshold = "1.0".to_string();
                 let max_threshold = blk_def
                     .parameters
-                    .get("lo")
+                    .get("hi")
                     .or(Some(&default_max_threshold));
                 let max_threshold = max_threshold
                     .expect("")
@@ -315,8 +317,11 @@ impl Grc2FutureSdr {
             "dc_blocker_xx" => {
                 let min_bufsize = "32".to_string();
                 let min_bufsize = blk_def.parameters.get("length").or(Some(&min_bufsize));
-                let min_bufsize = min_bufsize.expect("").parse::<usize>().expect("invalid length");
-                let dc_blocker = DCBlocker::<f32>::new(min_bufsize);
+                let min_bufsize = min_bufsize
+                    .expect("")
+                    .parse::<usize>()
+                    .expect("invalid length");
+                let dc_blocker = DCBlocker::<f32>::build(min_bufsize);
                 Ok(Some(dc_blocker))
             }
             "analog_quadrature_demod_cf" => {
@@ -514,6 +519,123 @@ impl Grc2FutureSdr {
                     "float" => NullSink::<f32>::new(),
                     "complex" => NullSink::<Complex32>::new(),
                     _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
+                };
+                Ok(Some(blk))
+            }
+            "fir_filter_xxx" => {
+                let taps = blk_def
+                    .parameters
+                    .get("taps")
+                    .expect("taps must be defined");
+                let decimation = blk_def
+                    .parameters
+                    .get("decim")
+                    .expect("decim must be defined")
+                    .parse::<usize>()?;
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("type must be defined");
+                let taps: Vec<f32> = if taps.is_empty() {
+                    // This block definition was from csdr
+                    let transition_bw = blk_def
+                        .parameters
+                        .get("transition_bw")
+                        .expect("transition_bw must be defined")
+                        .parse::<f64>()?;
+                    let window = blk_def
+                        .parameters
+                        .get("window")
+                        .expect("window must be defined");
+                    let taps_length: usize = (4.0 / transition_bw) as usize;
+                    let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
+                    assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
+
+                    // Building firdes_lowpass_f(taps,taps_length,0.5/(float)factor,window);
+                    let rect_win = match &window[..] {
+                        "HAMMING" => windows::hamming(taps_length, false),
+                        "BLACKMAN" => windows::blackman(taps_length, false),
+                        //"KAISER" => windows::kaiser(taps_length, beta),
+                        "HANN" => windows::hann(taps_length, false),
+                        //"GAUSSIAN" => windows::gaussian(taps_length, alpha),
+                        _ => todo!("Unknown fir_filter_xx window: {window}"),
+                    };
+                    let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
+                    taps
+                } else {
+                    todo!("Unhandled fir_filter_xx taps definition")
+                };
+                let blk = match &(item_type[..]) {
+                    "ccc" => FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
+                        1, decimation, taps,
+                    ),
+                    _ => todo!("Unhandled fir_filter_xx Type {item_type}"),
+                };
+                Ok(Some(blk))
+            }
+            "low_pass_filter" => {
+                let beta = blk_def
+                    .parameters
+                    .get("beta")
+                    .expect("beta must be defined")
+                    .parse::<f64>();
+                let cutoff_freq = blk_def
+                    .parameters
+                    .get("cutoff_freq")
+                    .expect("cutoff_freq must be defined")
+                    .parse::<f64>()?; // Cutoff frequency in Hz
+                let decimation = blk_def
+                    .parameters
+                    .get("decim")
+                    .expect("decim must be defined")
+                    .parse::<usize>()?; // Decimation rate of filter     
+                let gain = blk_def
+                    .parameters
+                    .get("gain")
+                    .expect("gain must be defined")
+                    .parse::<f32>()?;
+                let interp = blk_def
+                    .parameters
+                    .get("interp")
+                    .expect("interp must be defined")
+                    .parse::<usize>()?;                      
+                let sample_rate = blk_def
+                    .parameters
+                    .get("samp_rate")
+                    .expect("samp_rate must be defined")
+                    .parse::<f64>()?;    
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("type must be defined");
+                let width = blk_def
+                    .parameters
+                    .get("width")
+                    .expect("width must be defined")
+                    .parse::<f64>()?; // Transition width between stop-band and pass-band in Hz                                  
+                let window = blk_def
+                    .parameters
+                    .get("win")
+                    .expect("win must be defined");
+                let transition_bw = cutoff_freq / sample_rate;
+                let taps_length: usize = (4.0 / transition_bw) as usize;
+                let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
+                assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
+                let alpha = beta.clone();
+                let rect_win = match &window[..] {
+                    "window.WIN_HAMMING" => windows::hamming(taps_length, false),
+                    "window.WIN_BLACKMAN" => windows::blackman(taps_length, false),
+                    "window.WIN_KAISER" => windows::kaiser(taps_length, beta.expect("beta is mandatory for Kaiser")),
+                    "window.WIN_HANN" => windows::hann(taps_length, false),
+                    "window.WIN_GAUSSIAN" => windows::gaussian(taps_length, alpha.expect("alpha is mandatory for Gaussian")),
+                    _ => todo!("Unknown low_pass_filter window: {window}"),
+                };
+                let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
+                let blk = match &(item_type[..]) {
+                    "fir_filter_ccf" => FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
+                        interp, decimation, taps,
+                    ),
+                    _ => todo!("Unhandled low_pass_filter Type {item_type}"),
                 };
                 Ok(Some(blk))
             }

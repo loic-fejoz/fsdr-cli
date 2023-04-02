@@ -97,7 +97,7 @@ So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
 - [ ] [amdemod_estimator_cf](https://github.com/jketterl/csdr#amdemod_estimator_cf)
 - [ ] [firdes_lowpass_f](https://github.com/jketterl/csdr#firdes_lowpass_f)
 - [ ] [firdes_bandpass_c](https://github.com/jketterl/csdr#firdes_bandpass_c)
-- [ ] [fir_decimate_cc](https://github.com/jketterl/csdr#fir_decimate_cc)[^2][^3][^4]
+- [x] [fir_decimate_cc](https://github.com/jketterl/csdr#fir_decimate_cc)[^2][^3][^4]
 - [ ] [fir_interpolate_cc](https://github.com/jketterl/csdr#fir_interpolate_cc)
 - [ ] [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff)
 - [x] [fractional_decimator_ff](https://github.com/jketterl/csdr#fractional_decimator_ff)[^1]

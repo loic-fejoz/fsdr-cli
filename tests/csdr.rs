@@ -4,8 +4,8 @@ use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSinkBuilder;
 use futuresdr::blocks::VectorSource;
-use futuresdr::num_complex::Complex32;
 use futuresdr::macros::connect;
+use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 
@@ -85,7 +85,7 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let result = CsdrParser::parse_command(&mut cmds);
     assert!(result.is_ok());
     let grc = result.expect("");
-    // println!("{grc:?}");
+    //println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
     assert_eq!("analog_rail_ff", grc.blocks[0].id);
     let low_threshold = grc.blocks[0]
@@ -118,7 +118,16 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
 
     let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
     let snk_0 = snk_0.items();
-    assert!(snk_0.iter().all(|v| -3.0 <= *v && *v <= 3.0));
+    // assert!(snk_0.iter().all(|v| -3.0 <= *v && *v <= 3.0));
+    let expected: Vec<f32> = vec![
+        -3.0, -3.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0, 3.0,
+    ];
+    for (i, (expected, actual)) in expected.iter().zip(snk_0.iter()).enumerate() {
+        assert_eq!(
+            expected, actual,
+            "at index {i}, expected: {expected}, got: {actual}"
+        );
+    }
     Ok(())
 }
 
@@ -159,7 +168,6 @@ pub fn parse_limit_ff_multiple_commands() {
     assert_eq!("16.0", high_threshold);
 }
 
-
 #[test]
 pub fn parse_fastdc_block() -> Result<()> {
     let mut cmds = "fastdcblock_ff".split_whitespace().peekable();
@@ -183,13 +191,11 @@ pub fn parse_fastdc_block() -> Result<()> {
         .parameters
         .get("type")
         .expect("type must be defined");
-    assert_eq!("ff", data_type);    
+    assert_eq!("ff", data_type);
     assert_eq!(2, grc.connections.len());
 
     let mut fg = Flowgraph::new();
-    let orig: Vec<f32> = vec![
-        0.0, -1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0 
-    ];
+    let orig: Vec<f32> = vec![0.0, -1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0];
     let orig: Vec<f32> = orig.iter().map(|x| x + 5.0).collect();
     let orig = orig.repeat(32);
     let src = VectorSource::<f32>::new(orig);
@@ -225,7 +231,10 @@ pub fn parse_amdemod_cf() -> Result<()> {
     assert_eq!(2, grc.connections.len());
 
     let mut fg = Flowgraph::new();
-    let orig: Vec<Complex32> = (0..10).map(|x| x as f32).map(|x| Complex32::new(x*x, 0.0)).collect();
+    let orig: Vec<Complex32> = (0..10)
+        .map(|x| x as f32)
+        .map(|x| Complex32::new(x * x, 0.0))
+        .collect();
     let src = VectorSource::<Complex32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
@@ -241,7 +250,10 @@ pub fn parse_amdemod_cf() -> Result<()> {
     let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
     let snk_0 = snk_0.items();
     // println!("{snk_0:?}");
-    assert!(snk_0.iter().enumerate().all(|(i, v)| ((i * i) as f32 - *v).abs() < 0.0001));
+    assert!(snk_0
+        .iter()
+        .enumerate()
+        .all(|(i, v)| ((i * i) as f32 - *v).abs() < 0.0001));
     Ok(())
 }
 
@@ -268,17 +280,17 @@ pub fn parse_agc_ff() -> Result<()> {
         .parameters
         .get("rate")
         .expect("rate must be defined");
-    assert_eq!("0.0001", rate);    
+    assert_eq!("0.0001", rate);
     let data_type = grc.blocks[0]
         .parameters
         .get("type")
         .expect("type must be defined");
-    assert_eq!("float", data_type);   
+    assert_eq!("float", data_type);
     assert_eq!(2, grc.connections.len());
 
     let mut fg = Flowgraph::new();
     let orig: Vec<f32> = (0..256).map(|x| (x as f32).sin() * 0.5).collect();
-    let orig= orig.repeat(256);
+    let orig = orig.repeat(256);
     let src = VectorSource::<f32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
@@ -321,18 +333,20 @@ pub fn parse_agc_ff_with_reference() -> Result<()> {
         .parameters
         .get("rate")
         .expect("rate must be defined");
-    assert_eq!("0.0001", rate);    
+    assert_eq!("0.0001", rate);
     let data_type = grc.blocks[0]
         .parameters
         .get("type")
         .expect("type must be defined");
-    assert_eq!("float", data_type);   
+    assert_eq!("float", data_type);
     Ok(())
 }
 
 #[test]
 pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
-    let mut cmds = "agc_ff --reference 0.9 --max 256.0".split_whitespace().peekable();
+    let mut cmds = "agc_ff --reference 0.9 --max 256.0"
+        .split_whitespace()
+        .peekable();
     let result = CsdrParser::parse_command(&mut cmds);
     assert!(result.is_ok());
     let grc = result.expect("");
@@ -353,12 +367,12 @@ pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
         .parameters
         .get("rate")
         .expect("rate must be defined");
-    assert_eq!("0.0001", rate);    
+    assert_eq!("0.0001", rate);
     let data_type = grc.blocks[0]
         .parameters
         .get("type")
         .expect("type must be defined");
-    assert_eq!("float", data_type);   
+    assert_eq!("float", data_type);
     Ok(())
 }
 
@@ -385,11 +399,133 @@ pub fn parse_agc_ff_with_rate() -> Result<()> {
         .parameters
         .get("rate")
         .expect("rate must be defined");
-    assert_eq!("0.0002", rate);    
+    assert_eq!("0.0002", rate);
     let data_type = grc.blocks[0]
         .parameters
         .get("type")
         .expect("type must be defined");
-    assert_eq!("float", data_type);   
+    assert_eq!("float", data_type);
+    Ok(())
+}
+
+#[test]
+pub fn parse_fir_decimate_cc() -> Result<()> {
+    let mut cmds = "fir_decimate_cc 50".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fir_filter_xxx", grc.blocks[0].id);
+    let decimation_factor = grc.blocks[0]
+        .parameters
+        .get("decim")
+        .expect("decimation_factor must be defined");
+    assert_eq!("50", decimation_factor);
+    let transition_bw = grc.blocks[0]
+        .parameters
+        .get("transition_bw")
+        .expect("transition_bw  must be defined");
+    assert_eq!("0.05", transition_bw);
+    let window = grc.blocks[0]
+        .parameters
+        .get("window")
+        .expect("window must be defined");
+    assert_eq!("HAMMING", window);
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("ccc", data_type);
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<Complex32> = (0..350)
+        .map(|x| Complex32::new((x as f32).cos() * 0.5, (x as f32).sin() * 0.5))
+        .collect();
+    let orig = orig.repeat(10);
+    let original_length = orig.len();
+    let src = VectorSource::<Complex32>::new(orig);
+    let vect_sink_0 = VectorSinkBuilder::<Complex32>::new().build();
+
+    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
+    let block_under_test = block_under_test.unwrap().expect("");
+
+    connect!(fg,
+        src > block_under_test;
+        block_under_test > vect_sink_0;
+    );
+    fg = Runtime::new().run(fg)?;
+
+    let snk_0 = fg.kernel::<VectorSink<Complex32>>(vect_sink_0).unwrap();
+    let snk_0 = snk_0.items();
+    // println!("{snk_0:?}");
+    assert_eq!(original_length / 50 - 2, snk_0.len());
+
+    Ok(())
+}
+
+#[test]
+pub fn parse_fir_decimate_cc_bw() -> Result<()> {
+    let mut cmds = "fir_decimate_cc 50 0.06".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fir_filter_xxx", grc.blocks[0].id);
+    let decimation_factor = grc.blocks[0]
+        .parameters
+        .get("decim")
+        .expect("decimation_factor must be defined");
+    assert_eq!("50", decimation_factor);
+    let transition_bw = grc.blocks[0]
+        .parameters
+        .get("transition_bw")
+        .expect("transition_bw  must be defined");
+    assert_eq!("0.06", transition_bw);
+    let window = grc.blocks[0]
+        .parameters
+        .get("window")
+        .expect("window must be defined");
+    assert_eq!("HAMMING", window);
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("ccc", data_type);
+    Ok(())
+}
+
+#[test]
+pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
+    let mut cmds = "fir_decimate_cc 50 0.06 BLACKMAN"
+        .split_whitespace()
+        .peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fir_filter_xxx", grc.blocks[0].id);
+    let decimation_factor = grc.blocks[0]
+        .parameters
+        .get("decim")
+        .expect("decimation_factor must be defined");
+    assert_eq!("50", decimation_factor);
+    let transition_bw = grc.blocks[0]
+        .parameters
+        .get("transition_bw")
+        .expect("transition_bw  must be defined");
+    assert_eq!("0.06", transition_bw);
+    let window = grc.blocks[0]
+        .parameters
+        .get("window")
+        .expect("window must be defined");
+    assert_eq!("BLACKMAN", window);
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("ccc", data_type);
     Ok(())
 }

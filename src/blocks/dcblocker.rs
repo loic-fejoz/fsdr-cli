@@ -20,11 +20,11 @@ where
 impl<A> DCBlocker<A>
 where
     A: Send + 'static + Default,
-    DCBlocker<A>: Kernel
+    DCBlocker<A>: Kernel,
 {
-    pub fn new(min_bufsize: usize) -> Block {
+    pub fn build(min_bufsize: usize) -> Block {
         Block::new(
-            BlockMetaBuilder::new(format!("DCBlocker")).build(),
+            BlockMetaBuilder::new("DCBlocker".to_string()).build(),
             StreamIoBuilder::new()
                 .add_input::<A>("in")
                 .add_output::<A>("out")
@@ -40,8 +40,7 @@ where
 
 #[doc(hidden)]
 #[async_trait]
-impl Kernel for DCBlocker<f32>
-{
+impl Kernel for DCBlocker<f32> {
     async fn work(
         &mut self,
         io: &mut WorkIo,
@@ -56,7 +55,6 @@ impl Kernel for DCBlocker<f32>
         if m > self.min_bufsize {
             let sum: f32 = i.iter().sum();
             let avg = sum / (i.len() as f32);
-            println!("average is {avg:?}");
             let avgdiff = avg - self.last_dc_level;
 
             let input_size = m as f32;
