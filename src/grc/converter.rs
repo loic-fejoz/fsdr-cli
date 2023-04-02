@@ -589,7 +589,7 @@ impl Grc2FutureSdr {
                     .get("decim")
                     .expect("decim must be defined")
                     .parse::<usize>()?; // Decimation rate of filter
-                let gain = blk_def
+                let _gain = blk_def
                     .parameters
                     .get("gain")
                     .expect("gain must be defined")
@@ -608,7 +608,7 @@ impl Grc2FutureSdr {
                     .parameters
                     .get("type")
                     .expect("type must be defined");
-                let width = blk_def
+                let _width = blk_def
                     .parameters
                     .get("width")
                     .expect("width must be defined")
