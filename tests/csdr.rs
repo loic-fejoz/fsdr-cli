@@ -157,3 +157,57 @@ pub fn parse_limit_ff_multiple_commands() {
         .expect("high threshold must be defined");
     assert_eq!("16.0", high_threshold);
 }
+
+
+#[test]
+pub fn parse_fastdc_block() -> Result<()> {
+    let mut cmds = "fastdcblock_ff".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("dc_blocker_xx", grc.blocks[0].id);
+    let dc_length = grc.blocks[0]
+        .parameters
+        .get("length")
+        .expect("length must be defined");
+    assert_eq!("32", dc_length);
+    let long_form = grc.blocks[0]
+        .parameters
+        .get("long_form")
+        .expect("long_form must be defined");
+    assert_eq!("False", long_form);
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("ff", data_type);    
+    assert_eq!(2, grc.connections.len());
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<f32> = vec![
+        0.0, -1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0 
+    ];
+    let orig: Vec<f32> = orig.iter().map(|x| x + 5.0).collect();
+    let orig = orig.repeat(32);
+    let src = VectorSource::<f32>::new(orig);
+    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+
+    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
+    let block_under_test = block_under_test.unwrap().expect("");
+
+    connect!(fg,
+        src > block_under_test;
+        block_under_test > vect_sink_0;
+    );
+    fg = Runtime::new().run(fg)?;
+
+    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    let snk_0 = snk_0.items();
+    // println!("{snk_0:?}");
+    assert!(snk_0.iter().skip(110).all(|v| -5.0 <= *v && *v <= 5.0));
+    assert!(snk_0.iter().skip(175).all(|v| -4.0 <= *v && *v <= 4.0));
+    assert!(snk_0.iter().skip(200).all(|v| -3.0 <= *v && *v <= 3.0));
+    Ok(())
+}

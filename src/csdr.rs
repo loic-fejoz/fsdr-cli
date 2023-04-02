@@ -115,6 +115,14 @@ impl CsdrParser {
                 let block_name = self.push_block_instance("dump_f".into(), parameters);
                 Ok((block_name, "f32".to_string(), None))
             }
+            "fastdcblock_ff" => {
+                let mut parameters = BTreeMap::new();
+                parameters.insert("length".into(), "32".into());
+                parameters.insert("long_form".into(), "False".into());
+                parameters.insert("type".into(), "ff".into());
+                let block_name = self.push_block_instance("dc_blocker_xx".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
             "limit_ff" => {
                 let mut parameters = BTreeMap::new();
                 let next_arg = args.peek().cloned();

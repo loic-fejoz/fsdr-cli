@@ -1,4 +1,5 @@
 use crate::blocks::AudioSink;
+use crate::blocks::DCBlocker;
 use crate::blocks::OctaveComplex;
 use crate::grc::Grc;
 use fsdr_blocks::math::FrequencyShifter;
@@ -275,6 +276,13 @@ impl Grc2FutureSdr {
                     };
                     Ok(Some(blk))
                 }
+            }
+            "dc_blocker_xx" => {
+                let min_bufsize = "32".to_string();
+                let min_bufsize = blk_def.parameters.get("length").or(Some(&min_bufsize));
+                let min_bufsize = min_bufsize.expect("").parse::<usize>().expect("invalid length");
+                let dc_blocker = DCBlocker::<f32>::new(min_bufsize);
+                Ok(Some(dc_blocker))
             }
             "analog_quadrature_demod_cf" => {
                 let default_gain = "1.0".to_string();
