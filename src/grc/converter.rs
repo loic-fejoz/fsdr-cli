@@ -10,7 +10,7 @@ use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::{
-    Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
+    AgcBuilder, Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
 };
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Block;
@@ -139,6 +139,37 @@ impl Grc2FutureSdr {
             "realpart_cf" => {
                 let realpart_blk = Apply::new(|i: &Complex32| -> f32 { i.re });
                 Ok(Some(realpart_blk))
+            }
+            "analog_agc_xx" => {
+                let reference = blk_def
+                    .parameters
+                    .get("reference")
+                    .expect("reference must be defined")
+                    .parse::<f32>()?;
+                let max_gain = blk_def
+                    .parameters
+                    .get("max_gain")
+                    .expect("max_gain must be defined")
+                    .parse::<f32>()?;
+                let rate = blk_def
+                    .parameters
+                    .get("rate")
+                    .expect("rate must be defined")
+                    .parse::<f32>()?;
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("type must be defined");
+
+                let blk = match  &(item_type[..]) {
+                    "float" => AgcBuilder::<f32>::new()
+                        .reference_power(reference)
+                        .max_gain(max_gain)
+                        .adjustment_rate(rate)
+                        .build(),
+                    _ => todo!("Unhandled analog_agc_xx Type {item_type}"),
+                };
+                Ok(Some(blk))
             }
             "analog_rail_ff" => {
                 let default_low_threshold = "-1.0".to_string();

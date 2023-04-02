@@ -15,7 +15,7 @@ impl CsdrParser {
     pub fn parse_command<A, S>(args: &mut Peekable<A>) -> Result<Grc>
     where
         A: Iterator<Item = S>,
-        S: Into<String> + Clone,
+        S: Into<String> + Clone + std::convert::From<&'static str>,
     {
         let mut csdr_parser = CsdrParser::default();
         let (block_name, input_type, output_type) = csdr_parser
@@ -61,10 +61,51 @@ impl CsdrParser {
     ) -> Result<(String, String, Option<String>)>
     where
         A: Iterator<Item = S>,
-        S: Into<String> + Clone,
+        S: Into<String> + Clone + std::convert::From<&'static str>,
     {
         let cmd_name = args.next().expect("no command").into();
         match &cmd_name[..] {
+            "agc_ff" => {
+                let mut parameters = BTreeMap::new();
+                let mut reference: Option<S> = None;
+                let mut max_gain: Option<S> = None;
+                let mut rate: Option<S> = None;
+                loop {
+                    let next_arg = args.peek().cloned();
+                    if let Some(next_arg) = next_arg {
+                        let next_arg = next_arg.into();
+                        match &(next_arg[..]) {
+                            "|" => {
+                                break;
+                            }
+                            "--reference" => {
+                                let _ = args.next(); // Consume --reference
+                                reference = args.next();
+                            }
+                            "--max" => {
+                                let _ = args.next(); // Consume --reference
+                                max_gain = args.next();
+                            }
+                            "--rate" => {
+                                let _ = args.next(); // Consume --reference
+                                rate = args.next();
+                            }
+                            &_ => todo!("unknown agc_ff argument: {next_arg:?}")
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                let reference = reference.or(Some("0.8".into())).expect("");
+                parameters.insert("reference".into(), reference.into());
+                let max_gain = max_gain.or(Some("65536.0".into())).expect("");
+                parameters.insert("max_gain".into(),max_gain.into());
+                let rate = rate.or(Some("0.0001".into())).expect("");
+                parameters.insert("rate".into(), rate.into());
+                parameters.insert("type".into(), "float".into());
+                let block_name = self.push_block_instance("analog_agc_xx".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
             "amdemod_cf" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("blocks_complex_to_mag".into(), parameters);
@@ -294,7 +335,7 @@ impl CsdrParser {
     pub fn parse_multiple_commands<A, S>(args: &mut Peekable<A>) -> Result<Grc>
     where
         A: Iterator<Item = S>,
-        S: Into<String> + Clone,
+        S: Into<String> + Clone + std::convert::From<&'static str>,
     {
         let mut csdr_parser = CsdrParser::default();
         let mut first_block_name: Option<String> = None;

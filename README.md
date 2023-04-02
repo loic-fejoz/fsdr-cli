@@ -103,7 +103,7 @@ So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
 - [x] [fractional_decimator_ff](https://github.com/jketterl/csdr#fractional_decimator_ff)[^1]
 - [ ] [old_fractional_decimator_ff](https://github.com/jketterl/csdr#old_fractional_decimator_ff)
 - [ ] [bandpass_fir_fft_cc](https://github.com/jketterl/csdr#bandpass_fir_fft_cc)[^4]
-- [ ] [agc_ff](https://github.com/jketterl/csdr#agc_ff)[^3][^4]
+- [x] [agc_ff](https://github.com/jketterl/csdr#agc_ff)[^3][^4]
 - [ ] [fastagc_ff](https://github.com/jketterl/csdr#fastagc_ff)[^2]
 - [ ] [fft_cc](https://github.com/jketterl/csdr#fft_cc)
 - [ ] [fft_fc](https://github.com/jketterl/csdr#fft_fc)

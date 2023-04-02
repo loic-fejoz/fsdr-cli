@@ -244,3 +244,152 @@ pub fn parse_amdemod_cf() -> Result<()> {
     assert!(snk_0.iter().enumerate().all(|(i, v)| ((i * i) as f32 - *v).abs() < 0.0001));
     Ok(())
 }
+
+#[test]
+pub fn parse_agc_ff() -> Result<()> {
+    let mut cmds = "agc_ff".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_agc_xx", grc.blocks[0].id);
+    let reference = grc.blocks[0]
+        .parameters
+        .get("reference")
+        .expect("reference must be defined");
+    assert_eq!("0.8", reference);
+    let max_gain = grc.blocks[0]
+        .parameters
+        .get("max_gain")
+        .expect("max_gain must be defined");
+    assert_eq!("65536.0", max_gain);
+    let rate = grc.blocks[0]
+        .parameters
+        .get("rate")
+        .expect("rate must be defined");
+    assert_eq!("0.0001", rate);    
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("float", data_type);   
+    assert_eq!(2, grc.connections.len());
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<f32> = (0..256).map(|x| (x as f32).sin() * 0.5).collect();
+    let orig= orig.repeat(256);
+    let src = VectorSource::<f32>::new(orig);
+    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+
+    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
+    let block_under_test = block_under_test.unwrap().expect("");
+
+    connect!(fg,
+        src > block_under_test;
+        block_under_test > vect_sink_0;
+    );
+    fg = Runtime::new().run(fg)?;
+
+    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    let snk_0 = snk_0.items();
+    // println!("{snk_0:?}");
+    assert!(snk_0.iter().any(|v| *v > 0.7));
+    Ok(())
+}
+
+#[test]
+pub fn parse_agc_ff_with_reference() -> Result<()> {
+    let mut cmds = "agc_ff --reference 1.0".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_agc_xx", grc.blocks[0].id);
+    let reference = grc.blocks[0]
+        .parameters
+        .get("reference")
+        .expect("reference must be defined");
+    assert_eq!("1.0", reference);
+    let max_gain = grc.blocks[0]
+        .parameters
+        .get("max_gain")
+        .expect("max_gain must be defined");
+    assert_eq!("65536.0", max_gain);
+    let rate = grc.blocks[0]
+        .parameters
+        .get("rate")
+        .expect("rate must be defined");
+    assert_eq!("0.0001", rate);    
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("float", data_type);   
+    Ok(())
+}
+
+#[test]
+pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
+    let mut cmds = "agc_ff --reference 0.9 --max 256.0".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_agc_xx", grc.blocks[0].id);
+    let reference = grc.blocks[0]
+        .parameters
+        .get("reference")
+        .expect("reference must be defined");
+    assert_eq!("0.9", reference);
+    let max_gain = grc.blocks[0]
+        .parameters
+        .get("max_gain")
+        .expect("max_gain must be defined");
+    assert_eq!("256.0", max_gain);
+    let rate = grc.blocks[0]
+        .parameters
+        .get("rate")
+        .expect("rate must be defined");
+    assert_eq!("0.0001", rate);    
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("float", data_type);   
+    Ok(())
+}
+
+#[test]
+pub fn parse_agc_ff_with_rate() -> Result<()> {
+    let mut cmds = "agc_ff --rate 0.0002".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_agc_xx", grc.blocks[0].id);
+    let reference = grc.blocks[0]
+        .parameters
+        .get("reference")
+        .expect("reference must be defined");
+    assert_eq!("0.8", reference);
+    let max_gain = grc.blocks[0]
+        .parameters
+        .get("max_gain")
+        .expect("max_gain must be defined");
+    assert_eq!("65536.0", max_gain);
+    let rate = grc.blocks[0]
+        .parameters
+        .get("rate")
+        .expect("rate must be defined");
+    assert_eq!("0.0002", rate);    
+    let data_type = grc.blocks[0]
+        .parameters
+        .get("type")
+        .expect("type must be defined");
+    assert_eq!("float", data_type);   
+    Ok(())
+}
