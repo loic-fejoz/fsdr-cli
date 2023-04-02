@@ -65,6 +65,11 @@ impl CsdrParser {
     {
         let cmd_name = args.next().expect("no command").into();
         match &cmd_name[..] {
+            "amdemod_cf" => {
+                let parameters = BTreeMap::new();
+                let block_name = self.push_block_instance("blocks_complex_to_mag".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("f32".to_string())))
+            }
             "clipdetect_ff" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("clipdetect_ff".into(), parameters);

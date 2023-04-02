@@ -4,6 +4,7 @@ use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSinkBuilder;
 use futuresdr::blocks::VectorSource;
+use futuresdr::num_complex::Complex32;
 use futuresdr::macros::connect;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
@@ -209,5 +210,37 @@ pub fn parse_fastdc_block() -> Result<()> {
     assert!(snk_0.iter().skip(110).all(|v| -5.0 <= *v && *v <= 5.0));
     assert!(snk_0.iter().skip(175).all(|v| -4.0 <= *v && *v <= 4.0));
     assert!(snk_0.iter().skip(200).all(|v| -3.0 <= *v && *v <= 3.0));
+    Ok(())
+}
+
+#[test]
+pub fn parse_amdemod_cf() -> Result<()> {
+    let mut cmds = "amdemod_cf".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_complex_to_mag", grc.blocks[0].id);
+    assert_eq!(2, grc.connections.len());
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<Complex32> = (0..10).map(|x| x as f32).map(|x| Complex32::new(x*x, 0.0)).collect();
+    let src = VectorSource::<Complex32>::new(orig);
+    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+
+    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
+    let block_under_test = block_under_test.unwrap().expect("");
+
+    connect!(fg,
+        src > block_under_test;
+        block_under_test > vect_sink_0;
+    );
+    fg = Runtime::new().run(fg)?;
+
+    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    let snk_0 = snk_0.items();
+    // println!("{snk_0:?}");
+    assert!(snk_0.iter().enumerate().all(|(i, v)| ((i * i) as f32 - *v).abs() < 0.0001));
     Ok(())
 }

@@ -170,6 +170,10 @@ impl Grc2FutureSdr {
                 let realpart_blk = Apply::new(|i: &Complex32| -> f32 { i.re });
                 Ok(Some(realpart_blk))
             }
+            "blocks_complex_to_mag" => {
+                let blocks_complex_to_mag = Apply::new(|i: &Complex32| -> f32 { i.norm() });
+                Ok(Some(blocks_complex_to_mag))
+            }
             "clipdetect_ff" => {
                 let blk = Apply::new(|i: &f32| -> f32 {
                     if *i < 1.0 {
