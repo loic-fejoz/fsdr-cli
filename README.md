@@ -92,7 +92,7 @@ So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
 - [x] [fmdemod_quadri_cf](https://github.com/jketterl/csdr#fmdemod_quadri_cf)[^1]
 - [ ] [fmdemod_quadri_novect_cf](https://github.com/jketterl/csdr#fmdemod_quadri_novect_cf)
 - [x] [deemphasis_wfm_ff](https://github.com/jketterl/csdr#deemphasis_wfm_ff)[^1]
-- [ ] [deemphasis_nfm_ff](https://github.com/jketterl/csdr#deemphasis_nfm_ff)[^2]
+- [x] [deemphasis_nfm_ff](https://github.com/jketterl/csdr#deemphasis_nfm_ff)[^2]
 - [x] [amdemod_cf](https://github.com/jketterl/csdr#amdemod_cf)[^3]
 - [ ] [amdemod_estimator_cf](https://github.com/jketterl/csdr#amdemod_estimator_cf)
 - [ ] [firdes_lowpass_f](https://github.com/jketterl/csdr#firdes_lowpass_f)

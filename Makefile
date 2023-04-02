@@ -57,4 +57,7 @@ csdr-compare-dump-f: $(FSDR_CLI)
 csdr-compare-shift-addition-cc : $(FSDR_CLI)
 	$(call csdr_compare_cmd,shift_addition_cc 1256,1024,1024)
 
+test-nfm: $(FSDR_CLI)
+	cat tests/test-nfm.c32 | $(FSDR_CLI) csdr fir_decimate_cc 10 0.005 HAMMING \| fmdemod_quadri_cf \| limit_ff \| deemphasis_nfm_ff 48000 \| agc_ff \| convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+
 .PHONY: csdr-compare cargo-test csdr-compare-realpart-c-f csdr-compare-dump-u8

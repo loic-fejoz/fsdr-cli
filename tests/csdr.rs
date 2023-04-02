@@ -529,3 +529,39 @@ pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
     assert_eq!("ccc", data_type);
     Ok(())
 }
+
+#[test]
+pub fn parse_deemphasis_nfm_ff() -> Result<()> {
+    let mut cmds = "deemphasis_nfm_ff 48000".split_whitespace().peekable();
+    let result = CsdrParser::parse_command(&mut cmds);
+    assert!(result.is_ok());
+    let grc = result.expect("");
+    // println!("{grc:?}");
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("deemphasis_nfm_ff", grc.blocks[0].id);
+    let sample_rate = grc.blocks[0]
+        .parameters
+        .get("sample_rate")
+        .expect("sample_rate must be defined");
+    assert_eq!("48000", sample_rate);
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<f32> = (0..360).map(|x| (x as f32).cos() * 0.5).collect();
+    let orig = orig.repeat(10);
+    let src = VectorSource::<f32>::new(orig);
+    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+
+    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
+    let block_under_test = block_under_test.unwrap().expect("");
+
+    connect!(fg,
+        src > block_under_test;
+        block_under_test > vect_sink_0;
+    );
+    fg = Runtime::new().run(fg)?;
+
+    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    let _snk_0 = snk_0.items();
+    // println!("{snk_0:?}");
+    Ok(())
+}

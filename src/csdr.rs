@@ -152,6 +152,16 @@ impl CsdrParser {
                 let block_name = self.push_block_instance("convert_ff_c".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("c32".to_string())))
             }
+            "deemphasis_nfm_ff" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                let sample_rate = args
+                    .next()
+                    .expect("missing mandatory <one_of_the_predefined_sample_rate> parameters for deemphasis_nfm_ff");
+                let sample_rate = sample_rate.into();
+                parameters.insert("sample_rate".to_string(), sample_rate);
+                let block_name = self.push_block_instance("deemphasis_nfm_ff".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
             "dump_u8" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_u8".into(), parameters);
