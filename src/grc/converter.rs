@@ -588,7 +588,7 @@ impl Grc2FutureSdr {
                     .parameters
                     .get("decim")
                     .expect("decim must be defined")
-                    .parse::<usize>()?; // Decimation rate of filter     
+                    .parse::<usize>()?; // Decimation rate of filter
                 let gain = blk_def
                     .parameters
                     .get("gain")
@@ -598,12 +598,12 @@ impl Grc2FutureSdr {
                     .parameters
                     .get("interp")
                     .expect("interp must be defined")
-                    .parse::<usize>()?;                      
+                    .parse::<usize>()?;
                 let sample_rate = blk_def
                     .parameters
                     .get("samp_rate")
                     .expect("samp_rate must be defined")
-                    .parse::<f64>()?;    
+                    .parse::<f64>()?;
                 let item_type = blk_def
                     .parameters
                     .get("type")
@@ -612,11 +612,8 @@ impl Grc2FutureSdr {
                     .parameters
                     .get("width")
                     .expect("width must be defined")
-                    .parse::<f64>()?; // Transition width between stop-band and pass-band in Hz                                  
-                let window = blk_def
-                    .parameters
-                    .get("win")
-                    .expect("win must be defined");
+                    .parse::<f64>()?; // Transition width between stop-band and pass-band in Hz
+                let window = blk_def.parameters.get("win").expect("win must be defined");
                 let transition_bw = cutoff_freq / sample_rate;
                 let taps_length: usize = (4.0 / transition_bw) as usize;
                 let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
@@ -625,16 +622,23 @@ impl Grc2FutureSdr {
                 let rect_win = match &window[..] {
                     "window.WIN_HAMMING" => windows::hamming(taps_length, false),
                     "window.WIN_BLACKMAN" => windows::blackman(taps_length, false),
-                    "window.WIN_KAISER" => windows::kaiser(taps_length, beta.expect("beta is mandatory for Kaiser")),
+                    "window.WIN_KAISER" => {
+                        windows::kaiser(taps_length, beta.expect("beta is mandatory for Kaiser"))
+                    }
                     "window.WIN_HANN" => windows::hann(taps_length, false),
-                    "window.WIN_GAUSSIAN" => windows::gaussian(taps_length, alpha.expect("alpha is mandatory for Gaussian")),
+                    "window.WIN_GAUSSIAN" => windows::gaussian(
+                        taps_length,
+                        alpha.expect("alpha is mandatory for Gaussian"),
+                    ),
                     _ => todo!("Unknown low_pass_filter window: {window}"),
                 };
                 let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
                 let blk = match &(item_type[..]) {
-                    "fir_filter_ccf" => FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
-                        interp, decimation, taps,
-                    ),
+                    "fir_filter_ccf" => {
+                        FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
+                            interp, decimation, taps,
+                        )
+                    }
                     _ => todo!("Unhandled low_pass_filter Type {item_type}"),
                 };
                 Ok(Some(blk))
