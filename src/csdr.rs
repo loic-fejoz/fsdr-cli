@@ -15,7 +15,7 @@ impl CsdrParser {
     pub fn parse_command<A, S>(args: &mut Peekable<A>) -> Result<Grc>
     where
         A: Iterator<Item = S>,
-        S: Into<String> + Clone,
+        S: Into<String> + Clone + std::convert::From<&'static str>,
     {
         let mut csdr_parser = CsdrParser::default();
         let (block_name, input_type, output_type) = csdr_parser
@@ -61,10 +61,57 @@ impl CsdrParser {
     ) -> Result<(String, String, Option<String>)>
     where
         A: Iterator<Item = S>,
-        S: Into<String> + Clone,
+        S: Into<String> + Clone + std::convert::From<&'static str>,
     {
         let cmd_name = args.next().expect("no command").into();
         match &cmd_name[..] {
+            "agc_ff" => {
+                let mut parameters = BTreeMap::new();
+                let mut reference: Option<S> = None;
+                let mut max_gain: Option<S> = None;
+                let mut rate: Option<S> = None;
+                loop {
+                    let next_arg = args.peek().cloned();
+                    if let Some(next_arg) = next_arg {
+                        let next_arg = next_arg.into();
+                        match &(next_arg[..]) {
+                            "|" => {
+                                break;
+                            }
+                            "--reference" => {
+                                let _ = args.next(); // Consume --reference
+                                reference = args.next();
+                            }
+                            "--max" => {
+                                let _ = args.next(); // Consume --reference
+                                max_gain = args.next();
+                            }
+                            "--rate" => {
+                                let _ = args.next(); // Consume --reference
+                                rate = args.next();
+                            }
+                            &_ => todo!("unknown agc_ff argument: {next_arg:?}"),
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                let reference = reference.or(Some("0.8".into())).expect("");
+                parameters.insert("reference".into(), reference.into());
+                let max_gain = max_gain.or(Some("65536.0".into())).expect("");
+                parameters.insert("max_gain".into(), max_gain.into());
+                let rate = rate.or(Some("0.0001".into())).expect("");
+                parameters.insert("rate".into(), rate.into());
+                parameters.insert("type".into(), "float".into());
+                let block_name = self.push_block_instance("analog_agc_xx".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
+            "amdemod_cf" => {
+                let parameters = BTreeMap::new();
+                let block_name =
+                    self.push_block_instance("blocks_complex_to_mag".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("f32".to_string())))
+            }
             "clipdetect_ff" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("clipdetect_ff".into(), parameters);
@@ -105,6 +152,16 @@ impl CsdrParser {
                 let block_name = self.push_block_instance("convert_ff_c".into(), parameters);
                 Ok((block_name, "f32".to_string(), Some("c32".to_string())))
             }
+            "deemphasis_nfm_ff" => {
+                let mut parameters = BTreeMap::<String, String>::new();
+                let sample_rate = args
+                    .next()
+                    .expect("missing mandatory <one_of_the_predefined_sample_rate> parameters for deemphasis_nfm_ff");
+                let sample_rate = sample_rate.into();
+                parameters.insert("sample_rate".to_string(), sample_rate);
+                let block_name = self.push_block_instance("deemphasis_nfm_ff".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
             "dump_u8" => {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_u8".into(), parameters);
@@ -114,6 +171,60 @@ impl CsdrParser {
                 let parameters = BTreeMap::new();
                 let block_name = self.push_block_instance("dump_f".into(), parameters);
                 Ok((block_name, "f32".to_string(), None))
+            }
+            "fastdcblock_ff" => {
+                let mut parameters = BTreeMap::new();
+                parameters.insert("length".into(), "32".into());
+                parameters.insert("long_form".into(), "False".into());
+                parameters.insert("type".into(), "ff".into());
+                let block_name = self.push_block_instance("dc_blocker_xx".into(), parameters);
+                Ok((block_name, "f32".to_string(), Some("f32".to_string())))
+            }
+            "fir_decimate_cc" => {
+                let mut parameters = BTreeMap::new();
+                let mut decimation: Option<S> = None;
+                let mut bandwidth: Option<S> = None;
+                let mut window: Option<S> = None;
+                let mut positional_index = 1;
+                loop {
+                    let next_arg = args.peek().cloned();
+                    if let Some(next_arg) = next_arg {
+                        let next_arg = next_arg.into();
+                        match &(next_arg[..]) {
+                            "|" => {
+                                break;
+                            }
+                            _ => match positional_index {
+                                1 => {
+                                    decimation = args.next();
+                                    positional_index+=1;
+                                }
+                                2 => {
+                                    bandwidth = args.next();
+                                    positional_index+=1;
+                                }
+                                3 => {
+                                    window = args.next();
+                                    positional_index+=1;
+                                }
+                                _ => todo!("unknown fir_decimate_cc positional index {positional_index}: {next_arg}")
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                let decimation = decimation.or(Some("50".into())).expect("");
+                parameters.insert("decim".into(), decimation.into());
+                let bandwidth = bandwidth.or(Some("0.05".into())).expect("");
+                parameters.insert("transition_bw".into(), bandwidth.into());
+                let window = window.or(Some("HAMMING".into())).expect("");
+                parameters.insert("window".into(), window.into());
+                parameters.insert("taps".into(), "".into());
+                parameters.insert("samp_delay".into(), "0".into());
+                parameters.insert("type".into(), "ccc".into());
+                let block_name = self.push_block_instance("fir_filter_xxx".into(), parameters);
+                Ok((block_name, "c32".to_string(), Some("c32".to_string())))
             }
             "limit_ff" => {
                 let mut parameters = BTreeMap::new();
@@ -281,7 +392,7 @@ impl CsdrParser {
     pub fn parse_multiple_commands<A, S>(args: &mut Peekable<A>) -> Result<Grc>
     where
         A: Iterator<Item = S>,
-        S: Into<String> + Clone,
+        S: Into<String> + Clone + std::convert::From<&'static str>,
     {
         let mut csdr_parser = CsdrParser::default();
         let mut first_block_name: Option<String> = None;

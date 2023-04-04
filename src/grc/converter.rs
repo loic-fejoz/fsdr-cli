@@ -1,4 +1,5 @@
 use crate::blocks::AudioSink;
+use crate::blocks::DCBlocker;
 use crate::blocks::OctaveComplex;
 use crate::grc::Grc;
 use fsdr_blocks::math::FrequencyShifter;
@@ -9,8 +10,9 @@ use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::{
-    Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
+    AgcBuilder, Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
 };
+use futuresdr::futuredsp::{firdes, windows};
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Block;
 use futuresdr::runtime::Flowgraph;
@@ -139,6 +141,38 @@ impl Grc2FutureSdr {
                 let realpart_blk = Apply::new(|i: &Complex32| -> f32 { i.re });
                 Ok(Some(realpart_blk))
             }
+            "analog_agc_xx" => {
+                let reference = blk_def
+                    .parameters
+                    .get("reference")
+                    .expect("reference must be defined")
+                    .parse::<f32>()?;
+                let max_gain = blk_def
+                    .parameters
+                    .get("max_gain")
+                    .expect("max_gain must be defined")
+                    .parse::<f32>()?;
+                let rate = blk_def
+                    .parameters
+                    .get("rate")
+                    .expect("rate must be defined")
+                    .parse::<f32>()?;
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("type must be defined");
+
+                let blk = match &(item_type[..]) {
+                    "float" => AgcBuilder::<f32>::new()
+                        .squelch(0.0)
+                        .reference_power(reference)
+                        .max_gain(max_gain)
+                        .adjustment_rate(rate)
+                        .build(),
+                    _ => todo!("Unhandled analog_agc_xx Type {item_type}"),
+                };
+                Ok(Some(blk))
+            }
             "analog_rail_ff" => {
                 let default_low_threshold = "-1.0".to_string();
                 let low_threshold = blk_def
@@ -152,7 +186,7 @@ impl Grc2FutureSdr {
                 let default_max_threshold = "1.0".to_string();
                 let max_threshold = blk_def
                     .parameters
-                    .get("lo")
+                    .get("hi")
                     .or(Some(&default_max_threshold));
                 let max_threshold = max_threshold
                     .expect("")
@@ -168,6 +202,10 @@ impl Grc2FutureSdr {
                 // to know exactly what to generate
                 let realpart_blk = Apply::new(|i: &Complex32| -> f32 { i.re });
                 Ok(Some(realpart_blk))
+            }
+            "blocks_complex_to_mag" => {
+                let blocks_complex_to_mag = Apply::new(|i: &Complex32| -> f32 { i.norm() });
+                Ok(Some(blocks_complex_to_mag))
             }
             "clipdetect_ff" => {
                 let blk = Apply::new(|i: &f32| -> f32 {
@@ -275,6 +313,16 @@ impl Grc2FutureSdr {
                     };
                     Ok(Some(blk))
                 }
+            }
+            "dc_blocker_xx" => {
+                let min_bufsize = "32".to_string();
+                let min_bufsize = blk_def.parameters.get("length").or(Some(&min_bufsize));
+                let min_bufsize = min_bufsize
+                    .expect("")
+                    .parse::<usize>()
+                    .expect("invalid length");
+                let dc_blocker = DCBlocker::<f32>::build(min_bufsize);
+                Ok(Some(dc_blocker))
             }
             "analog_quadrature_demod_cf" => {
                 let default_gain = "1.0".to_string();
@@ -471,6 +519,158 @@ impl Grc2FutureSdr {
                     "float" => NullSink::<f32>::new(),
                     "complex" => NullSink::<Complex32>::new(),
                     _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
+                };
+                Ok(Some(blk))
+            }
+            "deemphasis_nfm_ff" => {
+                let sample_rate = blk_def
+                    .parameters
+                    .get("sample_rate")
+                    .expect("sample_rate must be defined")
+                    .parse::<usize>()?;
+                let blk = match sample_rate {
+                    48000 => {
+                        #[rustfmt::skip]
+                        let taps = [0.00172568f32, 0.00179665, 0.00191952, 0.00205318, 0.00215178, 0.00217534, 0.00209924, 0.00192026, 0.00165789, 0.0013502, 0.00104545, 0.000790927, 0.000621911, 0.000553077, 0.000574554, 0.000653624, 0.000741816, 0.000785877, 0.000740151, 0.000577506, 0.000296217, -7.89273e-05, -0.0005017, -0.000914683, -0.00126243, -0.00150456, -0.00162564, -0.0016396, -0.00158725, -0.00152751, -0.00152401, -0.00163025, -0.00187658, -0.00226223, -0.00275443, -0.003295, -0.0038132, -0.00424193, -0.00453375, -0.00467274, -0.00467943, -0.00460728, -0.00453119, -0.00453056, -0.00467051, -0.00498574, -0.00547096, -0.00608027, -0.00673627, -0.00734698, -0.00782705, -0.00811841, -0.00820539, -0.00812057, -0.00793936, -0.00776415, -0.00770111, -0.00783479, -0.00820643, -0.00880131, -0.00954878, -0.0103356, -0.0110303, -0.011514, -0.0117094, -0.0116029, -0.0112526, -0.0107795, -0.010343, -0.0101053, -0.0101917, -0.0106561, -0.0114608, -0.0124761, -0.0135018, -0.0143081, -0.0146885, -0.0145126, -0.0137683, -0.0125796, -0.0111959, -0.00994914, -0.00918404, -0.00917447, -0.0100402, -0.0116822, -0.0137533, -0.0156723, -0.0166881, -0.0159848, -0.0128153, -0.00664117, 0.00274383, 0.0151313, 0.0298729, 0.0459219, 0.0619393, 0.076451, 0.0880348, 0.0955087, 0.098091, 0.0955087, 0.0880348, 0.076451, 0.0619393, 0.0459219, 0.0298729, 0.0151313, 0.00274383, -0.00664117, -0.0128153, -0.0159848, -0.0166881, -0.0156723, -0.0137533, -0.0116822, -0.0100402, -0.00917447, -0.00918404, -0.00994914, -0.0111959, -0.0125796, -0.0137683, -0.0145126, -0.0146885, -0.0143081, -0.0135018, -0.0124761, -0.0114608, -0.0106561, -0.0101917, -0.0101053, -0.010343, -0.0107795, -0.0112526, -0.0116029, -0.0117094, -0.011514, -0.0110303, -0.0103356, -0.00954878, -0.00880131, -0.00820643, -0.00783479, -0.00770111, -0.00776415, -0.00793936, -0.00812057, -0.00820539, -0.00811841, -0.00782705, -0.00734698, -0.00673627, -0.00608027, -0.00547096, -0.00498574, -0.00467051, -0.00453056, -0.00453119, -0.00460728, -0.00467943, -0.00467274, -0.00453375, -0.00424193, -0.0038132, -0.003295, -0.00275443, -0.00226223, -0.00187658, -0.00163025, -0.00152401, -0.00152751, -0.00158725, -0.0016396, -0.00162564, -0.00150456, -0.00126243, -0.000914683, -0.0005017, -7.89273e-05, 0.000296217, 0.000577506, 0.000740151, 0.000785877, 0.000741816, 0.000653624, 0.000574554, 0.000553077, 0.000621911, 0.000790927, 0.00104545, 0.0013502, 0.00165789, 0.00192026, 0.00209924, 0.00217534, 0.00215178, 0.00205318, 0.00191952, 0.00179665, 0.00172568];
+                        FirBuilder::new::<f32, f32, f32, _>(taps)
+                    }
+                    8000 => {
+                        #[rustfmt::skip]
+                        let taps = [1.43777e+11f32, 1.45874e+11, -4.67746e+11, 9.98433e+10, -1.47835e+12, -3.78799e+11, -2.61333e+12, -1.07042e+12, -3.41242e+12, -1.57042e+12, -3.34195e+12, -1.4091e+12, -1.96864e+12, -2.26212e+11, 8.48259e+11, 2.04875e+12, 4.80451e+12, 5.06875e+12, 9.09434e+12, 8.04571e+12, 1.24874e+13, 9.85837e+12, 1.35433e+13, 9.28407e+12, 1.09287e+13, 5.30975e+12, 3.76762e+12, -2.54809e+12, -8.06152e+12, -1.39895e+13, -2.37664e+13, -2.77865e+13, -4.16745e+13, -4.16797e+13, -5.94708e+13, -5.17628e+13, -7.46014e+13, -4.66449e+13, -8.47575e+13, 1.51722e+14, 4.98196e+14, 1.51722e+14, -8.47575e+13, -4.66449e+13, -7.46014e+13, -5.17628e+13, -5.94708e+13, -4.16797e+13, -4.16745e+13, -2.77865e+13, -2.37664e+13, -1.39895e+13, -8.06152e+12, -2.54809e+12, 3.76762e+12, 5.30975e+12, 1.09287e+13, 9.28407e+12, 1.35433e+13, 9.85837e+12, 1.24874e+13, 8.04571e+12, 9.09434e+12, 5.06875e+12, 4.80451e+12, 2.04875e+12, 8.48259e+11, -2.26212e+11, -1.96864e+12, -1.4091e+12, -3.34195e+12, -1.57042e+12, -3.41242e+12, -1.07042e+12, -2.61333e+12, -3.78799e+11, -1.47835e+12, 9.98433e+10, -4.67746e+11, 1.45874e+11, 1.43777e+11];
+                        FirBuilder::new::<f32, f32, f32, _>(taps)
+                    }
+                    44100 => {
+                        #[rustfmt::skip]
+                        let taps = [0.0025158f32, 0.00308564, 0.00365507, 0.00413598, 0.00446279, 0.00461162, 0.00460866, 0.00452474, 0.00445739, 0.00450444, 0.00473648, 0.0051757, 0.0057872, 0.00648603, 0.00715856, 0.00769296, 0.00801081, 0.00809096, 0.00797853, 0.00777577, 0.00761627, 0.00762871, 0.00789987, 0.00844699, 0.00920814, 0.0100543, 0.0108212, 0.0113537, 0.011551, 0.0113994, 0.0109834, 0.0104698, 0.0100665, 0.00996618, 0.0102884, 0.0110369, 0.0120856, 0.0131998, 0.0140907, 0.0144924, 0.0142417, 0.0133401, 0.0119771, 0.0105043, 0.00935909, 0.00895022, 0.00952985, 0.0110812, 0.0132522, 0.015359, 0.0164664, 0.0155409, 0.0116496, 0.00416925, -0.00703664, -0.021514, -0.0382135, -0.0555955, -0.0718318, -0.0850729, -0.0937334, -0.0967458, -0.0937334, -0.0850729, -0.0718318, -0.0555955, -0.0382135, -0.021514, -0.00703664, 0.00416925, 0.0116496, 0.0155409, 0.0164664, 0.015359, 0.0132522, 0.0110812, 0.00952985, 0.00895022, 0.00935909, 0.0105043, 0.0119771, 0.0133401, 0.0142417, 0.0144924, 0.0140907, 0.0131998, 0.0120856, 0.0110369, 0.0102884, 0.00996618, 0.0100665, 0.0104698, 0.0109834, 0.0113994, 0.011551, 0.0113537, 0.0108212, 0.0100543, 0.00920814, 0.00844699, 0.00789987, 0.00762871, 0.00761627, 0.00777577, 0.00797853, 0.00809096, 0.00801081, 0.00769296, 0.00715856, 0.00648603, 0.0057872, 0.0051757, 0.00473648, 0.00450444, 0.00445739, 0.00452474, 0.00460866, 0.00461162, 0.00446279, 0.00413598, 0.00365507, 0.00308564, 0.0025158];
+                        FirBuilder::new::<f32, f32, f32, _>(taps)
+                    }
+                    11025 => {
+                        #[rustfmt::skip]
+                        let taps = [0.00113162f32, 0.000911207, 0.00173815, -0.000341385, -0.000849373, -0.00033066, -0.00290692, -0.00357326, -0.0031917, -0.00607078, -0.00659201, -0.00601551, -0.00886603, -0.00880243, -0.00759841, -0.0100344, -0.0088993, -0.00664423, -0.00835258, -0.00572919, -0.00214109, -0.00302443, 0.00132902, 0.00627003, 0.00596494, 0.0120731, 0.0180437, 0.0176243, 0.0253776, 0.0316572, 0.0298485, 0.0393389, 0.0446019, 0.0389943, 0.0516463, 0.0521951, 0.0350192, 0.0600945, 0.0163128, -0.217526, -0.378533, -0.217526, 0.0163128, 0.0600945, 0.0350192, 0.0521951, 0.0516463, 0.0389943, 0.0446019, 0.0393389, 0.0298485, 0.0316572, 0.0253776, 0.0176243, 0.0180437, 0.0120731, 0.00596494, 0.00627003, 0.00132902, -0.00302443, -0.00214109, -0.00572919, -0.00835258, -0.00664423, -0.0088993, -0.0100344, -0.00759841, -0.00880243, -0.00886603, -0.00601551, -0.00659201, -0.00607078, -0.0031917, -0.00357326, -0.00290692, -0.00033066, -0.000849373, -0.000341385, 0.00173815, 0.000911207, 0.00113162];
+                        FirBuilder::new::<f32, f32, f32, _>(taps)
+                    }
+                    _ => todo!("Unhandled sample rate for deemphasis_nfm_ff. Must be one of 8000, 11025, 44100, 48000."),
+                };
+                Ok(Some(blk))
+            }
+            "fir_filter_xxx" => {
+                let taps = blk_def
+                    .parameters
+                    .get("taps")
+                    .expect("taps must be defined");
+                let decimation = blk_def
+                    .parameters
+                    .get("decim")
+                    .expect("decim must be defined")
+                    .parse::<usize>()?;
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("type must be defined");
+                let taps: Vec<f32> = if taps.is_empty() {
+                    // This block definition was from csdr
+                    let transition_bw = blk_def
+                        .parameters
+                        .get("transition_bw")
+                        .expect("transition_bw must be defined")
+                        .parse::<f64>()?;
+                    let window = blk_def
+                        .parameters
+                        .get("window")
+                        .expect("window must be defined");
+                    let taps_length: usize = (4.0 / transition_bw) as usize;
+                    let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
+                    assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
+
+                    // Building firdes_lowpass_f(taps,taps_length,0.5/(float)factor,window);
+                    let rect_win = match &window[..] {
+                        "HAMMING" => windows::hamming(taps_length, false),
+                        "BLACKMAN" => windows::blackman(taps_length, false),
+                        //"KAISER" => windows::kaiser(taps_length, beta),
+                        "HANN" => windows::hann(taps_length, false),
+                        //"GAUSSIAN" => windows::gaussian(taps_length, alpha),
+                        _ => todo!("Unknown fir_filter_xx window: {window}"),
+                    };
+                    let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
+                    taps
+                } else {
+                    todo!("Unhandled fir_filter_xx taps definition")
+                };
+                let blk = match &(item_type[..]) {
+                    "ccc" => FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
+                        1, decimation, taps,
+                    ),
+                    _ => todo!("Unhandled fir_filter_xx Type {item_type}"),
+                };
+                Ok(Some(blk))
+            }
+            "low_pass_filter" => {
+                let beta = blk_def
+                    .parameters
+                    .get("beta")
+                    .expect("beta must be defined")
+                    .parse::<f64>();
+                let cutoff_freq = blk_def
+                    .parameters
+                    .get("cutoff_freq")
+                    .expect("cutoff_freq must be defined")
+                    .parse::<f64>()?; // Cutoff frequency in Hz
+                let decimation = blk_def
+                    .parameters
+                    .get("decim")
+                    .expect("decim must be defined")
+                    .parse::<usize>()?; // Decimation rate of filter
+                let _gain = blk_def
+                    .parameters
+                    .get("gain")
+                    .expect("gain must be defined")
+                    .parse::<f32>()?;
+                let interp = blk_def
+                    .parameters
+                    .get("interp")
+                    .expect("interp must be defined")
+                    .parse::<usize>()?;
+                let sample_rate = blk_def
+                    .parameters
+                    .get("samp_rate")
+                    .expect("samp_rate must be defined")
+                    .parse::<f64>()?;
+                let item_type = blk_def
+                    .parameters
+                    .get("type")
+                    .expect("type must be defined");
+                let _width = blk_def
+                    .parameters
+                    .get("width")
+                    .expect("width must be defined")
+                    .parse::<f64>()?; // Transition width between stop-band and pass-band in Hz
+                let window = blk_def.parameters.get("win").expect("win must be defined");
+                let transition_bw = cutoff_freq / sample_rate;
+                let taps_length: usize = (4.0 / transition_bw) as usize;
+                let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
+                assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
+                let alpha = beta.clone();
+                let rect_win = match &window[..] {
+                    "window.WIN_HAMMING" => windows::hamming(taps_length, false),
+                    "window.WIN_BLACKMAN" => windows::blackman(taps_length, false),
+                    "window.WIN_KAISER" => {
+                        windows::kaiser(taps_length, beta.expect("beta is mandatory for Kaiser"))
+                    }
+                    "window.WIN_HANN" => windows::hann(taps_length, false),
+                    "window.WIN_GAUSSIAN" => windows::gaussian(
+                        taps_length,
+                        alpha.expect("alpha is mandatory for Gaussian"),
+                    ),
+                    _ => todo!("Unknown low_pass_filter window: {window}"),
+                };
+                let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
+                let blk = match &(item_type[..]) {
+                    "fir_filter_ccf" => {
+                        FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
+                            interp, decimation, taps,
+                        )
+                    }
+                    _ => todo!("Unhandled low_pass_filter Type {item_type}"),
                 };
                 Ok(Some(blk))
             }
