@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+pub mod builder;
+
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Grc {
     pub options: Options,
@@ -26,7 +28,7 @@ pub struct Parameters {
     // title: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Default, Clone)]
 pub struct States {
     bus_sink: bool,
     bus_source: bool,
@@ -39,7 +41,7 @@ pub struct Metadata {
     pub grc_version: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct BlockInstance {
     pub name: String,
     pub id: String,

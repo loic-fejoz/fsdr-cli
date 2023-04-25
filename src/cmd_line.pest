@@ -1,0 +1,37 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+number = @{ "-"? ~ ASCII_DIGIT+ ~ ( "_" ~ ASCII_DIGIT+)* ~ (("." | ^"K" | ^"M" | ^"G" ) ~ ("_"? ~ ASCII_DIGIT)*)?  }
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+func_call = { ident ~ "(" ~ expr ~ ( "," ~ expr )* ~ ")" }
+term = { "(" ~ expr ~ ")" | number | func_call | ident }
+expr4 = { (minus ~ term) | term }
+exponentiation = { "**" | "^" }
+expr3 = { expr4 ~ (exponentiation ~  expr4)*}
+multiply = { "*" }
+division = { "/" }
+modulus = { "%" }
+expr2 = { expr3 ~ ( multiply ~ expr3 | division ~ expr3 | modulus ~ expr3 )* }
+addition = { "+" }
+minus = { "-" }
+expr1 = { expr2 ~ (addition ~ expr2 | minus ~ expr2)* }
+expr =  _{ expr1 }
+
+convert_typed = @{ ^"u8_f" | ^"f_u8" | ^"s8_f" | ^"f_s8" }
+bigendian = { "--bigendian" }
+convert_cmd = { "convert_" ~ convert_typed ~ bigendian? }
+limit_cmd = {"limit_ff" ~ number? }
+eval_cmd = { "=" ~ expr }
+
+any_csdr_cmd = _{ "csdr"? ~ (convert_cmd | limit_cmd | eval_cmd) }
+
+cmd_sep = _{ "|" | "!" }
+csdr_save_opt = { ("--output" | "-o") ~ filepath  }
+csdr_cmd = { "csdr" ~ csdr_save_opt? ~ (cmd_sep? ~ any_csdr_cmd)* }
+
+not_space =  _{ !( " " | "\t" ) ~ ANY }
+filepath = @{ not_space+ }
+
+grc_cmd = { "grc" ~ filepath }
+help_cmd = { "--help" }
+
+main = _{ SOI ~ (help_cmd | grc_cmd | csdr_cmd | any_csdr_cmd)   ~ EOI }
