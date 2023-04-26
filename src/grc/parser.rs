@@ -22,6 +22,7 @@ impl GrcParser {
     {
         let f = std::fs::OpenOptions::new()
             .write(true)
+            .truncate(true)
             .create(true)
             .open(filename)
             .expect("Couldn't open file");

@@ -1,8 +1,9 @@
-use crate::cmd_grammar::Rule;
+use crate::cmd_grammar::{Rule, CommandsParser};
 use crate::grc::builder::{GraphLevel, GrcBuilder};
-use crate::grc::Grc;
+use crate::grc::{Grc, self};
 use futuresdr::anyhow::{bail, Result};
 use pest::iterators::Pair;
+use pest::Parser;
 
 use self::eval_cmd::EvalCmd;
 use self::limit_cmd::LimitCmd;
@@ -69,5 +70,32 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
         grc_builder.ensure_sink();
         let grc = grc_builder.build()?;
         Ok(Some(grc))
+    }
+}
+
+
+#[derive(Default)]
+pub struct CsdrParser {
+}
+
+impl CsdrParser {
+    pub fn parse_command<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {
+        // let cmd = CommandsParser::parse_main(cmd.into())?;
+        // CsdrCmd::parse(&cmd)
+
+        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd.into())
+            .expect("msg")
+            .next()
+            .expect("msg");
+        let grc_builder = GrcBuilder::new();
+        let mut grc_builder = AnyCmd::parse(&input, grc_builder)?;
+        grc_builder.ensure_sink();
+        let grc = grc_builder.build()?;
+        Ok(Some(grc))
+    }
+
+    pub fn parse_multiple_commands<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {
+        let cmd = CommandsParser::parse_main(cmd.into())?;
+        CsdrCmd::parse(&cmd)
     }
 }

@@ -33,7 +33,7 @@ impl GrcItemType {
 pub struct GrcBuilderActualState {
     block_count: usize,
     blocks: Vec<BlockInstance>,
-    connections: Vec<Vec<String>>,
+    connections: Vec<[String; 4]>,
     last_output_type: Option<GrcItemType>,
     last_block_name: Option<String>,
 }
@@ -50,7 +50,7 @@ impl GrcBuilder<GraphLevel> {
         let actual_state = GrcBuilderActualState {
             block_count: 0,
             blocks: Vec::<BlockInstance>::new(),
-            connections: Vec::<Vec<String>>::new(),
+            connections: Vec::<[String; 4]>::new(),
             last_output_type: None,
             last_block_name: None,
         };
@@ -70,6 +70,13 @@ impl GrcBuilder<GraphLevel> {
         self.state.block_count += 1;
         self.state.blocks.push(block.build());
         assert_eq!(self.state.block_count, self.state.blocks.len());
+    }
+
+    fn push_and_link_block(&mut self, block: &mut GrcBlockInstanceBuilder) {
+        let previous_block_name = self.state.last_block_name.clone().expect("");
+        self.push_block(block);
+        let this_block_name = self.state.last_block_name.clone().expect("");
+        self.connect(previous_block_name, "0", this_block_name, "0");
     }
 
     pub fn ensure_source(&mut self, expected_last_output_type: GrcItemType) -> Self {
@@ -95,7 +102,7 @@ impl GrcBuilder<GraphLevel> {
                 .with_block_type("blocks_file_sink")
                 .with_parameter("file", "-")
                 .with_parameter("type", last_output_type.as_grc());
-            self.push_block(&mut snk_block);
+            self.push_and_link_block(&mut snk_block);
             self.state.last_output_type = None;
         }
         self
@@ -137,7 +144,7 @@ impl GrcBuilder<GraphLevel> {
         tgt_name:  impl Into<String>,
         tgt_port_name:  impl Into<String>,
     ) {
-        let connection = vec![
+        let connection = [
             src_name.into(),
             src_port_name.into(),
             tgt_name.into(),
@@ -176,11 +183,14 @@ impl GrcBuilder<BlockLevel> {
     }
 
     pub fn push_and_link(&self) -> GrcBuilder<GraphLevel> {
-        let previous_block_name = self.state.last_block_name.clone().expect("");
-        let mut grc = self.push();
-        let this_block_name = grc.state.last_block_name.clone().expect("");
-        grc.connect(previous_block_name, "0", this_block_name, "0");
-        grc
+        let mut blk_builder = self.extra.block_builder.clone();
+        let gl = GraphLevel {};
+        let mut grc_builder = GrcBuilder {
+            state: self.state.clone(),
+            extra: gl,
+        };
+        grc_builder.push_and_link_block(&mut blk_builder);
+        grc_builder
     }
 }
 

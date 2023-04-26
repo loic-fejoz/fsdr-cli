@@ -16,10 +16,10 @@ minus = { "-" }
 expr1 = { expr2 ~ (addition ~ expr2 | minus ~ expr2)* }
 expr =  _{ expr1 }
 
-convert_typed = @{ ^"u8_f" | ^"f_u8" | ^"s8_f" | ^"f_s8" }
+convert_typed = @{ ^"u8_f" | ^"s8_f" | ^"s16_f" | ^"f_u8" | ^"f_s8" | ^"f_s16" | ^"ff_c" }
 bigendian = { "--bigendian" }
 convert_cmd = { "convert_" ~ convert_typed ~ bigendian? }
-limit_cmd = {"limit_ff" ~ number? }
+limit_cmd = {"limit_ff" ~ expr? }
 eval_cmd = { "=" ~ expr }
 
 any_csdr_cmd = _{ "csdr"? ~ (convert_cmd | limit_cmd | eval_cmd) }

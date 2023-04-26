@@ -12,8 +12,8 @@ use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 mod grc;
 use grc::Grc;
-mod csdr;
-use csdr::CsdrParser;
+// mod csdr;
+// use csdr::CsdrParser;
 use grc::converter::Grc2FutureSdr;
 pub mod blocks;
 pub mod cmd_line;
@@ -33,37 +33,37 @@ fn usage() -> Result<Grc> {
     bail!(msg);
 }
 
-fn load() -> Result<Grc> {
-    let arg_count = env::args().count();
-    if arg_count <= 1 {
-        usage()?;
-    }
-    let mut args = env::args();
-    let _cmd_line = args.next().expect("");
-    let first_arg = args.next().expect("");
-    if "grc" == first_arg {
-        if arg_count <= 2 {
-            usage()?;
-        } else {
-            let filename = args.next().expect("");
-            return grc::GrcParser::load(filename);
-        }
-    } else if "--help" == first_arg || "help" == first_arg {
-        if arg_count <= 2 {
-            usage()?;
-        } else {
-            let cmd_name = args.next().expect("");
-            todo!("Display help for {cmd_name}");
-        }
-    } else if "csdr" == first_arg {
-        return CsdrParser::parse_multiple_commands(&mut args.peekable());
-    } else {
-        let args = env::args();
-        let args = args.skip(1);
-        return CsdrParser::parse_command(&mut args.peekable());
-    }
-    todo!();
-}
+// fn load() -> Result<Grc> {
+//     let arg_count = env::args().count();
+//     if arg_count <= 1 {
+//         usage()?;
+//     }
+//     let mut args = env::args();
+//     let _cmd_line = args.next().expect("");
+//     let first_arg = args.next().expect("");
+//     if "grc" == first_arg {
+//         if arg_count <= 2 {
+//             usage()?;
+//         } else {
+//             let filename = args.next().expect("");
+//             return grc::GrcParser::load(filename);
+//         }
+//     } else if "--help" == first_arg || "help" == first_arg {
+//         if arg_count <= 2 {
+//             usage()?;
+//         } else {
+//             let cmd_name = args.next().expect("");
+//             todo!("Display help for {cmd_name}");
+//         }
+//     } else if "csdr" == first_arg {
+//         return CsdrParser::parse_multiple_commands(&mut args.peekable());
+//     } else {
+//         let args = env::args();
+//         let args = args.skip(1);
+//         return CsdrParser::parse_command(&mut args.peekable());
+//     }
+//     todo!();
+// }
 
 fn main() -> Result<()> {
     let mut input = std::env::args();

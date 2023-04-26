@@ -1,7 +1,10 @@
 use crate::blocks::AudioSink;
 use crate::blocks::DCBlocker;
 use crate::blocks::OctaveComplex;
+use crate::cmd_grammar::CommandsParser;
+use crate::csdr_cmd::CsdrCmd;
 use crate::grc::Grc;
+use crate::csdr_cmd::eval_cmd::EvalCmd;
 use fsdr_blocks::math::FrequencyShifter;
 use fsdr_blocks::stdinout::*;
 use fsdr_blocks::stream::Deinterleave;
@@ -135,6 +138,12 @@ impl Grc2FutureSdr {
         }
     }
 
+    fn parameter_as_f32<'i>(blk_def: &'i BlockInstance, key: &'i str, default_value: impl Into<&'i str>) -> Result<f32> {
+        let expr = blk_def.parameter_or(key, default_value);
+        let expr = CommandsParser::parse_expr(expr)?;
+        EvalCmd::eval(&expr)
+    }
+
     fn convert_block(blk_def: &BlockInstance, _grc: &Grc) -> Result<Option<Block>> {
         match &(blk_def.id[..]) {
             "realpart_cf" => {
@@ -174,25 +183,8 @@ impl Grc2FutureSdr {
                 Ok(Some(blk))
             }
             "analog_rail_ff" => {
-                let default_low_threshold = "-1.0".to_string();
-                let low_threshold = blk_def
-                    .parameters
-                    .get("lo")
-                    .or(Some(&default_low_threshold));
-                let low_threshold = low_threshold
-                    .expect("")
-                    .parse::<f32>()
-                    .expect("invalid low_threshold");
-                let default_max_threshold = "1.0".to_string();
-                let max_threshold = blk_def
-                    .parameters
-                    .get("hi")
-                    .or(Some(&default_max_threshold));
-                let max_threshold = max_threshold
-                    .expect("")
-                    .parse::<f32>()
-                    .expect("invalid max_threshold");
-
+                let low_threshold = Grc2FutureSdr::parameter_as_f32(blk_def, "lo", "-1.0")?;
+                let max_threshold = Grc2FutureSdr::parameter_as_f32(blk_def, "hi", "1.0")?;
                 let rail_blk =
                     Apply::new(move |i: &f32| -> f32 { i.max(low_threshold).min(max_threshold) });
                 Ok(Some(rail_blk))

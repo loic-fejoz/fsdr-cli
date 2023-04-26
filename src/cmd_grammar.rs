@@ -20,4 +20,13 @@ impl CommandsParser {
         println!("input: {input:?}");
         Ok(input)
     }
+
+    pub fn parse_expr<'i>(expr: impl Into<&'i str>) -> Result<Pair<'i, Rule>> {
+        let expr = CommandsParser::parse(Rule::expr, expr.into())
+            .expect("msg")
+            .next()
+            .expect("msg");
+        //println!("input: {input:?}");
+        Ok(expr)
+    }
 }
