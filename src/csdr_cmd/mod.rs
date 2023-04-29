@@ -26,7 +26,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::csdr_save_opt => Ok(grc.clone()),
             _ => {
                 let rule = self.as_rule();
-                todo!("unknown any cmd: {rule:?}");
+                bail!("unknown any cmd: {rule:?}");
             }
         }
     }

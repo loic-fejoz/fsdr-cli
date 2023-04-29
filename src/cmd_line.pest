@@ -1,6 +1,8 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
-number = @{ "-"? ~ ASCII_DIGIT+ ~ ( "_" ~ ASCII_DIGIT+)* ~ (("." | ^"K" | ^"M" | ^"G" ) ~ ("_"? ~ ASCII_DIGIT)*)?  }
+engineer_number = @{ "-"? ~ ASCII_DIGIT+ ~ ( "_" ~ ASCII_DIGIT+)* ~ (("." | ^"K" | ^"M" | ^"G" ) ~ ("_"? ~ ASCII_DIGIT)*)?  }
+scientific_number = @{ "-"? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT*)? ~ "e" ~ "-"? ~ ASCII_DIGIT+ }
+number = {scientific_number | engineer_number }
 ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
 func_call = { ident ~ "(" ~ expr ~ ( "," ~ expr )* ~ ")" }
 term = { "(" ~ expr ~ ")" | number | func_call | ident }
@@ -18,11 +20,29 @@ expr =  _{ expr1 }
 
 convert_typed = @{ ^"u8_f" | ^"s8_f" | ^"s16_f" | ^"f_u8" | ^"f_s8" | ^"f_s16" | ^"ff_c" }
 bigendian = { "--bigendian" }
-convert_cmd = { "convert_" ~ convert_typed ~ bigendian? }
-limit_cmd = {"limit_ff" ~ expr? }
-eval_cmd = { "=" ~ expr }
 
-any_csdr_cmd = _{ "csdr"? ~ (convert_cmd | limit_cmd | eval_cmd) }
+agc_ref_param = { "--reference" ~ expr }
+agc_max_param = { "--max" ~ expr }
+agc_rate_param = { "--rate" ~ expr }
+agc_cmd = { "agc_ff" ~ (agc_rate_param | agc_ref_param | agc_max_param)* }
+amdemod_cmd = { "amdemod_cf" }
+clipdetect_cmd = { "clipdetect_ff" }
+convert_cmd = { "convert_" ~ convert_typed ~ bigendian? }
+deemphasis_nfm_cmd = { "deemphasis_nfm_ff" ~ expr }
+deemphasis_wfm_cmd = { "deemphasis_wfm_ff" ~ expr ~ expr }
+dump_cmd = { "dump_f" | "dump_u8" }
+eval_cmd = { "=" ~ expr }
+fastdcblock_cmd = { "fastdcblock_ff" }
+fir_decimate_cmd = { "fir_decimate_cc" ~ expr ~ expr? ~ ident? }
+fmdemod_quadri_cmd = { "fmdemod_quadri_cf" }
+fractional_decimator_cmd = { "fractional_decimator_ff" ~ expr }
+limit_cmd = {"limit_ff" ~ expr? }
+octave_complex_cmd = { "octave_complex_c" }
+realpart_cmd = {"realpart_cf"}
+shift_addition_cmd = { "shift_addition_cc" ~ expr }
+throttle_cmd = { "throttle_cc" | "throttle_ff" }
+
+any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | limit_cmd | octave_complex_cmd | realpart_cmd | shift_addition_cmd | throttle_cmd) }
 
 cmd_sep = _{ "|" | "!" }
 csdr_save_opt = { ("--output" | "-o") ~ filepath  }

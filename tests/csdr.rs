@@ -13,7 +13,6 @@ use futuresdr::runtime::Runtime;
 pub fn parse_convert_u8_f() {
     let cmds = "convert_u8_f";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
     assert_eq!("convert_u8_f", grc.blocks[0].id);
@@ -22,10 +21,75 @@ pub fn parse_convert_u8_f() {
 }
 
 #[test]
+pub fn parse_clipdetect_f() {
+    let cmds = "clipdetect_ff";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("clipdetect_ff", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_dump_f() {
+    let cmds = "dump_f";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("dump_f", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_dump_u8() {
+    let cmds = "dump_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("dump_u8", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_realpart_cf() {
+    let cmds = "realpart_cf";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("realpart_cf", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_throttle_ff() {
+    let cmds = "throttle_ff";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("throttle_ff", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_octave_complex_c() {
+    let cmds = "octave_complex_c";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("octave_complex_c", grc.blocks[0].id);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
 pub fn parse_multiple_commands_retrocompatibility() {
     let cmds = "csdr convert_u8_f | csdr fmdemod_quadri_cf | csdr fractional_decimator_ff 5 | csdr deemphasis_wfm_ff 48000 50e-6 | csdr convert_f_s16";
     let result = CsdrParser::parse_multiple_commands(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     println!("{grc:?}");
     assert_eq!(7, grc.blocks.len());
@@ -36,7 +100,6 @@ pub fn parse_multiple_commands_retrocompatibility() {
 pub fn parse_multiple_commands() {
     let cmds = "csdr convert_u8_f | fmdemod_quadri_cf | fractional_decimator_ff 5 | deemphasis_wfm_ff 48000 50e-6 | convert_f_s16";
     let result = CsdrParser::parse_multiple_commands(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     println!("{grc:?}");
     assert_eq!(7, grc.blocks.len());
@@ -47,7 +110,6 @@ pub fn parse_multiple_commands() {
 pub fn parse_shift_addition_cc_1256() {
     let cmds = "shift_addition_cc 1256";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
     assert_eq!("blocks_freqshift_cc", grc.blocks[0].id);
@@ -59,7 +121,6 @@ pub fn parse_shift_addition_cc_1256() {
 pub fn parse_limit_ff() {
     let cmds = "limit_ff";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -81,7 +142,6 @@ pub fn parse_limit_ff() {
 pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let cmds = "limit_ff 3.0";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     //println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -133,7 +193,6 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
 pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
     let cmds = "limit_ff (6.0/2)";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     //println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -185,7 +244,6 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
 pub fn parse_limit_ff_multiple_commands() {
     let cmds = "csdr convert_u8_f | limit_ff | limit_ff 16.0 | convert_f_s16";
     let result = CsdrParser::parse_multiple_commands(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(4 + 2, grc.blocks.len());
@@ -221,7 +279,6 @@ pub fn parse_limit_ff_multiple_commands() {
 pub fn parse_fastdc_block() -> Result<()> {
     let mut cmds = "fastdcblock_ff";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -272,7 +329,6 @@ pub fn parse_fastdc_block() -> Result<()> {
 pub fn parse_amdemod_cf() -> Result<()> {
     let mut cmds = "amdemod_cf";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -310,7 +366,6 @@ pub fn parse_amdemod_cf() -> Result<()> {
 pub fn parse_agc_ff() -> Result<()> {
     let mut cmds = "agc_ff";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -363,7 +418,6 @@ pub fn parse_agc_ff() -> Result<()> {
 pub fn parse_agc_ff_with_reference() -> Result<()> {
     let mut cmds = "agc_ff --reference 1.0";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -395,7 +449,6 @@ pub fn parse_agc_ff_with_reference() -> Result<()> {
 pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
     let mut cmds = "agc_ff --reference 0.9 --max 256.0";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -427,7 +480,6 @@ pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
 pub fn parse_agc_ff_with_rate() -> Result<()> {
     let mut cmds = "agc_ff --rate 0.0002";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -459,7 +511,6 @@ pub fn parse_agc_ff_with_rate() -> Result<()> {
 pub fn parse_fir_decimate_cc() -> Result<()> {
     let mut cmds = "fir_decimate_cc 50";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -515,7 +566,6 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
 pub fn parse_fir_decimate_cc_bw() -> Result<()> {
     let mut cmds = "fir_decimate_cc 50 0.06";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -547,7 +597,6 @@ pub fn parse_fir_decimate_cc_bw() -> Result<()> {
 pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
     let mut cmds = "fir_decimate_cc 50 0.06 BLACKMAN";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
@@ -579,7 +628,6 @@ pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
 pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let mut cmds = "deemphasis_nfm_ff 48000";
     let result = CsdrParser::parse_command(cmds);
-    assert!(result.is_ok());
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
