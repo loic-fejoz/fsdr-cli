@@ -1,4 +1,4 @@
-use crate::grc::{BlockInstance, Grc, States, Options, Metadata};
+use crate::grc::{BlockInstance, Grc, Metadata, Options, States};
 use futuresdr::anyhow::{bail, Result};
 use std::collections::BTreeMap;
 
@@ -62,7 +62,7 @@ impl GrcBuilder<GraphLevel> {
     }
 
     fn push_block(&mut self, block: &mut GrcBlockInstanceBuilder) {
-        let block_type =  block.kind.clone().expect("block kind");
+        let block_type = block.kind.clone().expect("block kind");
         let block_name = format!("{}_{}", block_type, self.state.block_count);
         block.with_name(block_name.clone());
         self.state.last_output_type = block.output_type;
@@ -108,15 +108,10 @@ impl GrcBuilder<GraphLevel> {
         self
     }
 
-    pub fn create_block_instance(
-        &self,
-        block_type: impl Into<String>,
-    ) -> GrcBuilder<BlockLevel> {
+    pub fn create_block_instance(&self, block_type: impl Into<String>) -> GrcBuilder<BlockLevel> {
         let mut block_builder = GrcBlockInstanceBuilder::new();
         block_builder.with_block_type(block_type);
-        let bl = BlockLevel {
-            block_builder
-        };
+        let bl = BlockLevel { block_builder };
         GrcBuilder {
             state: self.state.clone(),
             extra: bl,
@@ -136,13 +131,12 @@ impl GrcBuilder<GraphLevel> {
         Ok(grc)
     }
 
-    
     fn connect(
         &mut self,
         src_name: impl Into<String>,
-        src_port_name:  impl Into<String>,
-        tgt_name:  impl Into<String>,
-        tgt_port_name:  impl Into<String>,
+        src_port_name: impl Into<String>,
+        tgt_name: impl Into<String>,
+        tgt_port_name: impl Into<String>,
     ) {
         let connection = [
             src_name.into(),

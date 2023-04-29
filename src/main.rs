@@ -5,8 +5,8 @@ extern crate pest_derive;
 
 use std::env;
 
-use cmd_line::HighLevelCmdLine;
 use self::grc::GrcParser;
+use cmd_line::HighLevelCmdLine;
 use futuresdr::anyhow::{bail, Ok, Result};
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
@@ -82,10 +82,11 @@ fn main() -> Result<()> {
         fg = Some(grc::GrcParser::load(filename)?);
     } else if let Some(csdr_cmd) = input.as_csdr_cmd() {
         fg = csdr_cmd.parse()?;
-        if fg.is_none() { // happen for command like eval
+        if fg.is_none() {
+            // happen for command like eval
             return Ok(());
         }
-        
+
         if let Some(output) = csdr_cmd.output() {
             let fg = fg.expect("");
             GrcParser::save(output, &fg);

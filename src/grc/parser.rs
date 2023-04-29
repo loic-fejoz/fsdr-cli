@@ -18,7 +18,7 @@ impl GrcParser {
 
     pub fn save<P>(filename: P, grc: &Grc)
     where
-    P: AsRef<Path>,
+        P: AsRef<Path>,
     {
         let f = std::fs::OpenOptions::new()
             .write(true)

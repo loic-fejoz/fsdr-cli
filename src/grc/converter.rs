@@ -2,14 +2,16 @@ use crate::blocks::AudioSink;
 use crate::blocks::DCBlocker;
 use crate::blocks::OctaveComplex;
 use crate::cmd_grammar::CommandsParser;
+use crate::csdr_cmd::eval_cmd::EvalCmd;
 use crate::csdr_cmd::CsdrCmd;
 use crate::grc::Grc;
-use crate::csdr_cmd::eval_cmd::EvalCmd;
 use fsdr_blocks::math::FrequencyShifter;
 use fsdr_blocks::stdinout::*;
 use fsdr_blocks::stream::Deinterleave;
 use fsdr_blocks::type_converters::*;
 use futuresdr::anyhow::anyhow;
+use futuresdr::anyhow::bail;
+use futuresdr::anyhow::Context;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::{
@@ -21,13 +23,63 @@ use futuresdr::runtime::Block;
 use futuresdr::runtime::Flowgraph;
 use std::collections::BTreeMap;
 
+use super::converter_helper::*;
 use super::BlockInstance;
+pub mod blocks_deinterleave;
+use self::blocks_deinterleave::DeinterleaveBlockConverter;
+pub mod realpart_cf;
+use self::realpart_cf::RealpartCfConverter;
 
 #[derive(Default, Clone)]
 pub struct Grc2FutureSdr;
 
 impl Grc2FutureSdr {
+    fn block_converter(blk_def: &BlockInstance) -> Result<Box<dyn BlockConverter>> {
+        let blk_type = &(blk_def.id[..]);
+        let cvter: Box<dyn BlockConverter> = match blk_type {
+            "blocks_deinterleave" => Box::new(DeinterleaveBlockConverter {}),
+            "realpart_cf" => Box::new(RealpartCfConverter {}),
+            _ => bail!("Unknown GNU Radio block {blk_type}"),
+        };
+        Ok(cvter)
+    }
+
     pub fn convert_grc(grc: Grc) -> Result<Flowgraph> {
+        let mut fg = Flowgraph::new();
+        let fsdr_blocks = grc
+            .blocks
+            .iter()
+            .map(|blk| -> Result<Box<dyn ConnectorAdapter>> {
+                Grc2FutureSdr::block_converter(blk)?.convert(blk, &mut fg)
+            });
+        let names: Vec<String> = grc.blocks.iter().map(|blk| blk.name.clone()).collect();
+        let mut names_to_adapter = BTreeMap::<String, Box<dyn ConnectorAdapter>>::new();
+
+        for (name, adapter) in names.iter().zip(fsdr_blocks) {
+            let adapter = adapter?;
+            names_to_adapter.insert(name.clone(), adapter);
+        }
+        for connection in grc.connections {
+            let src_blk = connection[0].clone();
+            let src_blk = names_to_adapter
+                .get(&src_blk)
+                .context("unfound source block: {src_blk}")?;
+            let src_port = connection[1].clone();
+            let (src_blk, src_port) = src_blk.adapt_output_port(&src_port)?;
+
+            let tgt_blk = connection[2].clone();
+            let tgt_blk = names_to_adapter
+                .get(&tgt_blk)
+                .context("unfound target block: {tgt_blk}")?;
+            let tgt_port = connection[3].clone();
+            let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
+
+            fg.connect_stream(src_blk, src_port, tgt_blk, tgt_port)?;
+        }
+        Ok(fg)
+    }
+
+    pub fn convert_grc_old(grc: Grc) -> Result<Flowgraph> {
         let mut fg = Flowgraph::new();
         let names: Vec<String> = grc.blocks.iter().map(|blk| blk.name.clone()).collect();
         let mut names_to_id = BTreeMap::<String, usize>::new();
@@ -138,7 +190,11 @@ impl Grc2FutureSdr {
         }
     }
 
-    fn parameter_as_f32<'i>(blk_def: &'i BlockInstance, key: &'i str, default_value: impl Into<&'i str>) -> Result<f32> {
+    fn parameter_as_f32<'i>(
+        blk_def: &'i BlockInstance,
+        key: &'i str,
+        default_value: impl Into<&'i str>,
+    ) -> Result<f32> {
         let expr = blk_def.parameter_or(key, default_value);
         let expr = CommandsParser::parse_expr(expr)?;
         EvalCmd::eval(&expr)

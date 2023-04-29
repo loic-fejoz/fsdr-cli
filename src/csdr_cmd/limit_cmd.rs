@@ -17,10 +17,10 @@ pub trait LimitCmd<'i> {
         grc = grc
             .ensure_source(GrcItemType::F32)
             .create_block_instance("analog_rail_ff")
-                .with_parameter("lo", format!("-1.0*({max_amplitude})"))
-                .with_parameter("hi", format!("{max_amplitude}"))
-                .assert_output(GrcItemType::F32)
-                .push_and_link();
+            .with_parameter("lo", format!("-1.0*({max_amplitude})"))
+            .with_parameter("hi", format!("{max_amplitude}"))
+            .assert_output(GrcItemType::F32)
+            .push_and_link();
         Ok(grc)
     }
 }

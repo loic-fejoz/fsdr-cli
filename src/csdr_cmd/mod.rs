@@ -1,6 +1,6 @@
-use crate::cmd_grammar::{Rule, CommandsParser};
+use crate::cmd_grammar::{CommandsParser, Rule};
 use crate::grc::builder::{GraphLevel, GrcBuilder};
-use crate::grc::{Grc, self};
+use crate::grc::{self, Grc};
 use futuresdr::anyhow::{bail, Result};
 use pest::iterators::Pair;
 use pest::Parser;
@@ -22,12 +22,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
                 self.execute_eval()?;
                 Ok(grc.clone())
             }
-            Rule::limit_cmd => {
-                self.build_limit(grc)
-            }
-            Rule::csdr_save_opt => {
-                Ok(grc.clone())
-            }
+            Rule::limit_cmd => self.build_limit(grc),
+            Rule::csdr_save_opt => Ok(grc.clone()),
             _ => {
                 let rule = self.as_rule();
                 todo!("unknown any cmd: {rule:?}");
@@ -73,10 +69,8 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
     }
 }
 
-
 #[derive(Default)]
-pub struct CsdrParser {
-}
+pub struct CsdrParser {}
 
 impl CsdrParser {
     pub fn parse_command<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {

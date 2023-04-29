@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 pub mod builder;
+pub mod converter_helper;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Grc {
@@ -45,7 +46,7 @@ pub struct States {
     bus_sink: bool,
     bus_source: bool,
     pub state: String,
-    coordinate: [usize; 2]
+    coordinate: [usize; 2],
 }
 
 impl Default for States {
