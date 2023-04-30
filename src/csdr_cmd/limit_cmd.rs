@@ -1,12 +1,7 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::{bail, Result};
+use futuresdr::anyhow::Result;
 use pest::iterators::Pair;
-use std::{
-    env,
-    f32::consts::{E, PI},
-    num::ParseFloatError,
-};
 
 pub trait LimitCmd<'i> {
     fn max_amplitude(&self) -> Result<&str>;

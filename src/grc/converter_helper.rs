@@ -34,7 +34,7 @@ impl ConnectorAdapter for DefaultPortAdapter {
     fn adapt_input_port(&self, port_name: &str) -> Result<(usize, &str)> {
         match port_name {
             "0" => Ok((self.blk, "in")),
-            "1" => Ok((self.blk, "in")),
+            "in" => Ok((self.blk, "in")),
             _ => bail!("Unknown input port name {port_name}"),
         }
     }
@@ -42,7 +42,7 @@ impl ConnectorAdapter for DefaultPortAdapter {
     fn adapt_output_port(&self, port_name: &str) -> Result<(usize, &str)> {
         match port_name {
             "0" => Ok((self.blk, "out")),
-            "" => Ok((self.blk, "out")),
+            "out" => Ok((self.blk, "out")),
             _ => bail!("Unknown output port name {port_name}"),
         }
     }

@@ -1,15 +1,43 @@
 use crate::cmd_grammar::{CommandsParser, Rule};
 use crate::grc::builder::{GraphLevel, GrcBuilder};
-use crate::grc::{self, Grc};
-use futuresdr::anyhow::{bail, Result};
+use crate::grc::Grc;
+use futuresdr::anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 use pest::Parser;
 
+use self::agc_cmd::AgcCmd;
+use self::amdemod_cmd::AmDemodCmd;
+use self::clipdetect_cmd::ClipDetectCmd;
+use self::convert_cmd::ConvertCmd;
+use self::deemphasis_nfm_ff_cmd::DeemphasisNfnCmd;
+use self::deemphasis_wfm_ff_cmd::DeemphasisWfmCmd;
+use self::dump_cmd::DumpCmd;
 use self::eval_cmd::EvalCmd;
+use self::fastdcblock_cmd::FastDCBlockCmd;
+use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
+use self::fractional_decimator_cmd::FractionalDecimatorCmd;
 use self::limit_cmd::LimitCmd;
+use self::octave_complex_cmd::OctaveComplexCmd;
+use self::realpart_cmd::RealPartCmd;
+use self::shift_addition_cmd::ShiftAdditionCmd;
+use self::throttle_cmd::ThrottleCmd;
 
+mod agc_cmd;
+mod amdemod_cmd;
+mod clipdetect_cmd;
+mod convert_cmd;
+mod deemphasis_nfm_ff_cmd;
+mod deemphasis_wfm_ff_cmd;
+mod dump_cmd;
 pub mod eval_cmd;
+mod fastdcblock_cmd;
+mod fmdemod_quadri_cmd;
+mod fractional_decimator_cmd;
 mod limit_cmd;
+mod octave_complex_cmd;
+mod realpart_cmd;
+mod shift_addition_cmd;
+mod throttle_cmd;
 
 pub trait AnyCmd<'i> {
     fn parse(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>>;
@@ -18,11 +46,26 @@ pub trait AnyCmd<'i> {
 impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
     fn parse(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
         match self.as_rule() {
+            Rule::agc_cmd => self.build_agc(grc),
+            Rule::amdemod_cmd => self.build_amdemod(grc),
+            Rule::clipdetect_cmd => self.build_clipdetect(grc),
+            Rule::convert_cmd => self.build_convert(grc),
+            Rule::deemphasis_nfm_cmd => self.build_deemphasis_nfm(grc),
+            Rule::deemphasis_wfm_cmd => self.build_deemphasis_wfm(grc),
+            Rule::dump_cmd => self.build_dump(grc),
             Rule::eval_cmd => {
                 self.execute_eval()?;
                 Ok(grc.clone())
-            }
+            },
+            Rule::fastdcblock_cmd => self.build_fastdcblock(grc),
+            Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
+            Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
             Rule::limit_cmd => self.build_limit(grc),
+            Rule::octave_complex_cmd => self.build_octave_complex(grc),
+            Rule::realpart_cmd => self.build_realpart(grc),
+            Rule::shift_addition_cmd => self.build_shift_addition(grc),
+            Rule::throttle_cmd => self.build_throttle(grc),
+
             Rule::csdr_save_opt => Ok(grc.clone()),
             _ => {
                 let rule = self.as_rule();
@@ -77,10 +120,9 @@ impl CsdrParser {
         // let cmd = CommandsParser::parse_main(cmd.into())?;
         // CsdrCmd::parse(&cmd)
 
-        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd.into())
-            .expect("msg")
+        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd.into())?
             .next()
-            .expect("msg");
+            .context("Parsing commands")?;
         let grc_builder = GrcBuilder::new();
         let mut grc_builder = AnyCmd::parse(&input, grc_builder)?;
         grc_builder.ensure_sink();

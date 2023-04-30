@@ -1,12 +1,8 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::Grc;
-use futuresdr::anyhow::{bail, Result};
+use futuresdr::anyhow::Result;
 use pest::iterators::Pair;
-use std::{
-    env,
-    f32::consts::{E, PI},
-    num::ParseFloatError,
-};
+use std::f32::consts::{E, PI};
 
 pub trait EvalCmd<'i> {
     fn eval(&self) -> Result<f32>;
@@ -14,6 +10,7 @@ pub trait EvalCmd<'i> {
 }
 
 impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
+
     fn execute_eval(&self) -> Result<Option<Grc>> {
         let expr = self.clone().into_inner().next().expect("msg");
         let result = expr.eval()?;

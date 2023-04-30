@@ -1,5 +1,6 @@
 use fsdr_cli::csdr_cmd::CsdrParser;
 use fsdr_cli::grc::converter::Grc2FutureSdr;
+use futuresdr::anyhow::Context;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSinkBuilder;
@@ -15,7 +16,7 @@ pub fn parse_convert_u8_f() {
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("convert_u8_f", grc.blocks[0].id);
+    assert_eq!("blocks_uchar_to_float", grc.blocks[1].id);
     println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
@@ -26,7 +27,7 @@ pub fn parse_clipdetect_f() {
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("clipdetect_ff", grc.blocks[0].id);
+    assert_eq!("clipdetect_ff", grc.blocks[1].id);
     println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
@@ -36,10 +37,10 @@ pub fn parse_dump_f() {
     let cmds = "dump_f";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
-    assert_eq!(3, grc.blocks.len());
-    assert_eq!("dump_f", grc.blocks[0].id);
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("dump_f", grc.blocks[1].id);
     println!("{grc:?}");
-    assert_eq!(2, grc.connections.len());
+    assert_eq!(1, grc.connections.len());
 }
 
 #[test]
@@ -47,10 +48,10 @@ pub fn parse_dump_u8() {
     let cmds = "dump_u8";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
-    assert_eq!(3, grc.blocks.len());
-    assert_eq!("dump_u8", grc.blocks[0].id);
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("dump_u8", grc.blocks[1].id);
     println!("{grc:?}");
-    assert_eq!(2, grc.connections.len());
+    assert_eq!(1, grc.connections.len());
 }
 
 #[test]
@@ -59,31 +60,31 @@ pub fn parse_realpart_cf() {
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("realpart_cf", grc.blocks[0].id);
+    assert_eq!("blocks_complex_to_real", grc.blocks[1].id);
     println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
 
 #[test]
 pub fn parse_throttle_ff() {
-    let cmds = "throttle_ff";
+    let cmds = "throttle_ff (48000*6.0)";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("throttle_ff", grc.blocks[0].id);
+    assert_eq!("blocks_throttle", grc.blocks[1].id);
     println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
 
 #[test]
 pub fn parse_octave_complex_c() {
-    let cmds = "octave_complex_c";
+    let cmds = "octave_complex_c 512 1024";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
-    assert_eq!(3, grc.blocks.len());
-    assert_eq!("octave_complex_c", grc.blocks[0].id);
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("octave_complex_c", grc.blocks[1].id);
     println!("{grc:?}");
-    assert_eq!(2, grc.connections.len());
+    assert_eq!(1, grc.connections.len());
 }
 
 #[test]
@@ -92,8 +93,8 @@ pub fn parse_multiple_commands_retrocompatibility() {
     let result = CsdrParser::parse_multiple_commands(cmds);
     let grc = result.expect("").unwrap();
     println!("{grc:?}");
-    assert_eq!(7, grc.blocks.len());
-    assert_eq!(6, grc.connections.len());
+    assert_eq!(8, grc.blocks.len());
+    assert_eq!(7, grc.connections.len());
 }
 
 #[test]
@@ -102,8 +103,8 @@ pub fn parse_multiple_commands() {
     let result = CsdrParser::parse_multiple_commands(cmds);
     let grc = result.expect("").unwrap();
     println!("{grc:?}");
-    assert_eq!(7, grc.blocks.len());
-    assert_eq!(6, grc.connections.len());
+    assert_eq!(8, grc.blocks.len());
+    assert_eq!(7, grc.connections.len());
 }
 
 #[test]
@@ -112,7 +113,7 @@ pub fn parse_shift_addition_cc_1256() {
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("blocks_freqshift_cc", grc.blocks[0].id);
+    assert_eq!("blocks_freqshift_cc", grc.blocks[1].id);
     println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
@@ -165,8 +166,8 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let src = VectorSource::<f32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[1], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;
@@ -201,12 +202,12 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
         .parameters
         .get("lo")
         .expect("low threshold must be defined");
-    assert_eq!("-1.0*((6.0/2))", low_threshold);
+    assert_eq!("-1.0*(6.0/2)", low_threshold);
     let high_threshold = grc.blocks[1]
         .parameters
         .get("hi")
         .expect("high threshold must be defined");
-    assert_eq!("(6.0/2)", high_threshold);
+    assert_eq!("6.0/2", high_threshold);
     assert_eq!(2, grc.connections.len());
 
     let mut fg = Flowgraph::new();
@@ -216,8 +217,8 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
     let src = VectorSource::<f32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[1], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;
@@ -248,52 +249,52 @@ pub fn parse_limit_ff_multiple_commands() {
     // println!("{grc:?}");
     assert_eq!(4 + 2, grc.blocks.len());
 
-    let first_blk = &grc.blocks[1];
+    let first_blk = &grc.blocks[2];
     assert_eq!("analog_rail_ff", first_blk.id);
     let low_threshold = first_blk
         .parameters
         .get("lo")
         .expect("low threshold must be defined");
-    assert_eq!("-1.0", low_threshold);
+    assert_eq!("-1.0*(1.0)", low_threshold);
     let high_threshold = first_blk
         .parameters
         .get("hi")
         .expect("high threshold must be defined");
     assert_eq!("1.0", high_threshold);
 
-    let second_blk = &grc.blocks[2];
+    let second_blk = &grc.blocks[3];
     assert_eq!("analog_rail_ff", second_blk.id);
-    let low_threshold = second_blk
-        .parameters
-        .get("lo")
-        .expect("low threshold must be defined");
-    assert_eq!("-16.0", low_threshold);
     let high_threshold = second_blk
         .parameters
         .get("hi")
         .expect("high threshold must be defined");
-    assert_eq!("16.0", high_threshold);
+    assert_eq!("16.0", high_threshold);    
+    let low_threshold = second_blk
+        .parameters
+        .get("lo")
+        .expect("low threshold must be defined");
+    assert_eq!("-1.0*(16.0)", low_threshold);
 }
 
 #[test]
 pub fn parse_fastdc_block() -> Result<()> {
-    let mut cmds = "fastdcblock_ff";
+    let cmds = "fastdcblock_ff";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("dc_blocker_xx", grc.blocks[0].id);
-    let dc_length = grc.blocks[0]
+    assert_eq!("dc_blocker_xx", grc.blocks[1].id);
+    let dc_length = grc.blocks[1]
         .parameters
         .get("length")
         .expect("length must be defined");
     assert_eq!("32", dc_length);
-    let long_form = grc.blocks[0]
+    let long_form = grc.blocks[1]
         .parameters
         .get("long_form")
         .expect("long_form must be defined");
     assert_eq!("False", long_form);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -307,8 +308,8 @@ pub fn parse_fastdc_block() -> Result<()> {
     let src = VectorSource::<f32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;
@@ -327,12 +328,12 @@ pub fn parse_fastdc_block() -> Result<()> {
 
 #[test]
 pub fn parse_amdemod_cf() -> Result<()> {
-    let mut cmds = "amdemod_cf";
+    let cmds = "amdemod_cf";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("blocks_complex_to_mag", grc.blocks[0].id);
+    assert_eq!("blocks_complex_to_mag", grc.blocks[1].id);
     assert_eq!(2, grc.connections.len());
 
     let mut fg = Flowgraph::new();
@@ -343,8 +344,8 @@ pub fn parse_amdemod_cf() -> Result<()> {
     let src = VectorSource::<Complex32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;
@@ -364,28 +365,28 @@ pub fn parse_amdemod_cf() -> Result<()> {
 
 #[test]
 pub fn parse_agc_ff() -> Result<()> {
-    let mut cmds = "agc_ff";
+    let cmds = "agc_ff";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("analog_agc_xx", grc.blocks[0].id);
-    let reference = grc.blocks[0]
+    assert_eq!("analog_agc_xx", grc.blocks[1].id);
+    let reference = grc.blocks[1]
         .parameters
         .get("reference")
         .expect("reference must be defined");
     assert_eq!("0.8", reference);
-    let max_gain = grc.blocks[0]
+    let max_gain = grc.blocks[1]
         .parameters
         .get("max_gain")
         .expect("max_gain must be defined");
     assert_eq!("65536.0", max_gain);
-    let rate = grc.blocks[0]
+    let rate = grc.blocks[1]
         .parameters
         .get("rate")
         .expect("rate must be defined");
     assert_eq!("0.0001", rate);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -398,8 +399,8 @@ pub fn parse_agc_ff() -> Result<()> {
     let src = VectorSource::<f32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;
@@ -416,28 +417,28 @@ pub fn parse_agc_ff() -> Result<()> {
 
 #[test]
 pub fn parse_agc_ff_with_reference() -> Result<()> {
-    let mut cmds = "agc_ff --reference 1.0";
+    let cmds = "agc_ff --reference 1.0";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("analog_agc_xx", grc.blocks[0].id);
-    let reference = grc.blocks[0]
+    assert_eq!("analog_agc_xx", grc.blocks[1].id);
+    let reference = grc.blocks[1]
         .parameters
         .get("reference")
         .expect("reference must be defined");
     assert_eq!("1.0", reference);
-    let max_gain = grc.blocks[0]
+    let max_gain = grc.blocks[1]
         .parameters
         .get("max_gain")
         .expect("max_gain must be defined");
     assert_eq!("65536.0", max_gain);
-    let rate = grc.blocks[0]
+    let rate = grc.blocks[1]
         .parameters
         .get("rate")
         .expect("rate must be defined");
     assert_eq!("0.0001", rate);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -447,28 +448,28 @@ pub fn parse_agc_ff_with_reference() -> Result<()> {
 
 #[test]
 pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
-    let mut cmds = "agc_ff --reference 0.9 --max 256.0";
+    let cmds = "agc_ff --reference 0.9 --max 256.0";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("analog_agc_xx", grc.blocks[0].id);
-    let reference = grc.blocks[0]
+    assert_eq!("analog_agc_xx", grc.blocks[1].id);
+    let reference = grc.blocks[1]
         .parameters
         .get("reference")
         .expect("reference must be defined");
     assert_eq!("0.9", reference);
-    let max_gain = grc.blocks[0]
+    let max_gain = grc.blocks[1]
         .parameters
         .get("max_gain")
         .expect("max_gain must be defined");
     assert_eq!("256.0", max_gain);
-    let rate = grc.blocks[0]
+    let rate = grc.blocks[1]
         .parameters
         .get("rate")
         .expect("rate must be defined");
     assert_eq!("0.0001", rate);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -478,28 +479,28 @@ pub fn parse_agc_ff_with_reference_and_max_gain() -> Result<()> {
 
 #[test]
 pub fn parse_agc_ff_with_rate() -> Result<()> {
-    let mut cmds = "agc_ff --rate 0.0002";
+    let cmds = "agc_ff --rate 0.0002";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("analog_agc_xx", grc.blocks[0].id);
-    let reference = grc.blocks[0]
+    assert_eq!("analog_agc_xx", grc.blocks[1].id);
+    let reference = grc.blocks[1]
         .parameters
         .get("reference")
         .expect("reference must be defined");
     assert_eq!("0.8", reference);
-    let max_gain = grc.blocks[0]
+    let max_gain = grc.blocks[1]
         .parameters
         .get("max_gain")
         .expect("max_gain must be defined");
     assert_eq!("65536.0", max_gain);
-    let rate = grc.blocks[0]
+    let rate = grc.blocks[1]
         .parameters
         .get("rate")
         .expect("rate must be defined");
     assert_eq!("0.0002", rate);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -509,7 +510,7 @@ pub fn parse_agc_ff_with_rate() -> Result<()> {
 
 #[test]
 pub fn parse_fir_decimate_cc() -> Result<()> {
-    let mut cmds = "fir_decimate_cc 50";
+    let cmds = "fir_decimate_cc 50";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
@@ -545,8 +546,8 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
     let src = VectorSource::<Complex32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<Complex32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;
@@ -564,9 +565,9 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
 
 #[test]
 pub fn parse_fir_decimate_cc_bw() -> Result<()> {
-    let mut cmds = "fir_decimate_cc 50 0.06";
+    let cmds = "fir_decimate_cc 50 0.06";
     let result = CsdrParser::parse_command(cmds);
-    let grc = result.expect("").unwrap();
+    let grc = result?.unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
     assert_eq!("fir_filter_xxx", grc.blocks[0].id);
@@ -595,7 +596,7 @@ pub fn parse_fir_decimate_cc_bw() -> Result<()> {
 
 #[test]
 pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
-    let mut cmds = "fir_decimate_cc 50 0.06 BLACKMAN";
+    let cmds = "fir_decimate_cc 50 0.06 BLACKMAN";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
@@ -626,13 +627,13 @@ pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
 
 #[test]
 pub fn parse_deemphasis_nfm_ff() -> Result<()> {
-    let mut cmds = "deemphasis_nfm_ff 48000";
+    let cmds = "deemphasis_nfm_ff 48000";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("deemphasis_nfm_ff", grc.blocks[0].id);
-    let sample_rate = grc.blocks[0]
+    assert_eq!("deemphasis_nfm_ff", grc.blocks[1].id);
+    let sample_rate = grc.blocks[1]
         .parameters
         .get("sample_rate")
         .expect("sample_rate must be defined");
@@ -644,8 +645,8 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let src = VectorSource::<f32>::new(orig);
     let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
 
-    let block_under_test = Grc2FutureSdr::convert_add_block(&mut fg, &grc.blocks[0], &grc);
-    let block_under_test = block_under_test.unwrap().expect("");
+    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
 
     connect!(fg,
         src > block_under_test;

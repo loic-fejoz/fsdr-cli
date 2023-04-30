@@ -1,11 +1,7 @@
 use pest::iterators::Pair;
 use pest::Parser;
 
-use futuresdr::anyhow::{bail, Result};
-use std::{
-    f32::consts::{E, PI},
-    num::ParseFloatError,
-};
+use futuresdr::anyhow::Result;
 
 #[derive(Parser)]
 #[grammar = "src/cmd_line.pest"]

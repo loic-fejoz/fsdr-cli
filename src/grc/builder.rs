@@ -1,5 +1,5 @@
 use crate::grc::{BlockInstance, Grc, Metadata, Options, States};
-use futuresdr::anyhow::{bail, Result};
+use futuresdr::anyhow::Result;
 use std::collections::BTreeMap;
 
 #[derive(Clone)]
@@ -16,15 +16,70 @@ impl GrcBuilderState for BlockLevel {}
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum GrcItemType {
+    U8,
+    S8,
+    U16,
+    S16,
+    // S32
     F32,
+    F64,
     C32,
+    // Complex Integer 64
+    // Complex Integer 32
+    // Complex Integer 16
+    // Complex Integer 8
+    InterleavedF32,
 }
 
 impl GrcItemType {
+    pub fn as_csdr(self) -> &'static str {
+        match self {
+            Self::U8 => "u8",
+            Self::S8 => "s8",
+            Self::U16 => "u16",
+            Self::S16 => "s16",
+            Self::F32 => "f",
+            Self::F64 => "f64",
+            Self::C32 => "c",
+            Self::InterleavedF32 => "ff",
+        }
+    }
+
     pub fn as_grc(self) -> &'static str {
         match self {
+            Self::U8 => "uchar",
+            Self::S8 => "char",
+            Self::U16 => "short",
+            Self::S16 => "ishort",
             Self::F32 => "float",
+            Self::F64 => "float64",
             Self::C32 => "complex",
+            Self::InterleavedF32 => panic!("Cannot convert interleaved type to GRC"),
+        }
+    }
+}
+
+impl From<&str> for GrcItemType {
+    fn from(value: &str) -> Self {
+        match &value[..] {
+            "u8" => Self::U8,
+            "s8" => Self::S8,
+            "u16" => Self::U16,
+            "s16" => Self::S16,
+            "f" => Self::F32,
+            "ff" => Self::InterleavedF32,
+            "f32" => Self::F32,
+            "c" => Self::C32,
+            "c32" => Self::C32,
+            "uchar" => Self::U8,
+            "byte" => Self::U8,
+            "char" => Self::S8,
+            "short" => Self::U16,
+            "ishort" => Self::S16,
+            "float" => Self::F32,
+            "float64" => Self::F64,
+            "f64" => Self::F64,
+            _ => todo!("Unknown GNU Radio type: {value}"),
         }
     }
 }
@@ -81,7 +136,19 @@ impl GrcBuilder<GraphLevel> {
 
     pub fn ensure_source(&mut self, expected_last_output_type: GrcItemType) -> Self {
         if let Some(last_output_type) = self.state.last_output_type {
-            assert_eq!(last_output_type, expected_last_output_type);
+            // Ensure proper connectivity
+            match (last_output_type, expected_last_output_type) {
+                (GrcItemType::F32, GrcItemType::C32) => {
+                    let mut convert_ff_c_block = GrcBlockInstanceBuilder::new();
+                    convert_ff_c_block
+                        .with_block_type("convert_ff_c")
+                        .assert_output(GrcItemType::C32);
+                    self.push_and_link_block(&mut convert_ff_c_block);
+                }
+                _ => {
+                    assert_eq!(last_output_type, expected_last_output_type);
+                }
+            }
         } else {
             let mut src_block = GrcBlockInstanceBuilder::new();
             src_block

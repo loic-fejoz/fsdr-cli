@@ -3,8 +3,6 @@ pub extern crate async_trait;
 #[macro_use]
 extern crate pest_derive;
 
-use std::env;
-
 use self::grc::GrcParser;
 use cmd_line::HighLevelCmdLine;
 use futuresdr::anyhow::{bail, Ok, Result};
