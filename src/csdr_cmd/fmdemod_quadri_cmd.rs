@@ -5,7 +5,7 @@ use pest::iterators::Pair;
 
 pub trait FmDemodQuadriCmd<'i> {
     fn build_fm_demod_quadri(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         grc = grc
             .ensure_source(GrcItemType::C32)
             .create_block_instance("analog_quadrature_demod_cf")
@@ -16,5 +16,4 @@ pub trait FmDemodQuadriCmd<'i> {
     }
 }
 
-impl<'i> FmDemodQuadriCmd<'i> for Pair<'i, Rule> {
-}
+impl<'i> FmDemodQuadriCmd<'i> for Pair<'i, Rule> {}

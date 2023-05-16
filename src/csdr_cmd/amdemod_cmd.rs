@@ -5,7 +5,7 @@ use pest::iterators::Pair;
 
 pub trait AmDemodCmd<'i> {
     fn build_amdemod(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         grc = grc
             .ensure_source(GrcItemType::C32)
             .create_block_instance("blocks_complex_to_mag")
@@ -15,5 +15,4 @@ pub trait AmDemodCmd<'i> {
     }
 }
 
-impl<'i> AmDemodCmd<'i> for Pair<'i, Rule> {
-}
+impl<'i> AmDemodCmd<'i> for Pair<'i, Rule> {}

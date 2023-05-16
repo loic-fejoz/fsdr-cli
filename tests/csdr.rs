@@ -1,6 +1,5 @@
 use fsdr_cli::csdr_cmd::CsdrParser;
 use fsdr_cli::grc::converter::Grc2FutureSdr;
-use futuresdr::anyhow::Context;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSinkBuilder;
@@ -268,7 +267,7 @@ pub fn parse_limit_ff_multiple_commands() {
         .parameters
         .get("hi")
         .expect("high threshold must be defined");
-    assert_eq!("16.0", high_threshold);    
+    assert_eq!("16.0", high_threshold);
     let low_threshold = second_blk
         .parameters
         .get("lo")
@@ -510,28 +509,28 @@ pub fn parse_agc_ff_with_rate() -> Result<()> {
 
 #[test]
 pub fn parse_fir_decimate_cc() -> Result<()> {
-    let cmds = "fir_decimate_cc 50";
+    let cmds = "csdr fir_decimate_cc 50";
     let result = CsdrParser::parse_command(cmds);
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("fir_filter_xxx", grc.blocks[0].id);
-    let decimation_factor = grc.blocks[0]
+    assert_eq!("fir_filter_xxx", grc.blocks[1].id);
+    let decimation_factor = grc.blocks[1]
         .parameters
         .get("decim")
         .expect("decimation_factor must be defined");
     assert_eq!("50", decimation_factor);
-    let transition_bw = grc.blocks[0]
+    let transition_bw = grc.blocks[1]
         .parameters
         .get("transition_bw")
         .expect("transition_bw  must be defined");
     assert_eq!("0.05", transition_bw);
-    let window = grc.blocks[0]
+    let window = grc.blocks[1]
         .parameters
         .get("window")
         .expect("window must be defined");
     assert_eq!("HAMMING", window);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -570,23 +569,23 @@ pub fn parse_fir_decimate_cc_bw() -> Result<()> {
     let grc = result?.unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("fir_filter_xxx", grc.blocks[0].id);
-    let decimation_factor = grc.blocks[0]
+    assert_eq!("fir_filter_xxx", grc.blocks[1].id);
+    let decimation_factor = grc.blocks[1]
         .parameters
         .get("decim")
         .expect("decimation_factor must be defined");
     assert_eq!("50", decimation_factor);
-    let transition_bw = grc.blocks[0]
+    let transition_bw = grc.blocks[1]
         .parameters
         .get("transition_bw")
         .expect("transition_bw  must be defined");
     assert_eq!("0.06", transition_bw);
-    let window = grc.blocks[0]
+    let window = grc.blocks[1]
         .parameters
         .get("window")
         .expect("window must be defined");
     assert_eq!("HAMMING", window);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");
@@ -601,23 +600,23 @@ pub fn parse_fir_decimate_cc_bw_windows() -> Result<()> {
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("fir_filter_xxx", grc.blocks[0].id);
-    let decimation_factor = grc.blocks[0]
+    assert_eq!("fir_filter_xxx", grc.blocks[1].id);
+    let decimation_factor = grc.blocks[1]
         .parameters
         .get("decim")
         .expect("decimation_factor must be defined");
     assert_eq!("50", decimation_factor);
-    let transition_bw = grc.blocks[0]
+    let transition_bw = grc.blocks[1]
         .parameters
         .get("transition_bw")
         .expect("transition_bw  must be defined");
     assert_eq!("0.06", transition_bw);
-    let window = grc.blocks[0]
+    let window = grc.blocks[1]
         .parameters
         .get("window")
         .expect("window must be defined");
     assert_eq!("BLACKMAN", window);
-    let data_type = grc.blocks[0]
+    let data_type = grc.blocks[1]
         .parameters
         .get("type")
         .expect("type must be defined");

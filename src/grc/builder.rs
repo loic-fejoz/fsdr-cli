@@ -61,7 +61,7 @@ impl GrcItemType {
 
 impl From<&str> for GrcItemType {
     fn from(value: &str) -> Self {
-        match &value[..] {
+        match value {
             "u8" => Self::U8,
             "s8" => Self::S8,
             "u16" => Self::U16,
@@ -97,6 +97,12 @@ pub struct GrcBuilderActualState {
 pub struct GrcBuilder<S: GrcBuilderState> {
     state: Box<GrcBuilderActualState>,
     extra: S,
+}
+
+impl Default for GrcBuilder<GraphLevel> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl GrcBuilder<GraphLevel> {
@@ -301,8 +307,8 @@ impl GrcBlockInstanceBuilder {
 
     pub fn build(&self) -> BlockInstance {
         BlockInstance {
-            name: self.name.clone().expect("block name").clone(),
-            id: self.kind.clone().expect("block type").clone(),
+            name: self.name.clone().expect("block name"),
+            id: self.kind.clone().expect("block type"),
             parameters: self.parameters.clone(),
             states: States::default(),
         }

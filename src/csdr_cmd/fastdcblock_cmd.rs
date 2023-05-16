@@ -5,7 +5,7 @@ use pest::iterators::Pair;
 
 pub trait FastDCBlockCmd<'i> {
     fn build_fastdcblock(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         grc = grc
             .ensure_source(GrcItemType::F32)
             .create_block_instance("dc_blocker_xx")
@@ -18,5 +18,4 @@ pub trait FastDCBlockCmd<'i> {
     }
 }
 
-impl<'i> FastDCBlockCmd<'i> for Pair<'i, Rule> {
-}
+impl<'i> FastDCBlockCmd<'i> for Pair<'i, Rule> {}

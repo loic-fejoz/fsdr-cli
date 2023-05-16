@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::{Result, Context};
+use futuresdr::anyhow::{Context, Result};
 use pest::iterators::Pair;
 
 pub trait AgcCmd<'i> {
@@ -9,7 +9,7 @@ pub trait AgcCmd<'i> {
     fn rate(&self) -> Result<Option<&str>>;
 
     fn build_agc(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         let reference = self.reference()?.or(Some("0.8")).expect("");
         let max_gain = self.max_gain()?.or(Some("65536.0")).expect("");
         let rate = self.rate()?.or(Some("0.0001")).expect("");
@@ -29,11 +29,8 @@ pub trait AgcCmd<'i> {
 impl<'i> AgcCmd<'i> for Pair<'i, Rule> {
     fn reference(&self) -> Result<Option<&'i str>> {
         for arg in self.clone().into_inner() {
-            match arg.as_rule() {
-                Rule::agc_ref_param => {
-                    return Ok(Some(arg.into_inner().next().context("context")?.as_str()))
-                },
-                _ => {}
+            if arg.as_rule() == Rule::agc_ref_param {
+                return Ok(Some(arg.into_inner().next().context("context")?.as_str()));
             }
         }
         Ok(None)
@@ -41,11 +38,13 @@ impl<'i> AgcCmd<'i> for Pair<'i, Rule> {
 
     fn max_gain(&self) -> Result<Option<&'i str>> {
         for arg in self.clone().into_inner() {
-            match arg.as_rule() {
-                Rule::agc_max_param => {
-                    return Ok(Some(arg.into_inner().next().context("max_gain expected")?.as_str()))
-                },
-                _ => {}
+            if arg.as_rule() == Rule::agc_max_param {
+                return Ok(Some(
+                    arg.into_inner()
+                        .next()
+                        .context("max_gain expected")?
+                        .as_str(),
+                ));
             }
         }
         Ok(None)
@@ -53,11 +52,10 @@ impl<'i> AgcCmd<'i> for Pair<'i, Rule> {
 
     fn rate(&self) -> Result<Option<&'i str>> {
         for arg in self.clone().into_inner() {
-            match arg.as_rule() {
-                Rule::agc_rate_param => {
-                    return Ok(Some(arg.into_inner().next().context("rate expected")?.as_str()))
-                },
-                _ => {}
+            if arg.as_rule() == Rule::agc_rate_param {
+                return Ok(Some(
+                    arg.into_inner().next().context("rate expected")?.as_str(),
+                ));
             }
         }
         Ok(None)

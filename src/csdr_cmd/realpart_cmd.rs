@@ -5,7 +5,7 @@ use pest::iterators::Pair;
 
 pub trait RealPartCmd<'i> {
     fn build_realpart(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         grc = grc
             .ensure_source(GrcItemType::C32)
             .create_block_instance("blocks_complex_to_real")
@@ -15,5 +15,4 @@ pub trait RealPartCmd<'i> {
     }
 }
 
-impl<'i> RealPartCmd<'i> for Pair<'i, Rule> {
-}
+impl<'i> RealPartCmd<'i> for Pair<'i, Rule> {}

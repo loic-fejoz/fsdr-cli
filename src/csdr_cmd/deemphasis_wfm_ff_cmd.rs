@@ -8,7 +8,7 @@ pub trait DeemphasisWfmCmd<'i> {
     fn tau(&self) -> Result<&str>;
 
     fn build_deemphasis_wfm(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         let rate = self.sample_rate()?;
         let tau = self.tau()?;
         grc = grc

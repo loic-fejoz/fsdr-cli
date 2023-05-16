@@ -7,7 +7,7 @@ pub trait OctaveComplexCmd<'i> {
     fn samples_to_plot(&self) -> Result<&'i str>;
     fn out_of_n_samples(&self) -> Result<&'i str>;
     fn build_octave_complex(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         let samples_to_plot = self.samples_to_plot()?;
         let out_of_n_samples = self.out_of_n_samples()?;
         grc = grc

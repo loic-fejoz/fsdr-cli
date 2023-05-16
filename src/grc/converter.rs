@@ -1,28 +1,17 @@
-use crate::blocks::AudioSink;
-use crate::blocks::DCBlocker;
-use crate::blocks::OctaveComplex;
 use crate::cmd_grammar::CommandsParser;
 use crate::csdr_cmd::eval_cmd::EvalCmd;
 use crate::grc::Grc;
-use fsdr_blocks::math::FrequencyShifter;
-use fsdr_blocks::stdinout::*;
-use fsdr_blocks::stream::Deinterleave;
-use fsdr_blocks::type_converters::*;
-use futuresdr::anyhow::anyhow;
 use futuresdr::anyhow::bail;
 use futuresdr::anyhow::Context;
 use futuresdr::anyhow::Result;
-use futuresdr::blocks::ApplyNM;
-use futuresdr::blocks::{
-    AgcBuilder, Apply, Combine, FileSink, FileSource, FirBuilder, NullSink, Sink, Throttle,
-};
-use futuresdr::futuredsp::{firdes, windows};
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Block;
 use futuresdr::runtime::Flowgraph;
 use std::collections::BTreeMap;
 
 use super::converter_helper::*;
+pub mod analog_agc_xx;
+use self::analog_agc_xx::AnalogAgcXxConverter;
+pub mod analog_rail_ff;
+use self::analog_rail_ff::AnalogRailFfConverter;
 use super::BlockInstance;
 pub mod blocks_deinterleave;
 use self::blocks_deinterleave::DeinterleaveBlockConverter;
@@ -30,10 +19,22 @@ pub mod realpart_cf;
 use self::realpart_cf::RealpartCfConverter;
 pub mod convert;
 use self::convert::ConvertBlockConverter;
+pub mod blocks_file_sink;
+use self::blocks_file_sink::FileSinkConverter;
+pub mod blocks_file_source;
+use self::blocks_file_source::FileSourceConverter;
 pub mod blocks_throttle;
 use self::blocks_throttle::ThrottleConverter;
 pub mod blocks_complex_to_mag;
 use self::blocks_complex_to_mag::ComplexToMagConverter;
+pub mod dc_bloker_xx;
+use self::dc_bloker_xx::DcBlockerXx;
+pub mod deemphasis_nfm_ff;
+use self::deemphasis_nfm_ff::DeemphasisNfmConverter;
+pub mod fir_filter_xx;
+use self::fir_filter_xx::FirFilterXxConverter;
+pub mod analog_quadrature_demod;
+use self::analog_quadrature_demod::AnalogQuadratureDemoConverter;
 
 #[derive(Default, Clone)]
 pub struct Grc2FutureSdr;
@@ -42,7 +43,12 @@ impl Grc2FutureSdr {
     fn block_converter(blk_def: &BlockInstance) -> Result<Box<dyn BlockConverter>> {
         let blk_type = &(blk_def.id[..]);
         let cvter: Box<dyn BlockConverter> = match blk_type {
+            "analog_agc_xx" => Box::new(AnalogAgcXxConverter {}),
+            "analog_quadrature_demod_cf" => Box::new(AnalogQuadratureDemoConverter {}),
+            "analog_rail_ff" => Box::new(AnalogRailFfConverter {}),
             "blocks_deinterleave" => Box::new(DeinterleaveBlockConverter {}),
+            "blocks_file_sink" => Box::new(FileSinkConverter {}),
+            "blocks_file_source" => Box::new(FileSourceConverter {}),
             "blocks_uchar_to_float"
             | "blocks_char_to_float"
             | "convert_s16_f"
@@ -52,15 +58,21 @@ impl Grc2FutureSdr {
             | "convert_ff_c"
             | "blocks_short_to_float" => Box::new(ConvertBlockConverter {}),
             "throttle_ff" => Box::new(ThrottleConverter {}),
-            "realpart_cf"
-            | "blocks_complex_to_real" => Box::new(RealpartCfConverter {}),
-            "blocks_complex_to_mag" => Box::new(ComplexToMagConverter{}),
+            "realpart_cf" | "blocks_complex_to_real" => Box::new(RealpartCfConverter {}),
+            "blocks_complex_to_mag" => Box::new(ComplexToMagConverter {}),
+            "dc_blocker_xx" => Box::new(DcBlockerXx {}),
+            "deemphasis_nfm_ff" => Box::new(DeemphasisNfmConverter {}),
+            "fir_filter_xxx" => Box::new(FirFilterXxConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)
     }
 
-    pub fn convert_block(fg: &mut Flowgraph, blk: &BlockInstance) -> Result<Box<dyn ConnectorAdapter>> {
+    #[allow(dead_code)]
+    pub fn convert_block(
+        fg: &mut Flowgraph,
+        blk: &BlockInstance,
+    ) -> Result<Box<dyn ConnectorAdapter>> {
         Grc2FutureSdr::block_converter(blk)?.convert(blk, fg)
     }
 
@@ -94,7 +106,8 @@ impl Grc2FutureSdr {
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
-            fg.connect_stream(src_blk, src_port, tgt_blk, tgt_port).context("connecting {connection}")?;
+            fg.connect_stream(src_blk, src_port, tgt_blk, tgt_port)
+                .context("connecting {connection}")?;
         }
         Ok(fg)
     }

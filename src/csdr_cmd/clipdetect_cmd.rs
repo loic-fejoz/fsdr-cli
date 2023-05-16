@@ -4,9 +4,8 @@ use futuresdr::anyhow::Result;
 use pest::iterators::Pair;
 
 pub trait ClipDetectCmd<'i> {
-
     fn build_clipdetect(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         grc = grc
             .ensure_source(GrcItemType::F32)
             .create_block_instance("clipdetect_ff")
@@ -16,5 +15,4 @@ pub trait ClipDetectCmd<'i> {
     }
 }
 
-impl<'i> ClipDetectCmd<'i> for Pair<'i, Rule> {
-}
+impl<'i> ClipDetectCmd<'i> for Pair<'i, Rule> {}

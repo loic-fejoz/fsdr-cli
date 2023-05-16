@@ -10,7 +10,6 @@ pub trait EvalCmd<'i> {
 }
 
 impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
-
     fn execute_eval(&self) -> Result<Option<Grc>> {
         let expr = self.clone().into_inner().next().expect("msg");
         let result = expr.eval()?;
@@ -36,15 +35,15 @@ impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
                 let mut multiplier = 1.0;
                 if input.contains('K') {
                     multiplier = 1e3;
-                    input = input.replace("K", ".");
+                    input = input.replace('K', ".");
                 } else if input.contains('M') {
                     multiplier = 1e6;
-                    input = input.replace("M", ".");
+                    input = input.replace('M', ".");
                 } else if input.contains('G') {
                     multiplier = 1e9;
-                    input = input.replace("G", ".");
+                    input = input.replace('G', ".");
                 }
-                Ok(multiplier * input.replace("_", "").parse::<f32>()?)
+                Ok(multiplier * input.replace('_', "").parse::<f32>()?)
             }
             Rule::func_call => {
                 let mut it = self.clone().into_inner();
@@ -69,23 +68,19 @@ impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
                 let mut it = self.clone().into_inner();
                 let expr3 = it.next().expect("expr3");
                 let mut r = (expr3).eval()?;
-                loop {
-                    if let Some(operator) = it.next() {
-                        let right = it.next().expect("right expr expected");
-                        let right = (right).eval()?;
-                        match operator.as_rule() {
-                            Rule::addition => {
-                                r = r + right;
-                            }
-                            Rule::minus => {
-                                r = r - right;
-                            }
-                            _ => {
-                                todo!()
-                            }
+                while let Some(operator) = it.next() {
+                    let right = it.next().expect("right expr expected");
+                    let right = (right).eval()?;
+                    match operator.as_rule() {
+                        Rule::addition => {
+                            r += right;
                         }
-                    } else {
-                        break;
+                        Rule::minus => {
+                            r -= right;
+                        }
+                        _ => {
+                            todo!()
+                        }
                     }
                 }
                 Ok(r)
@@ -94,26 +89,22 @@ impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
                 let mut it = self.clone().into_inner();
                 let expr3 = it.next().expect("expr3");
                 let mut r = (expr3).eval()?;
-                loop {
-                    if let Some(operator) = it.next() {
-                        let right = it.next().expect("right expr expected");
-                        let right = (right).eval()?;
-                        match operator.as_rule() {
-                            Rule::multiply => {
-                                r = r * right;
-                            }
-                            Rule::division => {
-                                r = r / right;
-                            }
-                            Rule::modulus => {
-                                r = r % right;
-                            }
-                            _ => {
-                                todo!()
-                            }
+                while let Some(operator) = it.next() {
+                    let right = it.next().expect("right expr expected");
+                    let right = (right).eval()?;
+                    match operator.as_rule() {
+                        Rule::multiply => {
+                            r *= right;
                         }
-                    } else {
-                        break;
+                        Rule::division => {
+                            r /= right;
+                        }
+                        Rule::modulus => {
+                            r %= right;
+                        }
+                        _ => {
+                            todo!()
+                        }
                     }
                 }
                 Ok(r)
@@ -122,20 +113,16 @@ impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
                 let mut it = self.clone().into_inner();
                 let expr3 = it.next().expect("expr3");
                 let mut r = (expr3).eval()?;
-                loop {
-                    if let Some(operator) = it.next() {
-                        let right = it.next().expect("right expr expected");
-                        let right = (right).eval()?;
-                        match operator.as_rule() {
-                            Rule::exponentiation => {
-                                r = r.powf(right);
-                            }
-                            _ => {
-                                todo!()
-                            }
+                while let Some(operator) = it.next() {
+                    let right = it.next().expect("right expr expected");
+                    let right = (right).eval()?;
+                    match operator.as_rule() {
+                        Rule::exponentiation => {
+                            r = r.powf(right);
                         }
-                    } else {
-                        break;
+                        _ => {
+                            todo!()
+                        }
                     }
                 }
                 Ok(r)
@@ -146,11 +133,9 @@ impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
                 match first.as_rule() {
                     Rule::minus => {
                         let term = it.next().expect("expr4");
-                        return Ok(-1.0 * (term).eval()?);
+                        Ok(-1.0 * (term).eval()?)
                     }
-                    Rule::term => {
-                        return Ok((first).eval()?);
-                    }
+                    Rule::term => first.eval(),
                     _ => {
                         todo!()
                     }

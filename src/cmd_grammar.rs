@@ -8,12 +8,12 @@ use futuresdr::anyhow::Result;
 pub struct CommandsParser;
 
 impl CommandsParser {
-    pub fn parse_main<'i>(input: &'i str) -> Result<Pair<'i, Rule>> {
-        let input = CommandsParser::parse(Rule::main, &input)
-            .expect("msg")
+    pub fn parse_main(input: &str) -> Result<Pair<Rule>> {
+        let input = CommandsParser::parse(Rule::main, input)
+            .expect("Error while parsing:")
             .next()
             .expect("msg");
-        println!("input: {input:?}");
+        //println!("input: {input:?}");
         Ok(input)
     }
 

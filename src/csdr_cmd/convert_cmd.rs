@@ -7,7 +7,7 @@ pub trait ConvertCmd<'i> {
     fn types(&self) -> Result<(GrcItemType, GrcItemType)>;
 
     fn build_convert(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         let (src_type, tgt_type) = self.types()?;
         let blk_name = match (src_type, tgt_type) {
             (GrcItemType::U8, GrcItemType::F32) => "blocks_uchar_to_float",
@@ -35,7 +35,7 @@ impl<'i> ConvertCmd<'i> for Pair<'i, Rule> {
     fn types(&self) -> Result<(GrcItemType, GrcItemType)> {
         if let Some(types) = self.clone().into_inner().next() {
             let types = types.as_str();
-            let mut types_iter = types.split("_").map(|t| GrcItemType::from(t));
+            let mut types_iter = types.split('_').map(GrcItemType::from);
             Ok((
                 types_iter.next().context("source converion type")?,
                 types_iter.next().context("conversion target type")?,

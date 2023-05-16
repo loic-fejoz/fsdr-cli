@@ -45,7 +45,7 @@ pub struct States {
     bus_sink: bool,
     bus_source: bool,
     pub state: String,
-    coordinate: [usize; 2],
+    coordinate: [f32; 2],
 }
 
 impl Default for States {
@@ -54,7 +54,7 @@ impl Default for States {
             bus_sink: false,
             bus_source: false,
             state: "enabled".to_string(),
-            coordinate: [8, 8],
+            coordinate: [8.0, 8.0],
         }
     }
 }

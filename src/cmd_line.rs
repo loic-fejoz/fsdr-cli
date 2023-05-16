@@ -11,10 +11,7 @@ pub trait HighLevelCmdLine<'i> {
 
 impl<'i> HighLevelCmdLine<'i> for Pair<'i, Rule> {
     fn is_grc_cmd(&self) -> bool {
-        match self.as_rule() {
-            Rule::grc_cmd => true,
-            _ => false,
-        }
+        matches!(self.as_rule(), Rule::grc_cmd)
     }
 
     fn as_grc_cmd(&self) -> Option<&Self> {
@@ -25,10 +22,7 @@ impl<'i> HighLevelCmdLine<'i> for Pair<'i, Rule> {
     }
 
     fn is_csdr_cmd(&self) -> bool {
-        match self.as_rule() {
-            Rule::csdr_cmd => true,
-            _ => false,
-        }
+        matches!(self.as_rule(), Rule::csdr_cmd)
     }
 
     fn as_csdr_cmd(&self) -> Option<&Self> {
@@ -39,9 +33,6 @@ impl<'i> HighLevelCmdLine<'i> for Pair<'i, Rule> {
     }
 
     fn is_help_cmd(&self) -> bool {
-        match self.as_rule() {
-            Rule::help_cmd => true,
-            _ => false,
-        }
+        matches!(self.as_rule(), Rule::help_cmd)
     }
 }

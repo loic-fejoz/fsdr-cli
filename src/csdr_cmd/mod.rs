@@ -1,7 +1,7 @@
 use crate::cmd_grammar::{CommandsParser, Rule};
 use crate::grc::builder::{GraphLevel, GrcBuilder};
 use crate::grc::Grc;
-use futuresdr::anyhow::{bail, Result, Context};
+use futuresdr::anyhow::{bail, Context, Result};
 use pest::iterators::Pair;
 use pest::Parser;
 
@@ -14,6 +14,7 @@ use self::deemphasis_wfm_ff_cmd::DeemphasisWfmCmd;
 use self::dump_cmd::DumpCmd;
 use self::eval_cmd::EvalCmd;
 use self::fastdcblock_cmd::FastDCBlockCmd;
+use self::fir_decimate_cmd::FirDecimateCmd;
 use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
 use self::fractional_decimator_cmd::FractionalDecimatorCmd;
 use self::limit_cmd::LimitCmd;
@@ -31,6 +32,7 @@ mod deemphasis_wfm_ff_cmd;
 mod dump_cmd;
 pub mod eval_cmd;
 mod fastdcblock_cmd;
+mod fir_decimate_cmd;
 mod fmdemod_quadri_cmd;
 mod fractional_decimator_cmd;
 mod limit_cmd;
@@ -55,10 +57,11 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::dump_cmd => self.build_dump(grc),
             Rule::eval_cmd => {
                 self.execute_eval()?;
-                Ok(grc.clone())
-            },
+                Ok(grc)
+            }
             Rule::fastdcblock_cmd => self.build_fastdcblock(grc),
             Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
+            Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
             Rule::limit_cmd => self.build_limit(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
@@ -66,7 +69,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::shift_addition_cmd => self.build_shift_addition(grc),
             Rule::throttle_cmd => self.build_throttle(grc),
 
-            Rule::csdr_save_opt => Ok(grc.clone()),
+            Rule::csdr_save_opt => Ok(grc),
             _ => {
                 let rule = self.as_rule();
                 bail!("unknown any cmd: {rule:?}");

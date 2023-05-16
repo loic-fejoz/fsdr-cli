@@ -31,44 +31,17 @@ fn usage() -> Result<Grc> {
     bail!(msg);
 }
 
-// fn load() -> Result<Grc> {
-//     let arg_count = env::args().count();
-//     if arg_count <= 1 {
-//         usage()?;
-//     }
-//     let mut args = env::args();
-//     let _cmd_line = args.next().expect("");
-//     let first_arg = args.next().expect("");
-//     if "grc" == first_arg {
-//         if arg_count <= 2 {
-//             usage()?;
-//         } else {
-//             let filename = args.next().expect("");
-//             return grc::GrcParser::load(filename);
-//         }
-//     } else if "--help" == first_arg || "help" == first_arg {
-//         if arg_count <= 2 {
-//             usage()?;
-//         } else {
-//             let cmd_name = args.next().expect("");
-//             todo!("Display help for {cmd_name}");
-//         }
-//     } else if "csdr" == first_arg {
-//         return CsdrParser::parse_multiple_commands(&mut args.peekable());
-//     } else {
-//         let args = env::args();
-//         let args = args.skip(1);
-//         return CsdrParser::parse_command(&mut args.peekable());
-//     }
-//     todo!();
-// }
-
 fn main() -> Result<()> {
     let mut input = std::env::args();
     input.next(); // skip binary name
     let input: String = input.collect();
     let input = input.as_str();
-    let input = cmd_grammar::CommandsParser::parse_main(input)?;
+    let input = cmd_grammar::CommandsParser::parse_main(input);
+
+    // if let Err(err) = input {
+    //      std::process::exit(1);
+    // }
+    let input = input?;
 
     if input.is_help_cmd() {
         usage()?;

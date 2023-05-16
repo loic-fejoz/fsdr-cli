@@ -7,7 +7,7 @@ pub trait DeemphasisNfnCmd<'i> {
     fn rate(&self) -> Result<&str>;
 
     fn build_deemphasis_nfm(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         let rate = self.rate()?;
         grc = grc
             .ensure_source(GrcItemType::F32)

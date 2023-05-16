@@ -7,7 +7,7 @@ pub trait ShiftAdditionCmd<'i> {
     fn phase_rate(&self) -> Result<&str>;
 
     fn build_shift_addition(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+        let mut grc = grc;
         let phase_rate = self.phase_rate()?;
         grc = grc
             .ensure_source(GrcItemType::C32)

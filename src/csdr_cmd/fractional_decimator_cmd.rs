@@ -1,13 +1,16 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::{Result, bail};
+use futuresdr::anyhow::{bail, Result};
 use pest::iterators::Pair;
 
 pub trait FractionalDecimatorCmd<'i> {
     fn resampling_rate(&self) -> Result<&str>;
 
-    fn build_fractional_decimator(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
-        let mut grc = grc.clone();
+    fn build_fractional_decimator(
+        &self,
+        grc: GrcBuilder<GraphLevel>,
+    ) -> Result<GrcBuilder<GraphLevel>> {
+        let mut grc = grc;
         let resampling_rate = self.resampling_rate()?;
         grc = grc
             .ensure_source(GrcItemType::F32)
