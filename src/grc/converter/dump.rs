@@ -12,7 +12,6 @@ impl BlockConverter for DumpConverter {
         blk: &BlockInstance,
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
-
         let item_type = blk
             .parameters
             .get("type")

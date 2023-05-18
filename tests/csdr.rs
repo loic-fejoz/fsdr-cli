@@ -631,11 +631,11 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let grc = result.expect("").unwrap();
     // println!("{grc:?}");
     assert_eq!(3, grc.blocks.len());
-    assert_eq!("deemphasis_nfm_ff", grc.blocks[1].id);
+    assert_eq!("analog_nfm_deemph", grc.blocks[1].id);
     let sample_rate = grc.blocks[1]
         .parameters
-        .get("sample_rate")
-        .expect("sample_rate must be defined");
+        .get("samp_rate")
+        .expect("samp_rate must be defined");
     assert_eq!("48000", sample_rate);
 
     let mut fg = Flowgraph::new();

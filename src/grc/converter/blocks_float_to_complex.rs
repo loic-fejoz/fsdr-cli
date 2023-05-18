@@ -1,10 +1,9 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
-use futuresdr::anyhow::{Result, bail};
+use futuresdr::anyhow::{bail, Result};
 use futuresdr::blocks::Combine;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
-
 
 #[derive(Clone, Copy)]
 pub struct FloatToComplexPortAdapter {
@@ -34,7 +33,6 @@ impl ConnectorAdapter for FloatToComplexPortAdapter {
         }
     }
 }
-
 
 pub struct FloatToComplexConverter {}
 

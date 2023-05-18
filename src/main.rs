@@ -40,7 +40,7 @@ fn main() -> Result<()> {
     // Get back all the arguments as a big one command line ready to be parsed
     let input = input.fold(String::new(), |mut a, b| {
         a.reserve(b.len() + 1);
-        a.push_str(" ");
+        a.push(' ');
         a.push_str(&b);
         a
     });

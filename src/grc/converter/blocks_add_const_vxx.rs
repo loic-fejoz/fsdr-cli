@@ -23,9 +23,7 @@ impl BlockConverter for AddConstVxConverter {
                 let constant = constant as u8;
                 Apply::new(move |v: &u8| -> u8 { v + constant })
             }
-            "float" => {
-                Apply::new(move |v: &f32| -> f32 { v + constant })
-            }
+            "float" => Apply::new(move |v: &f32| -> f32 { v + constant }),
             _ => todo!("Unhandled blocks_add_const_vxx Type {item_type}"),
         };
         let blk = fg.add_block(blk);
