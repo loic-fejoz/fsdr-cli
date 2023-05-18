@@ -37,13 +37,16 @@ fastdcblock_cmd = { "fastdcblock_ff" }
 fir_decimate_cmd = { "fir_decimate_cc" ~ number_or_paren_expr ~ (number_or_paren_expr ~ ident?)? }
 fmdemod_quadri_cmd = { "fmdemod_quadri_cf" }
 fractional_decimator_cmd = { "fractional_decimator_ff" ~ number_or_paren_expr }
+load_param = { filepath }
+load_types = { "f" | "u8" | "c" }
+load_cmd = { "load_" ~ load_types ~ load_param }
 limit_cmd = {"limit_ff" ~ number_or_paren_expr? }
 octave_complex_cmd = { "octave_complex_c" ~ number_or_paren_expr ~ number_or_paren_expr }
 realpart_cmd = {"realpart_cf"}
 shift_addition_cmd = { "shift_addition_cc" ~ number_or_paren_expr }
 throttle_cmd = { "throttle_cc" | "throttle_ff" }
 
-any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | limit_cmd | octave_complex_cmd | realpart_cmd | shift_addition_cmd | throttle_cmd) }
+any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | load_cmd | limit_cmd | octave_complex_cmd | realpart_cmd | shift_addition_cmd | throttle_cmd) }
 
 cmd_sep = _{ "|" | "!" }
 csdr_save_opt = { ("--output" | "-o") ~ filepath }

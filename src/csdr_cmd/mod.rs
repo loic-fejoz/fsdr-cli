@@ -18,6 +18,7 @@ use self::fir_decimate_cmd::FirDecimateCmd;
 use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
 use self::fractional_decimator_cmd::FractionalDecimatorCmd;
 use self::limit_cmd::LimitCmd;
+use self::load_cmd::LoadCmd;
 use self::octave_complex_cmd::OctaveComplexCmd;
 use self::realpart_cmd::RealPartCmd;
 use self::shift_addition_cmd::ShiftAdditionCmd;
@@ -36,6 +37,7 @@ mod fir_decimate_cmd;
 mod fmdemod_quadri_cmd;
 mod fractional_decimator_cmd;
 mod limit_cmd;
+mod load_cmd;
 mod octave_complex_cmd;
 mod realpart_cmd;
 mod shift_addition_cmd;
@@ -64,6 +66,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
             Rule::limit_cmd => self.build_limit(grc),
+            Rule::load_cmd => self.build_load(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::realpart_cmd => self.build_realpart(grc),
             Rule::shift_addition_cmd => self.build_shift_addition(grc),

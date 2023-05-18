@@ -3,6 +3,7 @@
 A command line interface based on [FutureSDR](http://www.futuresdr.org) meant to be
 * a line-for-line replacement of [csdr](https://github.com/jketterl/csdr) ([original](https://github.com/ha7ilm/csdr)),
 * yet able to pack pipelined command in one unique-flowgraph,
+* with new commands and expression evaluation,
 * able to launch simple GNU Radio Companion flowgraph within FutureSDR runtime,
 * a testing tool for [FutureSDR community blocks](https://github.com/FutureSDR/fsdr-blocks)
 
@@ -21,10 +22,10 @@ rtl_sdr -s 240000 -f 89500000 -g 20 - | fsdr-cli convert_u8_f | fsdr-cli fmdemod
 But is it the most efficient way? No. One can benefit from FutureSDR efficient scheduling. You just need to transform it as such:
 
 ```bash
-rtl_sdr -s 240000 -f 89500000 -g 20 - | fsdr-cli csdr convert_u8_f \| convert_ff_c \| fmdemod_quadri_cf \| fractional_decimator_ff 5 \| deemphasis_wfm_ff 48000 50e-6 \| convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+rtl_sdr -s 240000 -f 89500000 -g 20 - | fsdr-cli csdr convert_u8_f ! convert_ff_c ! fmdemod_quadri_cf ! fractional_decimator_ff 5 ! deemphasis_wfm_ff 48000 50e-6 ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 ```
 
-Bascially, it is just a matter of escaping pipe `|` so that your shell does not interpret them, and asking `fsdr-cli` to interpret the command line as a multi-block of `csdr` command. There is also one newly inserted block `convert_ff_c` due to otherwise ill-typed workflow.
+Bascially, it is just a matter of replacing pipe `|` with `!` (escaping pipeline `\|` is also working) so that your shell does not interpret them, and asking `fsdr-cli` to interpret the command line as a multi-block of `csdr` command. There is also one newly inserted block `convert_ff_c` due to otherwise ill-typed workflow.
 
 But maybe you are more used to [GNURadio](https://www.gnuradio.org/) and would have come with the following workflow [chain1.grc](tests/chain1.grc):
 ![](chain1.png)
@@ -59,6 +60,19 @@ FutureSDR: DEBUG - blocks_file_sink_0 terminating
 FutureSDR: DEBUG - blocks_throttle_0 terminating 
 FutureSDR: DEBUG - audio_sink_0 terminating
 ```
+
+## additional commands
+
+### load_XX
+
+Syntax:
+```bash
+load_u8 filename
+load_f filename
+load_c filename
+```
+
+Use the file as input.
 
 ## TODO
 
