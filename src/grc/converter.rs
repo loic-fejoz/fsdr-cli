@@ -10,6 +10,10 @@ use std::collections::BTreeMap;
 use super::converter_helper::*;
 pub mod analog_agc_xx;
 use self::analog_agc_xx::AnalogAgcXxConverter;
+pub mod analog_fm_deemph;
+use self::analog_fm_deemph::AnalogFmDeemphConverter;
+pub mod analog_nfm_deemph;
+use self::analog_nfm_deemph::DeemphasisNfmConverter;
 pub mod analog_rail_ff;
 use self::analog_rail_ff::AnalogRailFfConverter;
 use super::BlockInstance;
@@ -29,8 +33,6 @@ pub mod blocks_complex_to_mag;
 use self::blocks_complex_to_mag::ComplexToMagConverter;
 pub mod dc_bloker_xx;
 use self::dc_bloker_xx::DcBlockerXx;
-pub mod deemphasis_nfm_ff;
-use self::deemphasis_nfm_ff::DeemphasisNfmConverter;
 pub mod fir_filter_xx;
 use self::fir_filter_xx::FirFilterXxConverter;
 pub mod analog_quadrature_demod;
@@ -61,7 +63,9 @@ impl Grc2FutureSdr {
             "realpart_cf" | "blocks_complex_to_real" => Box::new(RealpartCfConverter {}),
             "blocks_complex_to_mag" => Box::new(ComplexToMagConverter {}),
             "dc_blocker_xx" => Box::new(DcBlockerXx {}),
-            "deemphasis_nfm_ff" => Box::new(DeemphasisNfmConverter {}),
+            "deemphasis_nfm_ff" |
+            "analog_nfm_deemph" => Box::new(DeemphasisNfmConverter {}),
+            "analog_fm_deemph" => Box::new(AnalogFmDeemphConverter {}),
             "fir_filter_xxx" => Box::new(FirFilterXxConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };

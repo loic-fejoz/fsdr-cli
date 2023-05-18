@@ -23,8 +23,8 @@ pub trait ConvertCmd<'i> {
         grc = grc
             .ensure_source(src_type)
             .create_block_instance(blk_name)
-            .with_parameter("source_type", src_type.as_csdr())
-            .with_parameter("target_type", tgt_type.as_csdr())
+            .with_parameter("source_type", src_type.as_grc())
+            .with_parameter("target_type", tgt_type.as_grc())
             .assert_output(tgt_type)
             .push_and_link();
         Ok(grc)

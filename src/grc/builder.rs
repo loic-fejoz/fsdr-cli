@@ -50,7 +50,7 @@ impl GrcItemType {
             Self::U8 => "uchar",
             Self::S8 => "char",
             Self::U16 => "short",
-            Self::S16 => "ishort",
+            Self::S16 => "short",
             Self::F32 => "float",
             Self::F64 => "float64",
             Self::C32 => "complex",

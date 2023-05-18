@@ -3,6 +3,8 @@ pub extern crate async_trait;
 #[macro_use]
 extern crate pest_derive;
 
+use std::println;
+
 use self::grc::GrcParser;
 use cmd_line::HighLevelCmdLine;
 use futuresdr::anyhow::{bail, Ok, Result};
@@ -34,8 +36,18 @@ fn usage() -> Result<Grc> {
 fn main() -> Result<()> {
     let mut input = std::env::args();
     input.next(); // skip binary name
-    let input: String = input.collect();
-    let input = input.as_str();
+
+    // Get back all the arguments as a big one command line ready to be parsed
+    let input = input.fold(String::new(), |mut a, b| {
+        a.reserve(b.len() + 1);
+        a.push_str(" ");
+        a.push_str(&b);
+        a
+    });
+    let input = input.trim();
+    println!("actual input: '{input}'");
+    // let input: String = input.collect();
+    //let input = input.as_str();
     let input = cmd_grammar::CommandsParser::parse_main(input);
 
     // if let Err(err) = input {
@@ -50,6 +62,7 @@ fn main() -> Result<()> {
     let mut fg: Option<Grc> = None;
     if let Some(grc_cmd) = input.as_grc_cmd() {
         let filename = grc_cmd.filename();
+        println!("Loading {filename}");
         fg = Some(grc::GrcParser::load(filename)?);
     } else if let Some(csdr_cmd) = input.as_csdr_cmd() {
         fg = csdr_cmd.parse()?;

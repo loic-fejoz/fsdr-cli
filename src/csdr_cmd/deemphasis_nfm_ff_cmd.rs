@@ -11,8 +11,8 @@ pub trait DeemphasisNfnCmd<'i> {
         let rate = self.rate()?;
         grc = grc
             .ensure_source(GrcItemType::F32)
-            .create_block_instance("deemphasis_nfm_ff")
-            .with_parameter("sample_rate", rate)
+            .create_block_instance("analog_nfm_deemph")
+            .with_parameter("samp_rate", rate)
             .assert_output(GrcItemType::F32)
             .push_and_link();
         Ok(grc)
