@@ -25,7 +25,8 @@ impl BlockConverter for FileSourceConverter {
         let repeat = blk
             .parameters
             .get("repeat")
-            .unwrap_or(&"False".into())
+            .unwrap_or(&"false".into())
+            .to_lowercase()
             .parse::<bool>()?;
         let filename = if "-" == filename {
             "/proc/self/fd/0"

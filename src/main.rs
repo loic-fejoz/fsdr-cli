@@ -45,9 +45,7 @@ fn main() -> Result<()> {
         a
     });
     let input = input.trim();
-    println!("actual input: '{input}'");
-    // let input: String = input.collect();
-    //let input = input.as_str();
+    //println!("actual input: '{input}'");
     let input = cmd_grammar::CommandsParser::parse_main(input);
 
     // if let Err(err) = input {
@@ -62,7 +60,7 @@ fn main() -> Result<()> {
     let mut fg: Option<Grc> = None;
     if let Some(grc_cmd) = input.as_grc_cmd() {
         let filename = grc_cmd.filename();
-        println!("Loading {filename}");
+        // println!("Loading {filename}...");
         fg = Some(grc::GrcParser::load(filename)?);
     } else if let Some(csdr_cmd) = input.as_csdr_cmd() {
         fg = csdr_cmd.parse()?;
