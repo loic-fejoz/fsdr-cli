@@ -1,7 +1,7 @@
 use pest::iterators::Pair;
 use pest::Parser;
 
-use futuresdr::anyhow::Result;
+use futuresdr::anyhow::{Context, Result};
 
 #[derive(Parser)]
 #[grammar = "src/cmd_line.pest"]
@@ -10,7 +10,7 @@ pub struct CommandsParser;
 impl CommandsParser {
     pub fn parse_main(input: &str) -> Result<Pair<Rule>> {
         let input = CommandsParser::parse(Rule::main, input)
-            .expect("Error while parsing:")
+            .context("Error while parsing:")?
             .next()
             .expect("msg");
         //println!("input: {input:?}");

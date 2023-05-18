@@ -3,7 +3,9 @@ pub extern crate async_trait;
 #[macro_use]
 extern crate pest_derive;
 
-use std::println;
+use cmd_grammar::Rule;
+use pest::error::ErrorVariant;
+use std::{eprintln, println};
 
 use self::grc::GrcParser;
 use cmd_line::HighLevelCmdLine;
@@ -33,24 +35,63 @@ fn usage() -> Result<Grc> {
     bail!(msg);
 }
 
+fn join(iter: impl Iterator<Item = String>) -> String {
+    iter.fold(String::new(), |mut a, b| {
+        a.reserve(b.len() + 1);
+        a.push(' ');
+        a.push_str(&b);
+        a
+    })
+}
+
 fn main() -> Result<()> {
     let mut input = std::env::args();
     input.next(); // skip binary name
 
     // Get back all the arguments as a big one command line ready to be parsed
-    let input = input.fold(String::new(), |mut a, b| {
-        a.reserve(b.len() + 1);
-        a.push(' ');
-        a.push_str(&b);
-        a
-    });
-    let input = input.trim();
+    let one_liner = join(input);
+    // let one_liner = input.fold(String::new(), |mut a, b| {
+    //     a.reserve(b.len() + 1);
+    //     a.push(' ');
+    //     a.push_str(&b);
+    //     a
+    // });
+    let one_liner = one_liner.trim();
     //println!("actual input: '{input}'");
-    let input = cmd_grammar::CommandsParser::parse_main(input);
+    let input = cmd_grammar::CommandsParser::parse_main(one_liner);
 
-    // if let Err(err) = input {
-    //      std::process::exit(1);
-    // }
+    if let Err(err) = input {
+        match err.downcast_ref::<pest::error::Error<Rule>>() {
+            Some(err) => match &err.variant {
+                ErrorVariant::ParsingError {
+                    positives,
+                    negatives: _,
+                } => {
+                    eprintln!("\x1b[0;31mParsing error:\x1b[0m");
+                    eprintln!("{one_liner}");
+                    match err.location {
+                        pest::error::InputLocation::Pos(x) => {
+                            let marker = "-".repeat(x - 1) + "^";
+                            eprintln!("\x1b[93m{marker}\x1b[0m");
+                        }
+                        pest::error::InputLocation::Span(range) => {
+                            let marker = " ".repeat(range.0) + &("^".repeat(range.1 - range.0));
+                            eprintln!("\x1b[93m{marker}\x1b[0m");
+                        }
+                    }
+                    let positives = join(positives.iter().map(|r| format!("{r:?}")));
+                    eprintln!("help: Expecting one of{positives}");
+                }
+                ErrorVariant::CustomError { message: _ } => {
+                    eprintln!("{err}");
+                }
+            },
+            None => {
+                eprintln!("{err}");
+            }
+        }
+        std::process::exit(1);
+    }
     let input = input?;
 
     if input.is_help_cmd() {
