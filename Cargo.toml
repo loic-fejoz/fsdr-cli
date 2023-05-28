@@ -5,7 +5,7 @@ edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/loic-fejoz/fsdr-cli/"
 homepage = "https://fsdr-cli.github.io"
-description = "`fsdr` is a command line tool to carry out DSP tasks for Software Defined Radio. It comes as a replacement of `csdr`."
+description = "`fsdr-cli` is a command line tool to carry out DSP tasks for Software Defined Radio. It also comes as a replacement of `csdr`."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,10 +13,10 @@ description = "`fsdr` is a command line tool to carry out DSP tasks for Software
 audio = ["futuresdr/audio"]
 
 [dependencies]
-futuresdr = { git="https://github.com/FutureSDR/FutureSDR", version = "0.0", features=['audio']}
+futuresdr = { version = "0.0", features=['audio']}
 async-trait = "0.1.52"
-cpal = { version = "0.14.1"}
-fsdr-blocks = { git="https://github.com/FutureSDR/fsdr-blocks", version="0.1"}
+cpal = { version = "0.15.2"}
+fsdr-blocks = {  version="0.1"} # git="https://github.com/FutureSDR/fsdr-blocks",
 #fsdr-blocks = { path="../fsdr-blocks" }
 futures = "0.3.26"
 serde_yaml = "0.9.17"
