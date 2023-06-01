@@ -13,7 +13,7 @@ pub trait ShiftAdditionCmd<'i> {
             .ensure_source(GrcItemType::C32)
             .create_block_instance("blocks_freqshift_cc")
             .with_parameter("freq", phase_rate)
-            .with_parameter("sample_rate", "6.283185307179586")
+            .with_parameter("sample_rate", "1.0")
             .assert_output(GrcItemType::C32)
             .push_and_link();
         Ok(grc)

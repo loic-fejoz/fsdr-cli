@@ -19,6 +19,8 @@ use self::analog_rail_ff::AnalogRailFfConverter;
 pub mod audio_sink;
 use self::audio_sink::AudioSinkConverter;
 use super::BlockInstance;
+pub mod band_pass_filter;
+use self::band_pass_filter::BandPassFilterConverter;
 pub mod blocks_add_const_vxx;
 use self::blocks_add_const_vxx::AddConstVxConverter;
 pub mod blocks_deinterleave;
@@ -68,6 +70,7 @@ impl Grc2FutureSdr {
             "analog_agc_xx" => Box::new(AnalogAgcXxConverter {}),
             "analog_quadrature_demod_cf" => Box::new(AnalogQuadratureDemoConverter {}),
             "analog_rail_ff" => Box::new(AnalogRailFfConverter {}),
+            "band_pass_filter" => Box::new(BandPassFilterConverter {}),
             "audio_sink" => Box::new(AudioSinkConverter {}),
             "blocks_add_const_vxx" => Box::new(AddConstVxConverter {}),
             "blocks_deinterleave" => Box::new(DeinterleaveBlockConverter {}),

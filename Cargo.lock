@@ -642,8 +642,6 @@ dependencies = [
 [[package]]
 name = "fsdr-blocks"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24fb3c540940eef22f4d261962638d02146410f0d09fa5657d2d76fd56f34682"
 dependencies = [
  "async-trait",
  "futuresdr",
@@ -667,8 +665,6 @@ dependencies = [
 [[package]]
 name = "futuredsp"
 version = "0.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f7672eb033261d8a9cff356d0373c831e853ea11dbeeb9100ffb6bea7a49189"
 dependencies = [
  "log",
  "num-complex",
@@ -783,8 +779,6 @@ dependencies = [
 [[package]]
 name = "futuresdr"
 version = "0.0.34"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "738b3a1e523ebdec2bc33acf90307f33f6167417f230773ad94c5c3d87a729d3"
 dependencies = [
  "android_logger",
  "anyhow",
@@ -838,22 +832,20 @@ dependencies = [
 [[package]]
 name = "futuresdr-macros"
 version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "660deb00cb7054b6ca79d011107fe13b0411ea8c9ed4ad3462d377d4ef39929e"
 dependencies = [
+ "indexmap",
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.18",
 ]
 
 [[package]]
 name = "futuresdr-types"
 version = "0.0.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29ba9e07125e58b7ce8af4a8e57c7acc79410b25c1691fc471c4f329265957a5"
 dependencies = [
  "dyn-clone",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -1244,9 +1236,9 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "mio"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eebffdb73fe72e917997fad08bdbf31ac50b0fa91cec93e69a0662e4264d454c"
+checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
  "wasi",
@@ -1407,9 +1399,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.17.1"
+version = "1.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
+checksum = "9670a07f94779e00908f3e686eab508878ebb390ba6e604d3a284c00e8d0487b"
 
 [[package]]
 name = "option-ext"
@@ -1934,9 +1926,9 @@ checksum = "fe895eb47f22e2ddd4dabc02bce419d2e643c8e3b585c78158b349195bc24d82"
 
 [[package]]
 name = "symphonia"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3671dd6f64f4f9d5c87179525054cfc1f60de23ba1f193bd6ceab812737403f1"
+checksum = "62e48dba70095f265fdb269b99619b95d04c89e619538138383e63310b14d941"
 dependencies = [
  "lazy_static",
  "symphonia-bundle-mp3",
@@ -1946,9 +1938,9 @@ dependencies = [
 
 [[package]]
 name = "symphonia-bundle-mp3"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55a0846e7a2c9a8081ff799fc83a975170417ad2a143f644a77ec2e3e82a2b73"
+checksum = "0f31d7fece546f1e6973011a9eceae948133bbd18fd3d52f6073b1e38ae6368a"
 dependencies = [
  "bitflags",
  "lazy_static",
@@ -1959,9 +1951,9 @@ dependencies = [
 
 [[package]]
 name = "symphonia-core"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b9567e2d8a5f866b2f94f5d366d811e0c6826babcff6d37de9e1a6690d38869"
+checksum = "f7c73eb88fee79705268cc7b742c7bc93a7b76e092ab751d0833866970754142"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -1972,9 +1964,9 @@ dependencies = [
 
 [[package]]
 name = "symphonia-metadata"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acd35c263223ef6161000be79b124a75de3e065eea563bf3ef169b3e94c7bb2e"
+checksum = "89c3e1937e31d0e068bbe829f66b2f2bfaa28d056365279e0ef897172c3320c0"
 dependencies = [
  "encoding_rs",
  "lazy_static",

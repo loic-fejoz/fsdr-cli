@@ -34,7 +34,7 @@ impl BlockConverter for FileSourceConverter {
             filename
         };
         let blk = match &(item_type[..]) {
-            "u8" => FileSource::<u8>::new(filename, repeat),
+            "u8" | "uchar" => FileSource::<u8>::new(filename, repeat),
             "byte" => FileSource::<i8>::new(filename, repeat),
             "f32" | "float" => FileSource::<f32>::new(filename, repeat),
             "c32" | "complex" => FileSource::<Complex32>::new(filename, repeat),

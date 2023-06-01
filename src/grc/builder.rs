@@ -54,7 +54,7 @@ impl GrcItemType {
             Self::F32 => "float",
             Self::F64 => "float64",
             Self::C32 => "complex",
-            Self::InterleavedF32 => panic!("Cannot convert interleaved type to GRC"),
+            Self::InterleavedF32 => "float",
         }
     }
 }
@@ -150,7 +150,8 @@ impl GrcBuilder<GraphLevel> {
                         .with_block_type("convert_ff_c")
                         .assert_output(GrcItemType::C32);
                     self.push_and_link_block(&mut convert_ff_c_block);
-                }
+                },
+                (GrcItemType::F32, GrcItemType::InterleavedF32) => {}
                 _ => {
                     assert_eq!(last_output_type, expected_last_output_type);
                 }
