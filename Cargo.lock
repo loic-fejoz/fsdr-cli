@@ -642,6 +642,7 @@ dependencies = [
 [[package]]
 name = "fsdr-blocks"
 version = "0.1.0"
+source = "git+https://github.com/FutureSDR/fsdr-blocks?branch=main#37781a5e976486e925039b134d45c65588beb678"
 dependencies = [
  "async-trait",
  "futuresdr",
@@ -649,7 +650,7 @@ dependencies = [
 
 [[package]]
 name = "fsdr-cli"
-version = "0.1.0+202303300848-alpha"
+version = "0.1.0+202306030813-alpha"
 dependencies = [
  "async-trait",
  "cpal",
@@ -665,6 +666,7 @@ dependencies = [
 [[package]]
 name = "futuredsp"
 version = "0.0.6"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#40d6fd6fb021e90aaf082bfc2ec6dddcdaca9d16"
 dependencies = [
  "log",
  "num-complex",
@@ -779,6 +781,7 @@ dependencies = [
 [[package]]
 name = "futuresdr"
 version = "0.0.34"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#40d6fd6fb021e90aaf082bfc2ec6dddcdaca9d16"
 dependencies = [
  "android_logger",
  "anyhow",
@@ -832,6 +835,7 @@ dependencies = [
 [[package]]
 name = "futuresdr-macros"
 version = "0.0.4"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#40d6fd6fb021e90aaf082bfc2ec6dddcdaca9d16"
 dependencies = [
  "indexmap",
  "proc-macro2",
@@ -842,6 +846,7 @@ dependencies = [
 [[package]]
 name = "futuresdr-types"
 version = "0.0.9"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#40d6fd6fb021e90aaf082bfc2ec6dddcdaca9d16"
 dependencies = [
  "dyn-clone",
  "serde",

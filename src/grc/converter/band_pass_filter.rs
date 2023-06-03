@@ -7,19 +7,16 @@ use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 
 struct Complex32VecTaps {
-    taps: Vec<Complex32>
+    taps: Vec<Complex32>,
 }
 
 impl Complex32VecTaps {
     fn new(taps: Vec<Complex32>) -> Complex32VecTaps {
-        Complex32VecTaps {
-            taps
-        }
+        Complex32VecTaps { taps }
     }
 }
 
-impl TapsAccessor for Complex32VecTaps
-{
+impl TapsAccessor for Complex32VecTaps {
     type TapType = Complex32;
 
     fn num_taps(&self) -> usize {
@@ -77,13 +74,17 @@ impl BlockConverter for BandPassFilterConverter {
                 FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
                     interp, decimation, taps,
                 )
-            },
+            }
             "fir_filter_ccc" => {
-                let taps = firdes::bandpass::<Complex32>(low_cutoff_freq, high_cutoff_freq, &rect_win);
+                let taps =
+                    firdes::bandpass::<Complex32>(low_cutoff_freq, high_cutoff_freq, &rect_win);
                 let taps = Complex32VecTaps::new(taps);
-                FirBuilder::new_resampling_with_taps::<Complex32, Complex32, Complex32, Complex32VecTaps>(
-                    interp, decimation, taps,
-                )
+                FirBuilder::new_resampling_with_taps::<
+                    Complex32,
+                    Complex32,
+                    Complex32,
+                    Complex32VecTaps,
+                >(interp, decimation, taps)
             }
             _ => todo!("Unhandled band_pass_filter Type {item_type}"),
         };

@@ -1,20 +1,32 @@
 # fsdr-cli
 
 A command line interface based on [FutureSDR](http://www.futuresdr.org) meant to be
+
 * a line-for-line replacement of [csdr](https://github.com/jketterl/csdr) ([original](https://github.com/ha7ilm/csdr)),
 * yet able to pack pipelined command in one unique-flowgraph,
 * with new commands and expression evaluation,
 * able to launch simple GNU Radio Companion flowgraph within FutureSDR runtime,
 * a testing tool for [FutureSDR community blocks](https://github.com/FutureSDR/fsdr-blocks)
 
+Features:
+
+* csdr retrocompatibility: ongoing
+* GNU Radio flowgraph execution: ongoing
+* all in one flow graph execution: single process, no more pipes!
+* expression evaluation
+* conversion of csdr commands into GNU Radio companion flowgraph wherever possible
+* additional commands
+
 ## WFM decoding
 
 In the [csdr documentation about WFM demodulation](https://github.com/jketterl/csdr#demodulate-wfm), one can find the following command line:
+
 ```bash
 rtl_sdr -s 240000 -f 89500000 -g 20 - | csdr convert_u8_f | csdr fmdemod_quadri_cf | csdr fractional_decimator_ff 5 | csdr deemphasis_wfm_ff 48000 50e-6 | csdr convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 ```
 
 Does it works with `fsdr-cli`? For sure! Just replace every `csdr` with `fsdr-cli`:
+
 ```bash
 rtl_sdr -s 240000 -f 89500000 -g 20 - | fsdr-cli convert_u8_f | fsdr-cli fmdemod_quadri_cf | fsdr-cli fractional_decimator_ff 5 | fsdr-cli deemphasis_wfm_ff 48000 50e-6 | fsdr-cli convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 ```
@@ -61,11 +73,48 @@ FutureSDR: DEBUG - blocks_throttle_0 terminating
 FutureSDR: DEBUG - audio_sink_0 terminating
 ```
 
-## additional commands
+## NFM Decoding
+
+```bash
+fsdr-cli csdr load_c tests/test-nfm.c32 ! fir_decimate_cc 10 0.005 HAMMING ! fmdemod_quadri_cf ! limit_ff ! deemphasis_nfm_ff 48000 ! agc_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+```
+
+## AM Decoding
+
+```bash
+fsdr-cli csdr load_u8 tests/test-am.u8 ! convert_u8_f ! convert_ff_c ! shift_addition_cc "((145000000-144400000)/2400000)" ! fir_decimate_cc 16 0.005 HAMMING ! amdemod_cf ! fastdcblock_ff ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+```
+
+Oh by the way, did you notice that you no longer need python? Look at the `shift_addition_cc` parameter.
+Everywhere one can provide a value can also now provide an expression given it is in bracket "()". Due to bash rules, you may be required to surround them with quotes. You can also use constants `pi`, `e`, `nan`, `inf`, `neg_inf`, `tau` wherever appropriate.
+
+One can also use multipliers notation like `145M500` would be interpreted as `145500000`. Valid multipliers are `K`, `M`, and `G`. Also `_` can be used as a separator to ease lisibility, eg `145_500_000`.
+
+## SSB decoding
+
+Just like with `csdr`, one can simulate analog circuit with following commands to demodulate LSB:
+
+```bash
+fsdr-cli csdr load_c some- ! shift_addition_cc "(-51500/256000)" ! fir_decimate_cc "(256000/48000)" 0.005 HAMMING ! bandpass_fir_fft_cc -0.1 0.0 0.05 ! realpart_cf ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+```
+
+Reminder:
+
+* `bandpass_fir_fft_cc 0 0.1` for USB
+* `bandpass_fir_fft_cc -0.1 0` for LSB
+
+NB: additional weaver command may soon be introduced.
+
+## TODO
+
+So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
+
+## commands
 
 ### load_XX
 
 Syntax:
+
 ```bash
 load_u8 filename
 load_f filename
@@ -74,11 +123,7 @@ load_c filename
 
 Use the file as input.
 
-## TODO
-
-So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
-
-### csdr retrocompatibility
+### csdr retrocompatibility commands
 
 - [x] [realpart_cf](https://github.com/jketterl/csdr#realpart_cf)[^4]
 - [x] [clipdetect_ff](https://github.com/jketterl/csdr#clipdetect_ff)
@@ -116,7 +161,7 @@ So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
 - [ ] [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff)
 - [x] [fractional_decimator_ff](https://github.com/jketterl/csdr#fractional_decimator_ff)[^1]
 - [ ] [old_fractional_decimator_ff](https://github.com/jketterl/csdr#old_fractional_decimator_ff)
-- [ ] [bandpass_fir_fft_cc](https://github.com/jketterl/csdr#bandpass_fir_fft_cc)[^4]
+- [x] [bandpass_fir_fft_cc](https://github.com/jketterl/csdr#bandpass_fir_fft_cc)[^4]
 - [x] [agc_ff](https://github.com/jketterl/csdr#agc_ff)[^3][^4]
 - [ ] [fastagc_ff](https://github.com/jketterl/csdr#fastagc_ff)[^2]
 - [ ] [fft_cc](https://github.com/jketterl/csdr#fft_cc)

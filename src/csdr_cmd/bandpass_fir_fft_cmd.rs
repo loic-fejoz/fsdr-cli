@@ -9,7 +9,10 @@ pub trait BandpassFirFftcmd<'i> {
     fn bandwidth(&self) -> Result<Option<&str>>;
     fn window(&self) -> Result<Option<&str>>;
 
-    fn build_bandpass_fir_fft_cc(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
+    fn build_bandpass_fir_fft_cc(
+        &self,
+        grc: GrcBuilder<GraphLevel>,
+    ) -> Result<GrcBuilder<GraphLevel>> {
         let mut grc = grc;
         let low_cut = self.low_cut()?;
         let high_cut = self.high_cut()?;
