@@ -1,11 +1,11 @@
 [package]
 name = "fsdr-cli"
-version = "0.1.0+202303300848-alpha"
+version = "0.1.0+202306030813-alpha"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/loic-fejoz/fsdr-cli/"
 homepage = "https://fsdr-cli.github.io"
-description = "`fsdr` is a command line tool to carry out DSP tasks for Software Defined Radio. It comes as a replacement of `csdr`."
+description = "`fsdr-cli` is a command line tool to carry out DSP tasks for Software Defined Radio. It also comes as a replacement of `csdr`."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,14 +13,21 @@ description = "`fsdr` is a command line tool to carry out DSP tasks for Software
 audio = ["futuresdr/audio"]
 
 [dependencies]
-futuresdr = { git="https://github.com/FutureSDR/FutureSDR", version = "0.0", features=['audio']}
+# futuresdr = { version = "0.0", features=['audio']}
+# futuresdr = { path="../FutureSDR", features=['audio']}
+# futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
+
 async-trait = "0.1.52"
-cpal = { version = "0.14.1"}
-fsdr-blocks = { git="https://github.com/FutureSDR/fsdr-blocks", version="0.1"}
-#fsdr-blocks = { path="../fsdr-blocks" }
+cpal = { version = "0.15.2"}
+# fsdr-blocks = {  version="0.1"}
+# fsdr-blocks = { path="../fsdr-blocks" }
+fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
 futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
+pest = "2.0"
+pest_derive = "2.0"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

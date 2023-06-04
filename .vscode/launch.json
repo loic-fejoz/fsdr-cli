@@ -1,0 +1,102 @@
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'fsdr-cli'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "fsdr-cli",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'fsdr-cli'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=fsdr-cli",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "fsdr-cli",
+                    "kind": "bin"
+                }
+            },
+            "args": ["csdr --output /tmp/test.grc limit_ff 2.0"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'fsdr-cli'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=fsdr-cli",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "fsdr-cli",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'csdr'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=csdr",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "csdr",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'grc_parse'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=grc_parse",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "grc_parse",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

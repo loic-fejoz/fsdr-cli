@@ -1,0 +1,62 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+engineer_number = @{ "-"? ~ ASCII_DIGIT+ ~ ( "_" ~ ASCII_DIGIT+)* ~ (("." | ^"K" | ^"M" | ^"G" ) ~ ("_"? ~ ASCII_DIGIT)*)?  }
+scientific_number = @{ "-"? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT*)? ~ "e" ~ "-"? ~ ASCII_DIGIT+ }
+number = {scientific_number | engineer_number }
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+func_call = { ident ~ "(" ~ expr ~ ( "," ~ expr )* ~ ")" }
+term = { "(" ~ expr ~ ")" | number | func_call | ident }
+expr4 = { (minus ~ term) | term }
+exponentiation = { "**" | "^" }
+expr3 = { expr4 ~ (exponentiation ~  expr4)*}
+multiply = { "*" }
+division = { "/" }
+modulus = { "%" }
+expr2 = { expr3 ~ ( multiply ~ expr3 | division ~ expr3 | modulus ~ expr3 )* }
+addition = { "+" }
+minus = { "-" }
+expr1 = { expr2 ~ (addition ~ expr2 | minus ~ expr2)* }
+expr =  _{ expr1 }
+number_or_paren_expr = _{  number | ( "(" ~ expr ~ ")" ) }
+
+convert_typed = @{ ^"u8_f" | ^"s8_f" | ^"s16_f" | ^"f_u8" | ^"f_s8" | ^"f_s16" | ^"ff_c" }
+bigendian = { "--bigendian" }
+
+agc_ref_param = { ^"--reference" ~ number_or_paren_expr }
+agc_max_param = { ^"--max" ~ number_or_paren_expr }
+agc_rate_param = { ^"--rate" ~ number_or_paren_expr }
+agc_cmd = { "agc_ff" ~ (agc_rate_param | agc_ref_param | agc_max_param)* }
+amdemod_cmd = { "amdemod_cf" }
+bandpass_fir_fft_cc_cmd = { "bandpass_fir_fft_cc" ~ number_or_paren_expr ~ number_or_paren_expr ~ number_or_paren_expr ~ ident? }
+clipdetect_cmd = { "clipdetect_ff" }
+convert_cmd = { "convert_" ~ convert_typed ~ bigendian? }
+deemphasis_nfm_cmd = { "deemphasis_nfm_ff" ~ number_or_paren_expr }
+deemphasis_wfm_cmd = { "deemphasis_wfm_ff" ~ number_or_paren_expr ~ number_or_paren_expr }
+dump_cmd = { "dump_f" | "dump_u8" }
+eval_cmd = { "=" ~ expr }
+fastdcblock_cmd = { "fastdcblock_ff" }
+fir_decimate_cmd = { "fir_decimate_cc" ~ number_or_paren_expr ~ (number_or_paren_expr ~ ident?)? }
+fmdemod_quadri_cmd = { "fmdemod_quadri_cf" }
+fractional_decimator_cmd = { "fractional_decimator_ff" ~ number_or_paren_expr }
+load_param = { filepath }
+load_types = { "f" | "u8" | "c" }
+load_cmd = { "load_" ~ load_types ~ load_param }
+limit_cmd = {"limit_ff" ~ number_or_paren_expr? }
+octave_complex_cmd = { "octave_complex_c" ~ number_or_paren_expr ~ number_or_paren_expr }
+realpart_cmd = {"realpart_cf"}
+shift_addition_cmd = { "shift_addition_cc" ~ number_or_paren_expr }
+throttle_cmd = { "throttle_cc" | "throttle_ff" }
+
+any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | bandpass_fir_fft_cc_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | load_cmd | limit_cmd | octave_complex_cmd | realpart_cmd | shift_addition_cmd | throttle_cmd) }
+
+cmd_sep = _{ "|" | "!" }
+csdr_save_opt = { ("--output" | "-o") ~ filepath }
+csdr_cmd = { "csdr" ~ csdr_save_opt? ~ (cmd_sep? ~ any_csdr_cmd)+ }
+
+not_space =  { !( " " | "\t" ) ~ ANY }
+filepath = @{ not_space+ }
+
+grc_cmd = { "grc" ~ filepath }
+help_cmd = { "--help" }
+
+main = _{ SOI ~ (help_cmd | grc_cmd | csdr_cmd | any_csdr_cmd)   ~ EOI }
