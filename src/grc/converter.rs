@@ -37,6 +37,8 @@ pub mod blocks_float_to_complex;
 use self::blocks_float_to_complex::FloatToComplexConverter;
 pub mod blocks_freqshift_cc;
 use self::blocks_freqshift_cc::FreqShiftCcConverter;
+pub mod blocks_multiply_const_vxx;
+use self::blocks_multiply_const_vxx::MulConstVxConverter;
 pub mod blocks_null_sink;
 use self::blocks_null_sink::NullSinkConverter;
 pub mod blocks_throttle;
@@ -59,6 +61,8 @@ pub mod octave_complex_c;
 use self::octave_complex_c::OctaveComplexConverter;
 pub mod rational_resampler_xxx;
 use self::rational_resampler_xxx::RationalResamplerXxConverter;
+pub mod weaver_ssb;
+use self::weaver_ssb::WeaverSsbConverter;
 
 #[derive(Default, Clone)]
 pub struct Grc2FutureSdr;
@@ -78,6 +82,7 @@ impl Grc2FutureSdr {
             "blocks_file_source" => Box::new(FileSourceConverter {}),
             "blocks_float_to_complex" => Box::new(FloatToComplexConverter {}),
             "blocks_freqshift_cc" => Box::new(FreqShiftCcConverter {}),
+            "blocks_multiply_const_vxx" => Box::new(MulConstVxConverter {}),
             "blocks_uchar_to_float"
             | "blocks_char_to_float"
             | "convert_s16_f"
@@ -99,6 +104,7 @@ impl Grc2FutureSdr {
             "low_pass_filter" => Box::new(LowPassFilterConverter {}),
             "octave_complex_c" => Box::new(OctaveComplexConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
+            "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)

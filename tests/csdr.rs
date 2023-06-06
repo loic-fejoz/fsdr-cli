@@ -658,3 +658,63 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     // println!("{snk_0:?}");
     Ok(())
 }
+
+#[test]
+pub fn parse_weaver_lsb_123456() {
+    let cmds = "weaver_lsb_cf 123456";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("weaver_lsb_cf", grc.blocks[1].id);
+    let audio_freq = grc.blocks[1].parameter_or("audio_freq", "none");
+    assert_ne!("123456", audio_freq);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_weaver_usb_123456() {
+    let cmds = "weaver_usb_cf 123456";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("weaver_usb_cf", grc.blocks[1].id);
+    let audio_freq = grc.blocks[1].parameter_or("audio_freq", "none");
+    assert_ne!("123456", audio_freq);
+    println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_rational_resampler_ff() {
+    let cmds = "rational_resampler_ff 123 456";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("rational_resampler_xxx", grc.blocks[1].id);
+    let interp = grc.blocks[1].parameter_or("interp", "none");
+    assert_eq!("123", interp);
+    let decim = grc.blocks[1].parameter_or("decim", "none");
+    assert_eq!("456", decim);
+    let kind = grc.blocks[1].parameter_or("type", "none");
+    assert_eq!("fff", kind);
+    // println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}
+
+#[test]
+pub fn parse_rational_resampler_cc() {
+    let cmds = "rational_resampler_cc 123 456";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("rational_resampler_xxx", grc.blocks[1].id);
+    let interp = grc.blocks[1].parameter_or("interp", "none");
+    assert_eq!("123", interp);
+    let decim = grc.blocks[1].parameter_or("decim", "none");
+    assert_eq!("456", decim);
+    let kind = grc.blocks[1].parameter_or("type", "none");
+    assert_eq!("ccc", kind);
+    // println!("{grc:?}");
+    assert_eq!(2, grc.connections.len());
+}

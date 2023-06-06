@@ -103,7 +103,11 @@ Reminder:
 * `bandpass_fir_fft_cc 0 0.1` for USB
 * `bandpass_fir_fft_cc -0.1 0` for LSB
 
-NB: additional weaver command may soon be introduced.
+Yet, thanks to newly added `weaver_lsb_cf` and `weaver_usb_cf` we may have better result with following commands line:
+
+```bash
+fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+```
 
 ## TODO
 
@@ -123,12 +127,37 @@ load_c filename
 
 Use the file as input.
 
+### rational_resampler_cc
+
+Syntax:
+
+```bash
+rational_resampler_cc interp decim
+```
+
+Resample stream based on rational ratio: `interp/decim`, just like [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff) but on complex stream.
+
+### weaver_XXX_cf
+
+Syntax:
+
+```bash
+weaver_usb_cf mid_audio_freq_rate
+weaver_lsb_cf mid_audio_freq_rate
+
+weaver_usb_cf "(1500/48000)"
+```
+
+Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of the audible audio bandwidth. Basically it acts as following flowgraph:
+
+![](weaver.png)
+
 ### csdr retrocompatibility commands
 
 - [x] [realpart_cf](https://github.com/jketterl/csdr#realpart_cf)[^4]
 - [x] [clipdetect_ff](https://github.com/jketterl/csdr#clipdetect_ff)
 - [x] [limit_ff](https://github.com/jketterl/csdr#limit_ff)[^2][^3][^4]
-- [ ] [gain_ff](https://github.com/jketterl/csdr#gain_ff)
+- [x] [gain_ff](https://github.com/jketterl/csdr#gain_ff)
 - [ ] [clone](https://github.com/jketterl/csdr#clone)
 - [ ] [through](https://github.com/jketterl/csdr#through)
 - [ ] [none](https://github.com/jketterl/csdr#none)
@@ -158,7 +187,7 @@ Use the file as input.
 - [ ] [firdes_bandpass_c](https://github.com/jketterl/csdr#firdes_bandpass_c)
 - [x] [fir_decimate_cc](https://github.com/jketterl/csdr#fir_decimate_cc)[^2][^3][^4]
 - [ ] [fir_interpolate_cc](https://github.com/jketterl/csdr#fir_interpolate_cc)
-- [ ] [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff)
+- [x] [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff)
 - [x] [fractional_decimator_ff](https://github.com/jketterl/csdr#fractional_decimator_ff)[^1]
 - [ ] [old_fractional_decimator_ff](https://github.com/jketterl/csdr#old_fractional_decimator_ff)
 - [x] [bandpass_fir_fft_cc](https://github.com/jketterl/csdr#bandpass_fir_fft_cc)[^4]

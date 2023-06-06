@@ -84,8 +84,11 @@ tests/ssb_lsb_256k_complex2.dat: tests/ssb_lsb_256k_complex2.dat.zip
 test-ssb: $(FSDR_CLI) tests/ssb_lsb_256k_complex2.dat
 	$(FSDR_CLI) csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! fir_decimate_cc "(256000/48000)" 0.005 HAMMING ! bandpass_fir_fft_cc -0.1 0.0 0.05 ! realpart_cf ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 
+test-ssb-weaver: tests/ssb_lsb_256k_complex2.dat
+	cargo run -- csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+
 test-ssb-debug: tests/ssb_lsb_256k_complex2.dat
-	cargo run -- csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! fir_decimate_cc "(256000/48000)" 0.005 HAMMING ! bandpass_fir_fft_cc 0.0 0.1 0.05 ! realpart_cf ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+	$(FSDR_CLI) csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! fir_decimate_cc "(256000/48000)" 0.005 HAMMING ! bandpass_fir_fft_cc 0.0 0.1 0.05 ! realpart_cf ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 
 test-ssb-csdr:
 	$(FSDR_CLI) csdr load_c tests/ssb_lsb_256k_complex2.dat ! csdr shift_addition_cc -0.201171875 ! csdr fir_decimate_cc 5 0.005 HAMMING ! csdr bandpass_fir_fft_cc 0.0 0.1 0.05 ! csdr realpart_cf ! csdr agc_ff ! csdr limit_ff ! csdr convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
