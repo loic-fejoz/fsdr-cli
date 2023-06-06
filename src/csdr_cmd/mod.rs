@@ -7,6 +7,7 @@ use pest::Parser;
 
 use self::agc_cmd::AgcCmd;
 use self::amdemod_cmd::AmDemodCmd;
+use self::audio_cmd::AudioCmd;
 use self::bandpass_fir_fft_cmd::BandpassFirFftcmd;
 use self::clipdetect_cmd::ClipDetectCmd;
 use self::convert_cmd::ConvertCmd;
@@ -30,6 +31,7 @@ use self::weaver_cmd::WeaverCmd;
 
 mod agc_cmd;
 mod amdemod_cmd;
+mod audio_cmd;
 mod bandpass_fir_fft_cmd;
 mod clipdetect_cmd;
 mod convert_cmd;
@@ -60,6 +62,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
         match self.as_rule() {
             Rule::agc_cmd => self.build_agc(grc),
             Rule::amdemod_cmd => self.build_amdemod(grc),
+            Rule::audio_cmd => self.build_audio_sink(grc),
             Rule::bandpass_fir_fft_cc_cmd => self.build_bandpass_fir_fft_cc(grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
             Rule::convert_cmd => self.build_convert(grc),
