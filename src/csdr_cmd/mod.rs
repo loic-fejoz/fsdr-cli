@@ -18,12 +18,15 @@ use self::fastdcblock_cmd::FastDCBlockCmd;
 use self::fir_decimate_cmd::FirDecimateCmd;
 use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
 use self::fractional_decimator_cmd::FractionalDecimatorCmd;
+use self::gain_cmd::GainCmd;
 use self::limit_cmd::LimitCmd;
 use self::load_cmd::LoadCmd;
 use self::octave_complex_cmd::OctaveComplexCmd;
+use self::rational_resampler_cmd::RationalResamplerCmd;
 use self::realpart_cmd::RealPartCmd;
 use self::shift_addition_cmd::ShiftAdditionCmd;
 use self::throttle_cmd::ThrottleCmd;
+use self::weaver_cmd::WeaverCmd;
 
 mod agc_cmd;
 mod amdemod_cmd;
@@ -38,12 +41,15 @@ mod fastdcblock_cmd;
 mod fir_decimate_cmd;
 mod fmdemod_quadri_cmd;
 mod fractional_decimator_cmd;
+mod gain_cmd;
 mod limit_cmd;
 mod load_cmd;
 mod octave_complex_cmd;
+mod rational_resampler_cmd;
 mod realpart_cmd;
 mod shift_addition_cmd;
 mod throttle_cmd;
+mod weaver_cmd;
 
 pub trait AnyCmd<'i> {
     fn parse(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>>;
@@ -68,12 +74,15 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
             Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
+            Rule::gain_cmd => self.build_gain(grc),
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
+            Rule::rational_resampler_cmd => self.build_rational_resampler(grc),
             Rule::realpart_cmd => self.build_realpart(grc),
             Rule::shift_addition_cmd => self.build_shift_addition(grc),
             Rule::throttle_cmd => self.build_throttle(grc),
+            Rule::weaver_lsb_cmd | Rule::weaver_usb_cmd => self.build_weaver(grc),
 
             Rule::csdr_save_opt => Ok(grc),
             _ => {
