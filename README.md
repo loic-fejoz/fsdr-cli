@@ -39,6 +39,12 @@ rtl_sdr -s 240000 -f 89500000 -g 20 - | fsdr-cli csdr convert_u8_f ! convert_ff_
 
 Bascially, it is just a matter of replacing pipe `|` with `!` (escaping pipeline `\|` is also working) so that your shell does not interpret them, and asking `fsdr-cli` to interpret the command line as a multi-block of `csdr` command. There is also one newly inserted block `convert_ff_c` due to otherwise ill-typed workflow.
 
+And by the way, why use `mplayer` for sound output? There is also an [`audio` command](#audio):
+
+```bash
+rtl_sdr -s 240000 -f 89500000 -g 20 - | fsdr-cli csdr convert_u8_f ! convert_ff_c ! fmdemod_quadri_cf ! fractional_decimator_ff 5 ! deemphasis_wfm_ff 48000 50e-6 ! audio "48_000" 1
+```
+
 But maybe you are more used to [GNURadio](https://www.gnuradio.org/) and would have come with the following workflow [chain1.grc](tests/chain1.grc):
 ![](chain1.png)
 
@@ -76,13 +82,13 @@ FutureSDR: DEBUG - audio_sink_0 terminating
 ## NFM Decoding
 
 ```bash
-fsdr-cli csdr load_c tests/test-nfm.c32 ! fir_decimate_cc 10 0.005 HAMMING ! fmdemod_quadri_cf ! limit_ff ! deemphasis_nfm_ff 48000 ! agc_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+fsdr-cli csdr load_c tests/test-nfm.c32 ! fir_decimate_cc 10 0.005 HAMMING ! fmdemod_quadri_cf ! limit_ff ! deemphasis_nfm_ff 48000 ! agc_ff ! audio 48000 1
 ```
 
 ## AM Decoding
 
 ```bash
-fsdr-cli csdr load_u8 tests/test-am.u8 ! convert_u8_f ! convert_ff_c ! shift_addition_cc "((145000000-144400000)/2400000)" ! fir_decimate_cc 16 0.005 HAMMING ! amdemod_cf ! fastdcblock_ff ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+fsdr-cli csdr load_u8 tests/test-am.u8 ! convert_u8_f ! convert_ff_c ! shift_addition_cc "((145M-144M400)/2_400_000)" ! fir_decimate_cc 16 0.005 HAMMING ! amdemod_cf ! fastdcblock_ff ! agc_ff ! limit_ff ! audio "48_000" 1
 ```
 
 Oh by the way, did you notice that you no longer need python? Look at the `shift_addition_cc` parameter.
@@ -95,7 +101,7 @@ One can also use multipliers notation like `145M500` would be interpreted as `14
 Just like with `csdr`, one can simulate analog circuit with following commands to demodulate LSB:
 
 ```bash
-fsdr-cli csdr load_c some- ! shift_addition_cc "(-51500/256000)" ! fir_decimate_cc "(256000/48000)" 0.005 HAMMING ! bandpass_fir_fft_cc -0.1 0.0 0.05 ! realpart_cf ! agc_ff ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! fir_decimate_cc "(256000/48000)" 0.005 HAMMING ! bandpass_fir_fft_cc -0.1 0.0 0.05 ! realpart_cf ! agc_ff ! limit_ff ! audio 48_000 1
 ```
 
 Reminder:
@@ -106,7 +112,7 @@ Reminder:
 Yet, thanks to newly added `weaver_lsb_cf` and `weaver_usb_cf` we may have better result with following commands line:
 
 ```bash
-fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
+fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! audio 48_000 1
 ```
 
 ## TODO
@@ -115,7 +121,21 @@ So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
 
 ## commands
 
-### load_XX
+### [audio](#audio)
+
+Syntax:
+
+```bash
+audio rate num_inputs
+audio "48_000" 1
+```
+
+Create a sink from an audio device. The sink has `num_inputs` floating streams as inputs.
+
+Not all audio rate will be supported by your device, nor `num_inputs`.
+`fsdr-cli` will try his best to find a compatible one but better for you to adapt the flowgraph.
+
+### [load_XX](#load_xx)
 
 Syntax:
 
@@ -127,7 +147,7 @@ load_c filename
 
 Use the file as input.
 
-### rational_resampler_cc
+### [rational_resampler_cc](#rational_resampler_cc)
 
 Syntax:
 
@@ -137,7 +157,7 @@ rational_resampler_cc interp decim
 
 Resample stream based on rational ratio: `interp/decim`, just like [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff) but on complex stream.
 
-### weaver_XXX_cf
+### [weaver_XXX_cf](#weaver_xxx_cf)
 
 Syntax:
 
@@ -152,7 +172,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 
 ![](weaver.png)
 
-### csdr retrocompatibility commands
+### [csdr retrocompatibility commands](#csdr-retrocompatibility-commands)
 
 - [x] [realpart_cf](https://github.com/jketterl/csdr#realpart_cf)[^4]
 - [x] [clipdetect_ff](https://github.com/jketterl/csdr#clipdetect_ff)
