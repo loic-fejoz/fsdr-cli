@@ -1,3 +1,4 @@
+use super::cmd::CsdrCmd;
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
 use futuresdr::anyhow::{bail, Result};
@@ -50,48 +51,18 @@ impl<'i> RationalResamplerCmd<'i> for Pair<'i, Rule> {
     }
 
     fn interpolation(&self) -> Result<&str> {
-        let mut inner = self.clone().into_inner();
-        inner.next();
-        if let Some(value) = inner.next() {
-            Ok(value.as_str())
-        } else {
-            bail!("missing mandatory <interp> parameters for fractional_decimator_ff")
-        }
+        self.arg::<2>("missing mandatory <interp> parameters for fractional_decimator_ff")
     }
 
     fn decimation(&self) -> Result<&'i str> {
-        let mut inner = self.clone().into_inner();
-        inner.next();
-        inner.next();
-        if let Some(value) = inner.next() {
-            Ok(value.as_str())
-        } else {
-            bail!("missing mandatory <decim> parameters for fractional_decimator_ff")
-        }
+        self.arg::<3>("missing mandatory <decim> parameters for fractional_decimator_ff")
     }
 
     fn bandwidth(&self) -> Result<Option<&'i str>> {
-        let mut inner = self.clone().into_inner();
-        inner.next();
-        inner.next();
-        inner.next();
-        if let Some(value) = inner.next() {
-            Ok(Some(value.as_str()))
-        } else {
-            Ok(None)
-        }
+        self.optional_arg::<4>()
     }
 
     fn window(&self) -> Result<Option<&'i str>> {
-        let mut inner = self.clone().into_inner();
-        inner.next();
-        inner.next();
-        inner.next();
-        inner.next();
-        if let Some(value) = inner.next() {
-            Ok(Some(value.as_str()))
-        } else {
-            Ok(None)
-        }
+        self.optional_arg::<5>()
     }
 }

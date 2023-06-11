@@ -172,6 +172,34 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 
 ![](weaver.png)
 
+### [zmq_src_xxx](#zmq_src_xxx)
+
+Syntax:
+
+```bash
+zmq_src_xxx zmq_address
+
+zmq_src_f tcp://127.0.0.1:5555
+zmq_src_c tcp://127.0.0.1:5555
+zmq_src_u8 tcp://127.0.0.1:5555
+```
+
+Subscribe to given address of a ZeroMQ publisher to get stream of data.
+
+### [zmq_snk_xxx](#zmq_snk_xxx)
+
+Syntax:
+
+```bash
+zmq_snk_xxx zmq_address
+
+zmq_snk_f tcp://127.0.0.1:5555
+zmq_snk_c tcp://127.0.0.1:5555
+zmq_snk_u8 tcp://127.0.0.1:5555
+```
+
+Publish stream to given address as ZeroMQ.
+
 ### [csdr retrocompatibility commands](#csdr-retrocompatibility-commands)
 
 - [x] [realpart_cf](https://github.com/jketterl/csdr#realpart_cf)[^4]

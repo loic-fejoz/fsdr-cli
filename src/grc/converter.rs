@@ -63,6 +63,10 @@ pub mod rational_resampler_xxx;
 use self::rational_resampler_xxx::RationalResamplerXxConverter;
 pub mod weaver_ssb;
 use self::weaver_ssb::WeaverSsbConverter;
+pub mod zeromq_pub_sink;
+use self::zeromq_pub_sink::ZeromqPubSinkConverter;
+pub mod zeromq_sub_source;
+use self::zeromq_sub_source::ZeromqSubSourceConverter;
 
 #[derive(Default, Clone)]
 pub struct Grc2FutureSdr;
@@ -105,6 +109,8 @@ impl Grc2FutureSdr {
             "octave_complex_c" => Box::new(OctaveComplexConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
+            "zeromq_pub_sink" => Box::new(ZeromqPubSinkConverter {}),
+            "zeromq_sub_source" => Box::new(ZeromqSubSourceConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)

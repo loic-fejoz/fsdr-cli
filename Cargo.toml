@@ -16,7 +16,7 @@ audio = ["futuresdr/audio"]
 # futuresdr = { version = "0.0", features=['audio']}
 # futuresdr = { path="../FutureSDR", features=['audio']}
 # futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio', 'zeromq']}
 
 async-trait = "0.1.52"
 cpal = { version = "0.15.2"}

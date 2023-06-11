@@ -28,6 +28,10 @@ use self::realpart_cmd::RealPartCmd;
 use self::shift_addition_cmd::ShiftAdditionCmd;
 use self::throttle_cmd::ThrottleCmd;
 use self::weaver_cmd::WeaverCmd;
+use self::zmq_sink_cmd::ZmqSinkCmd;
+use self::zmq_src_cmd::ZmqSrcCmd;
+
+mod cmd;
 
 mod agc_cmd;
 mod amdemod_cmd;
@@ -52,6 +56,8 @@ mod realpart_cmd;
 mod shift_addition_cmd;
 mod throttle_cmd;
 mod weaver_cmd;
+mod zmq_sink_cmd;
+mod zmq_src_cmd;
 
 pub trait AnyCmd<'i> {
     fn parse(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>>;
@@ -86,6 +92,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::shift_addition_cmd => self.build_shift_addition(grc),
             Rule::throttle_cmd => self.build_throttle(grc),
             Rule::weaver_lsb_cmd | Rule::weaver_usb_cmd => self.build_weaver(grc),
+            Rule::zmq_source_cmd => self.build_zmq_src(grc),
+            Rule::zmq_sink_cmd => self.build_zmq_snk(grc),
 
             Rule::csdr_save_opt => Ok(grc),
             _ => {
