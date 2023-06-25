@@ -1,6 +1,6 @@
 [package]
 name = "fsdr-cli"
-version = "0.1.0+202306030813-alpha"
+version = "0.1.0+202306251819-alpha"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/loic-fejoz/fsdr-cli/"
