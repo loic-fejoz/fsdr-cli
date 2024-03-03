@@ -1,4 +1,5 @@
 use futuresdr::anyhow::Result;
+use futuresdr::macros::async_trait;
 use futuresdr::runtime::Block;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
@@ -8,7 +9,6 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
-use futuresdr::macros::async_trait;
 
 pub struct DCBlocker<A>
 where

@@ -2,6 +2,7 @@ use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPo
 use super::BlockInstance;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::Sink;
+use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 
 pub struct DumpConverter {}
@@ -18,8 +19,9 @@ impl BlockConverter for DumpConverter {
             .expect("item type must be defined");
 
         let blk = match &(item_type[..]) {
-            "float" => Sink::new(|x: &u8| print!("{:02x} ", *x)),
-            "u8" => Sink::new(|x: &f32| print!("{:e} ", *x)),
+            "u8" => Sink::new(|x: &u8| print!("{:02x} ", *x)),
+            "f" | "float" => Sink::new(|x: &f32| print!("{:e} ", *x)),
+            "c" => Sink::new(|x: &Complex32| print!("({:e}, {:e})", x.re, x.im)),
             _ => todo!("Unhandled dump of Type {item_type}"),
         };
         let blk = fg.add_block(blk);

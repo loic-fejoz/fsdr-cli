@@ -10,7 +10,7 @@ use serde_derive::{Deserialize, Serialize};
 use crate::csdr_cmd::CsdrCmd;
 use crate::grc::converter;
 use crate::grc::converter_helper::{
-    ConnectorAdapter, DefaultPortAdapter, MutBlockConverter, PredefinedBlockConverter
+    ConnectorAdapter, DefaultPortAdapter, MutBlockConverter, PredefinedBlockConverter,
 };
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 use crate::{cmd_grammar::Rule, cmd_line::HighLevelCmdLine};
@@ -24,10 +24,7 @@ pub struct UserDefinedFunctionParams {
 pub struct UserDefinedFunction {}
 
 impl UserDefinedFunction {
-    fn create_grc(
-        self,
-        cli: String,
-    ) -> Result<crate::grc::Grc, IQEngineError> {
+    fn create_grc(self, cli: String) -> Result<crate::grc::Grc, IQEngineError> {
         let cli = crate::cmd_grammar::CommandsParser::parse_main(&cli);
         if let Err(err) = cli {
             match err.downcast_ref::<pest::error::Error<Rule>>() {
@@ -114,9 +111,10 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
     }
 }
 
-fn fun_name(samples_b64: Vec<iqengine_plugin::server::SamplesB64>, grc: crate::grc::Grc)
- -> Result<(futuresdr::runtime::Flowgraph, IQEngineOutputBlockConverter), IQEngineError>
-{
+fn fun_name(
+    samples_b64: Vec<iqengine_plugin::server::SamplesB64>,
+    grc: crate::grc::Grc,
+) -> Result<(futuresdr::runtime::Flowgraph, IQEngineOutputBlockConverter), IQEngineError> {
     let stream1 = samples_b64.get(0).unwrap();
     let sample_rate = stream1.sample_rate.unwrap_or(1_800_000.0);
     debug!("sample_rate is {}", sample_rate);
@@ -129,10 +127,8 @@ fn fun_name(samples_b64: Vec<iqengine_plugin::server::SamplesB64>, grc: crate::g
 
             let src = futuresdr::blocks::VectorSource::new(v);
             let blk_cvter = PredefinedBlockConverter::new(src);
-            converter.with_blocktype_conversion(
-                "blocks_file_source".to_string(),
-                Box::new(blk_cvter),
-            );
+            converter
+                .with_blocktype_conversion("blocks_file_source".to_string(), Box::new(blk_cvter));
         }
         _ => {
             return Err(IQEngineError::UnsupportedDataType(stream1.data_type));

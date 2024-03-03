@@ -13,8 +13,11 @@ pub trait BlockConverter {
 }
 
 pub trait MutBlockConverter {
-    fn convert(&mut self, blk: &BlockInstance, fg: &mut Flowgraph)
-        -> Result<Box<dyn ConnectorAdapter>>;
+    fn convert(
+        &mut self,
+        blk: &BlockInstance,
+        fg: &mut Flowgraph,
+    ) -> Result<Box<dyn ConnectorAdapter>>;
 
     fn downcast_iqengine(&self) -> Option<&IQEngineOutputBlockConverter> {
         None
@@ -60,25 +63,28 @@ impl ConnectorAdapter for DefaultPortAdapter {
 }
 
 pub struct PredefinedBlockConverter {
-    value: Option<Block>
+    value: Option<Block>,
 }
 
 impl PredefinedBlockConverter {
     pub fn new(blk: Block) -> PredefinedBlockConverter {
-        PredefinedBlockConverter {
-            value: Some(blk)
-        }
+        PredefinedBlockConverter { value: Some(blk) }
     }
 }
 
 impl MutBlockConverter for PredefinedBlockConverter {
-    fn convert(&mut self, _blk: &BlockInstance, fg: &mut Flowgraph)
-        -> Result<Box<dyn ConnectorAdapter>> {
-            if let Some(res) = self.value.take() {
-                let blk = fg.add_block(res);
-                let s: Box<dyn ConnectorAdapter> = Box::new(DefaultPortAdapter::new(blk));
-                return Ok(s);
-            }
-            Err(anyhow!("Value already picked: probably too many time the same block type."))
+    fn convert(
+        &mut self,
+        _blk: &BlockInstance,
+        fg: &mut Flowgraph,
+    ) -> Result<Box<dyn ConnectorAdapter>> {
+        if let Some(res) = self.value.take() {
+            let blk = fg.add_block(res);
+            let s: Box<dyn ConnectorAdapter> = Box::new(DefaultPortAdapter::new(blk));
+            return Ok(s);
+        }
+        Err(anyhow!(
+            "Value already picked: probably too many time the same block type."
+        ))
     }
 }

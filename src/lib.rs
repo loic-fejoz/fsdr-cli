@@ -9,8 +9,8 @@ pub mod cmd_line;
 pub mod csdr_cmd;
 pub mod grc;
 pub mod grc_cmd;
-pub mod iqengine_userdef;
 pub mod iqengine_blockconverter;
+pub mod iqengine_userdef;
 
 pub fn join(iter: impl Iterator<Item = String>) -> String {
     iter.fold(String::new(), |mut a, b| {

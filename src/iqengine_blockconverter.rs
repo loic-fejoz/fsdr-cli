@@ -11,7 +11,7 @@ pub struct IQEngineOutputBlockConverter {
 
 impl IQEngineOutputBlockConverter {
     pub fn new() -> IQEngineOutputBlockConverter {
-        IQEngineOutputBlockConverter{
+        IQEngineOutputBlockConverter {
             blk_idx: None,
             data_type: None,
         }
@@ -21,12 +21,25 @@ impl IQEngineOutputBlockConverter {
         let mut result = FunctionPostResponse::new();
         let output: SamplesB64 = match self.data_type {
             Some(iqengine_plugin::server::DataType::IqSlashCf32Le) => {
-                let snk_0 = fg.kernel::<VectorSink<Complex32>>(self.blk_idx.expect("msg")).unwrap();
+                let snk_0 = fg
+                    .kernel::<VectorSink<Complex32>>(self.blk_idx.expect("msg"))
+                    .unwrap();
                 let snk_0 = snk_0.items();
                 SamplesB64Builder::new()
                     .with_samples_cf32(snk_0.clone())
-                    .build().expect("msg")
-            },
+                    .build()
+                    .expect("msg")
+            }
+            Some(iqengine_plugin::server::DataType::ApplicationSlashOctetStream) => {
+                let snk_0 = fg
+                    .kernel::<VectorSink<u8>>(self.blk_idx.expect("msg"))
+                    .unwrap();
+                let snk_0 = snk_0.items();
+                SamplesB64Builder::new()
+                    .from_u8_data(snk_0.clone())
+                    .build()
+                    .expect("msg")
+            }
             Some(_) => todo!(),
             None => todo!(),
         };
@@ -36,8 +49,11 @@ impl IQEngineOutputBlockConverter {
 }
 
 impl MutBlockConverter for IQEngineOutputBlockConverter {
-    fn convert(&mut self, blk: &crate::grc::BlockInstance, fg: &mut futuresdr::runtime::Flowgraph)
-        -> futuresdr::anyhow::Result<Box<dyn crate::grc::converter_helper::ConnectorAdapter>> {
+    fn convert(
+        &mut self,
+        blk: &crate::grc::BlockInstance,
+        fg: &mut futuresdr::runtime::Flowgraph,
+    ) -> futuresdr::anyhow::Result<Box<dyn crate::grc::converter_helper::ConnectorAdapter>> {
         let filename = blk
             .parameters
             .get("file")
@@ -48,16 +64,20 @@ impl MutBlockConverter for IQEngineOutputBlockConverter {
             .expect("item type must be defined");
         let blk = if "-" == filename {
             match &(item_type[..]) {
-                "u8" => VectorSink::<u8>::new(0),
+                "u8" | "uchar" => {
+                    self.data_type =
+                        Some(iqengine_plugin::server::DataType::ApplicationSlashOctetStream);
+                    VectorSink::<u8>::new(0)
+                }
                 "i16" | "ishort" | "short" => VectorSink::<i16>::new(0),
                 "f32" | "float" => {
                     self.data_type = Some(iqengine_plugin::server::DataType::AudioSlashWav);
                     VectorSink::<f32>::new(0)
-                },
+                }
                 "c32" | "complex" => {
                     self.data_type = Some(iqengine_plugin::server::DataType::IqSlashCf32Le);
                     VectorSink::<Complex32>::new(0)
-                },
+                }
                 _ => todo!("Unhandled FileSink Type {item_type}"),
             }
         } else {
@@ -69,7 +89,9 @@ impl MutBlockConverter for IQEngineOutputBlockConverter {
         Ok(s)
     }
 
-    fn downcast_iqengine(&self) -> Option<&crate::iqengine_blockconverter::IQEngineOutputBlockConverter> {
+    fn downcast_iqengine(
+        &self,
+    ) -> Option<&crate::iqengine_blockconverter::IQEngineOutputBlockConverter> {
         Some(self)
     }
 }

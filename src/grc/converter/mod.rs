@@ -26,6 +26,10 @@ pub mod blocks_add_const_vxx;
 use self::blocks_add_const_vxx::AddConstVxConverter;
 pub mod blocks_deinterleave;
 use self::blocks_deinterleave::DeinterleaveBlockConverter;
+pub mod digital_binary_slicer;
+use self::digital_binary_slicer::DigitalBinarySlicerConverter;
+pub mod dsb;
+use self::dsb::DsbConverter;
 pub mod blocks_complex_to_real;
 use self::blocks_complex_to_real::RealpartCfConverter;
 pub mod convert;
@@ -60,30 +64,39 @@ pub mod low_pass_filter;
 use self::low_pass_filter::LowPassFilterConverter;
 pub mod octave_complex_c;
 use self::octave_complex_c::OctaveComplexConverter;
+pub mod pattern_search;
+use self::pattern_search::PatternSearchConverter;
 pub mod rational_resampler_xxx;
 use self::rational_resampler_xxx::RationalResamplerXxConverter;
+pub mod timing_recovery;
+use self::timing_recovery::TimingRecoveryConverter;
 pub mod weaver_ssb;
 use self::weaver_ssb::WeaverSsbConverter;
 
-
 #[derive(Default)]
 pub struct Grc2FutureSdr {
-    specific_converter: HashMap<String, Box<dyn MutBlockConverter>>
+    specific_converter: HashMap<String, Box<dyn MutBlockConverter>>,
 }
 
 impl Grc2FutureSdr {
     pub fn new() -> Grc2FutureSdr {
         Grc2FutureSdr {
-            specific_converter: HashMap::new()
+            specific_converter: HashMap::new(),
         }
     }
 
-    pub fn take(&mut self, k: &str) -> std::option::Option<&mut Box<(dyn MutBlockConverter + 'static)>> {
+    pub fn take(
+        &mut self,
+        k: &str,
+    ) -> std::option::Option<&mut Box<(dyn MutBlockConverter + 'static)>> {
         self.specific_converter.get_mut(k).take()
     }
 
-    pub fn with_blocktype_conversion(&mut self, blocktype: impl ToString, f: Box<dyn MutBlockConverter>)
-    {
+    pub fn with_blocktype_conversion(
+        &mut self,
+        blocktype: impl ToString,
+        f: Box<dyn MutBlockConverter>,
+    ) {
         self.specific_converter.insert(blocktype.to_string(), f);
     }
 
@@ -97,6 +110,8 @@ impl Grc2FutureSdr {
             "audio_sink" => Box::new(AudioSinkConverter {}),
             "blocks_add_const_vxx" => Box::new(AddConstVxConverter {}),
             "blocks_deinterleave" => Box::new(DeinterleaveBlockConverter {}),
+            "digital_binary_slicer_fb" => Box::new(DigitalBinarySlicerConverter {}),
+            "dsb" => Box::new(DsbConverter {}),
             "blocks_file_sink" => Box::new(FileSinkConverter {}),
             "blocks_file_source" => Box::new(FileSourceConverter {}),
             "blocks_float_to_complex" => Box::new(FloatToComplexConverter {}),
@@ -111,7 +126,7 @@ impl Grc2FutureSdr {
             | "convert_ff_c"
             | "blocks_short_to_float" => Box::new(ConvertBlockConverter {}),
             "blocks_null_sink" => Box::new(NullSinkConverter {}),
-            "dump_u8" | "dump_f" => Box::new(DumpConverter {}),
+            "dump_u8" | "dump_f" | "dump_c" => Box::new(DumpConverter {}),
             "throttle_ff" | "blocks_throttle" => Box::new(ThrottleConverter {}),
             "realpart_cf" | "blocks_complex_to_real" => Box::new(RealpartCfConverter {}),
             "blocks_complex_to_mag" => Box::new(ComplexToMagConverter {}),
@@ -122,7 +137,9 @@ impl Grc2FutureSdr {
             "fir_filter_xxx" => Box::new(FirFilterXxConverter {}),
             "low_pass_filter" => Box::new(LowPassFilterConverter {}),
             "octave_complex_c" => Box::new(OctaveComplexConverter {}),
+            "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
+            "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
@@ -136,7 +153,6 @@ impl Grc2FutureSdr {
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let cvter = self.specific_converter.get_mut(&blk.id).take();
         if let Some(cvter) = cvter {
-
             if let Ok(res) = cvter.convert(blk, fg) {
                 Ok(res)
             } else {
@@ -152,9 +168,7 @@ impl Grc2FutureSdr {
         let fsdr_blocks = grc
             .blocks
             .iter()
-            .map(|blk| -> Result<Box<dyn ConnectorAdapter>> {
-                self.convert_block(&mut fg, blk)
-            });
+            .map(|blk| -> Result<Box<dyn ConnectorAdapter>> { self.convert_block(&mut fg, blk) });
         let names: Vec<String> = grc.blocks.iter().map(|blk| blk.name.clone()).collect();
         let mut names_to_adapter = BTreeMap::<String, Box<dyn ConnectorAdapter>>::new();
 

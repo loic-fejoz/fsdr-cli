@@ -1,7 +1,14 @@
-use futuresdr::{anyhow::{Ok, Result}, log::debug};
+use futuresdr::{
+    anyhow::{Ok, Result},
+    log::debug,
+};
 
 use axum::{
-    extract::DefaultBodyLimit, http::StatusCode, response::Html, routing::{get, options, post}, Json, Router
+    extract::DefaultBodyLimit,
+    http::StatusCode,
+    response::Html,
+    routing::{get, options, post},
+    Json, Router,
 };
 use iqengine_plugin::server::{
     FunctionParameters, FunctionPostRequest, FunctionPostResponse, IQFunction,
@@ -11,7 +18,6 @@ use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 
 use fsdr_cli::iqengine_userdef::{UserDefinedFunctionParams, USER_DEFINED_FUNCTION};
-
 
 #[tokio::main]
 pub async fn start_iqengine_daemon(_filename: Option<&str>) -> Result<()> {
@@ -38,7 +44,9 @@ pub async fn start_iqengine_daemon(_filename: Option<&str>) -> Result<()> {
         .layer(ServiceBuilder::new().layer(cors))
         .layer(DefaultBodyLimit::disable());
 
-    let addr = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    let addr = tokio::net::TcpListener::bind("127.0.0.1:8000")
+        .await
+        .unwrap();
     println!("listening on {}", 8000);
     axum::serve(addr, app).await.expect("msg");
     Ok(())
@@ -50,7 +58,10 @@ async fn options_function() -> (StatusCode, Json<String>) {
 
 async fn get_index() -> (StatusCode, Html<&'static str>) {
     debug!("Get root");
-    (StatusCode::OK, Html("Welcome to the IQEngine plugin written in Rust and FutureSDR."))
+    (
+        StatusCode::OK,
+        Html("Welcome to the IQEngine plugin written in Rust and FutureSDR."),
+    )
 }
 
 // Return list of IQEngine functions

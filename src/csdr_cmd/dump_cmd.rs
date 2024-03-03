@@ -29,6 +29,7 @@ impl<'i> DumpCmd<'i> for Pair<'i, Rule> {
         match input {
             "dump_u8" => Ok(GrcItemType::U8),
             "dump_f" => Ok(GrcItemType::F32),
+            "dump_c" => Ok(GrcItemType::C32),
             _ => bail!("Unkown dump type: {input}"),
         }
     }

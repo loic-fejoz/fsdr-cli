@@ -24,11 +24,11 @@ impl BlockConverter for FileSinkConverter {
             .expect("item type must be defined");
         let blk = if "-" == filename {
             match &(item_type[..]) {
-                "u8" => StdInOutBuilder::<u8>::stdout().as_ne().build(),
+                "u8" | "uchar" => StdInOutBuilder::<u8>::stdout().as_ne().build(),
                 "i16" | "ishort" | "short" => StdInOutBuilder::<i16>::stdout().as_ne().build(),
                 "f32" | "float" => StdInOutBuilder::<f32>::stdout().as_ne().build(),
                 "c32" | "complex" => StdInOutBuilder::<Complex32>::stdout().as_ne().build(),
-                _ => todo!("Unhandled StdIn FileSink Type {item_type}"),
+                _ => todo!("Unhandled StdOut FileSink Type {item_type}"),
             }
         } else {
             match &(item_type[..]) {

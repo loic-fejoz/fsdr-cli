@@ -115,6 +115,23 @@ Yet, thanks to newly added `weaver_lsb_cf` and `weaver_usb_cf` we may have bette
 fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! audio 48_000 1
 ```
 
+## IQEngine plugins
+
+```bash
+fsdr-cli csdr \
+shift_addition_cc (-22850/100000) ! \
+fmdemod_quadri_cf ! \
+gain_ff 4 ! \
+rational_resampler_ff 12 25 ! \
+dsc_fc ! \
+timing_recovery_cc GARDNER 20 0.5 2 ! \
+realpart_cf ! \
+binary_slicer_f_u8 ! \
+pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+pack_bits_8to1_u8_u8 ! \
+dump_u8
+```
+
 ## TODO
 
 So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-

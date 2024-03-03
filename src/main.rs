@@ -31,8 +31,8 @@ pub mod grc_cmd;
 use grc_cmd::GrcCmd;
 pub mod iqengine_cmd;
 use iqengine_cmd::IQEngineCmd;
-mod iqengine_plugin;
 pub mod iqengine_blockconverter;
+mod iqengine_plugin;
 
 fn usage() -> Result<Grc> {
     let msg = "Usage:\n\
@@ -111,7 +111,6 @@ fn main() -> Result<()> {
             let filename = iqengine_cmd.iqengine_configuration();
             return iqengine_plugin::start_iqengine_daemon(filename);
         }
-        
     } else if let Some(grc_cmd) = input.as_grc_cmd() {
         let filename = grc_cmd.filename();
         // println!("Loading {filename}...");
