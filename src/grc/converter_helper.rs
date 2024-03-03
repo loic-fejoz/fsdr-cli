@@ -1,6 +1,8 @@
+use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
+
 use super::BlockInstance;
-use futuresdr::anyhow::{bail, Result};
-use futuresdr::runtime::Flowgraph;
+use futuresdr::anyhow::{anyhow, bail, Result};
+use futuresdr::runtime::{Block, Flowgraph};
 
 /// Do the actual conversion from GNU Radio block description into
 /// one or several FutureSDR block.
@@ -8,6 +10,15 @@ use futuresdr::runtime::Flowgraph;
 pub trait BlockConverter {
     fn convert(&self, blk: &BlockInstance, fg: &mut Flowgraph)
         -> Result<Box<dyn ConnectorAdapter>>;
+}
+
+pub trait MutBlockConverter {
+    fn convert(&mut self, blk: &BlockInstance, fg: &mut Flowgraph)
+        -> Result<Box<dyn ConnectorAdapter>>;
+
+    fn downcast_iqengine(&self) -> Option<&IQEngineOutputBlockConverter> {
+        None
+    }
 }
 
 /// Convert GNU Radio port's name into actual FutureSDR block id and port name.
@@ -45,5 +56,29 @@ impl ConnectorAdapter for DefaultPortAdapter {
             "out" => Ok((self.blk, "out")),
             _ => bail!("Unknown output port name {port_name}"),
         }
+    }
+}
+
+pub struct PredefinedBlockConverter {
+    value: Option<Block>
+}
+
+impl PredefinedBlockConverter {
+    pub fn new(blk: Block) -> PredefinedBlockConverter {
+        PredefinedBlockConverter {
+            value: Some(blk)
+        }
+    }
+}
+
+impl MutBlockConverter for PredefinedBlockConverter {
+    fn convert(&mut self, _blk: &BlockInstance, fg: &mut Flowgraph)
+        -> Result<Box<dyn ConnectorAdapter>> {
+            if let Some(res) = self.value.take() {
+                let blk = fg.add_block(res);
+                let s: Box<dyn ConnectorAdapter> = Box::new(DefaultPortAdapter::new(blk));
+                return Ok(s);
+            }
+            Err(anyhow!("Value already picked: probably too many time the same block type."))
     }
 }

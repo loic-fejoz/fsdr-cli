@@ -6,6 +6,7 @@ use futuresdr::anyhow::Context;
 use futuresdr::anyhow::Result;
 use futuresdr::runtime::Flowgraph;
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use super::converter_helper::*;
 pub mod analog_agc_xx;
@@ -64,10 +65,28 @@ use self::rational_resampler_xxx::RationalResamplerXxConverter;
 pub mod weaver_ssb;
 use self::weaver_ssb::WeaverSsbConverter;
 
-#[derive(Default, Clone)]
-pub struct Grc2FutureSdr;
+
+#[derive(Default)]
+pub struct Grc2FutureSdr {
+    specific_converter: HashMap<String, Box<dyn MutBlockConverter>>
+}
 
 impl Grc2FutureSdr {
+    pub fn new() -> Grc2FutureSdr {
+        Grc2FutureSdr {
+            specific_converter: HashMap::new()
+        }
+    }
+
+    pub fn take(&mut self, k: &str) -> std::option::Option<&mut Box<(dyn MutBlockConverter + 'static)>> {
+        self.specific_converter.get_mut(k).take()
+    }
+
+    pub fn with_blocktype_conversion(&mut self, blocktype: impl ToString, f: Box<dyn MutBlockConverter>)
+    {
+        self.specific_converter.insert(blocktype.to_string(), f);
+    }
+
     fn block_converter(blk_def: &BlockInstance) -> Result<Box<dyn BlockConverter>> {
         let blk_type = &(blk_def.id[..]);
         let cvter: Box<dyn BlockConverter> = match blk_type {
@@ -110,21 +129,31 @@ impl Grc2FutureSdr {
         Ok(cvter)
     }
 
-    #[allow(dead_code)]
     pub fn convert_block(
+        &mut self,
         fg: &mut Flowgraph,
         blk: &BlockInstance,
     ) -> Result<Box<dyn ConnectorAdapter>> {
-        Grc2FutureSdr::block_converter(blk)?.convert(blk, fg)
+        let cvter = self.specific_converter.get_mut(&blk.id).take();
+        if let Some(cvter) = cvter {
+
+            if let Ok(res) = cvter.convert(blk, fg) {
+                Ok(res)
+            } else {
+                Grc2FutureSdr::block_converter(blk)?.convert(blk, fg)
+            }
+        } else {
+            Grc2FutureSdr::block_converter(blk)?.convert(blk, fg)
+        }
     }
 
-    pub fn convert_grc(grc: Grc) -> Result<Flowgraph> {
+    pub fn convert_grc(&mut self, grc: Grc) -> Result<Flowgraph> {
         let mut fg = Flowgraph::new();
         let fsdr_blocks = grc
             .blocks
             .iter()
             .map(|blk| -> Result<Box<dyn ConnectorAdapter>> {
-                Grc2FutureSdr::block_converter(blk)?.convert(blk, &mut fg)
+                self.convert_block(&mut fg, blk)
             });
         let names: Vec<String> = grc.blocks.iter().map(|blk| blk.name.clone()).collect();
         let mut names_to_adapter = BTreeMap::<String, Box<dyn ConnectorAdapter>>::new();
@@ -169,7 +198,7 @@ impl Grc2FutureSdr {
         key: &'i str,
         default_value: impl Into<&'i str>,
     ) -> Result<f64> {
-        let value = Grc2FutureSdr::parameter_as_f32(blk_def, key, default_value)?;
+        let value = Self::parameter_as_f32(blk_def, key, default_value)?;
         Ok(value as f64)
     }
 }

@@ -62,7 +62,8 @@ csdr_cmd = { "csdr" ~ csdr_save_opt? ~ (cmd_sep? ~ any_csdr_cmd)+ }
 not_space =  { !( " " | "\t" ) ~ ANY }
 filepath = @{ not_space+ }
 
+iqengine_cmd = { "iqengine" ~ filepath? }
 grc_cmd = { "grc" ~ filepath }
 help_cmd = { "--help" }
 
-main = _{ SOI ~ (help_cmd | grc_cmd | csdr_cmd | any_csdr_cmd)   ~ EOI }
+main = _{ SOI ~ (help_cmd | iqengine_cmd | grc_cmd | csdr_cmd | any_csdr_cmd)   ~ EOI }

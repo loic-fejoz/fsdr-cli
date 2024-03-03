@@ -10,6 +10,7 @@ use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
 use std::io::Write;
+use futuresdr::macros::async_trait;
 
 pub struct OctaveComplex {
     samples_to_plot: usize,

@@ -10,7 +10,9 @@ description = "`fsdr-cli` is a command line tool to carry out DSP tasks for Soft
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+default=['iqengine']
 audio = ["futuresdr/audio"]
+iqengine = [ 'dep:axum', 'dep:http', 'dep:tokio', 'dep:tower', 'dep:tower-http', 'dep:iqengine-plugin', 'dep:serde_derive', 'dep:simple_logger']
 
 [dependencies]
 # futuresdr = { version = "0.0", features=['audio']}
@@ -29,10 +31,27 @@ serde = {version="1.0.152", features=["derive"]}
 pest = "2.0"
 pest_derive = "2.0"
 
+iqengine-plugin = {path="../iqengine-plugin-rs", optional = true  }
+# iqengine-plugin = { git = "https://github.com/loic-fejoz/iqengine-plugin-rs/", branch = "main", optional = true   }
+axum = {version = "0.7.4", features = ["macros"], optional = true  }
+http = {version="1.0.0", optional = true }
+serde_derive = {version="1.0.190", optional = true }
+simple_logger = {version="4.2.0", optional = true }
+tokio = { version = "1.33.0", features = ["full"], optional = true }
+tower = {version="0.4.13", optional = true }
+tower-http = { version = "0.5.2", features = ["cors"], optional = true  }
+
+# [profile.release]
+# codegen-units = 1
+# debug = true
+# lto = "fat"
+# opt-level = 3
+# panic = "abort"
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
-lto = "thin"
+lto = "fat"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
