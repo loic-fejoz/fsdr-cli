@@ -7,6 +7,7 @@ use futuresdr::anyhow::Result;
 use futuresdr::runtime::Flowgraph;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use tower::util::BoxCloneService;
 
 use super::converter_helper::*;
 pub mod analog_agc_xx;
@@ -46,6 +47,8 @@ pub mod blocks_multiply_const_vxx;
 use self::blocks_multiply_const_vxx::MulConstVxConverter;
 pub mod blocks_null_sink;
 use self::blocks_null_sink::NullSinkConverter;
+pub mod blocks_pack_k_bits;
+use self::blocks_pack_k_bits::PackBitsConverter;
 pub mod blocks_throttle;
 use self::blocks_throttle::ThrottleConverter;
 pub mod blocks_complex_to_mag;
@@ -137,6 +140,7 @@ impl Grc2FutureSdr {
             "fir_filter_xxx" => Box::new(FirFilterXxConverter {}),
             "low_pass_filter" => Box::new(LowPassFilterConverter {}),
             "octave_complex_c" => Box::new(OctaveComplexConverter {}),
+            "blocks_pack_k_bits_bb" => Box::new(PackBitsConverter {}),
             "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),

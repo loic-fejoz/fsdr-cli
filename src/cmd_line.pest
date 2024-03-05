@@ -47,6 +47,7 @@ load_types = { "f" | "u8" | "c" }
 load_cmd = { "load_" ~ load_types ~ load_param }
 limit_cmd = {"limit_ff" ~ number_or_paren_expr? }
 octave_complex_cmd = { "octave_complex_c" ~ number_or_paren_expr ~ number_or_paren_expr }
+pack_bits_cmd = { "pack_bits_8to1_u8_u8" }
 pattern_search_cmd = { "pattern_search_u8_u8" ~ number_or_paren_expr ~ number_or_paren_expr+ }
 resampler_types = { "ff" | "cc" }
 rational_resampler_cmd = { "rational_resampler_" ~ resampler_types ~ number_or_paren_expr ~ number_or_paren_expr ~ (number_or_paren_expr ~ ident?)? }
@@ -57,7 +58,7 @@ throttle_cmd = { "throttle_cc" | "throttle_ff" }
 weaver_lsb_cmd = { "weaver_lsb_cf" ~ number_or_paren_expr }
 weaver_usb_cmd = { "weaver_usb_cf" ~ number_or_paren_expr }
 
-any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | limit_cmd | octave_complex_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
+any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | limit_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
 
 cmd_sep = _{ "|" | "!" }
 csdr_save_opt = { ("--output" | "-o") ~ filepath }
