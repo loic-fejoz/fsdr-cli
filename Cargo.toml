@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "fsdr-cli"
 version = "0.1.0+202306030813-alpha"
@@ -25,7 +27,7 @@ cpal = { version = "0.15.2"}
 # fsdr-blocks = {  version="0.1"}
 fsdr-blocks = { path="../fsdr-blocks" }
 # fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
-futures = "0.3.26"
+# futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
 pest = "2.0"
@@ -41,12 +43,12 @@ tokio = { version = "1.33.0", features = ["full"], optional = true }
 tower = {version="0.4.13", optional = true }
 tower-http = { version = "0.5.2", features = ["cors"], optional = true  }
 
-# [profile.dev]
-# codegen-units = 1
-# debug = true
-# lto = "fat"
-# opt-level = 3
-# panic = "abort"
+[profile.release]
+codegen-units = 1
+debug = true
+lto = "fat"
+opt-level = 3
+panic = "abort"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

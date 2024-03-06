@@ -116,7 +116,9 @@ spino-csdr:
 	xxd -g 1
 
 spino-fsdr:
-	cargo run -- csdr load_c /home/loic/download/beacon_cycling_IQ.sigmf-data ! \
+	# cargo run -- \
+	./target/release/fsdr-cli csdr \
+	load_c /home/loic/download/beacon_cycling_IQ.sigmf-data ! \
 	shift_addition_cc "(-22850/100000)" ! \
 	fmdemod_quadri_cf ! \
 	gain_ff 4 ! \
@@ -149,13 +151,13 @@ spino-mixed1:
 	# cargo build && \
 	cat /home/loic/download/beacon_cycling_IQ.sigmf-data | \
 	~/projets/csdr/build/src/csdr shift_addition_cc "-0.22850" | \
-	~/projets/csdr/build/src/csdr fmdemod_quadri_cf | \
-	~/projets/csdr/build/src/csdr gain_ff 4 | \
- 	~/projets/csdr/build/src/csdr rational_resampler_ff 12 25 | \
-	~/projets/csdr/build/src/csdr dsb_fc | \
-	~/projets/csdr/build/src/csdr timing_recovery_cc GARDNER 20 0.5 2 | \
-	~/projets/csdr/build/src/csdr realpart_cf | \
-	~/projets/csdr/build/src/csdr binary_slicer_f_u8 | \
-	RUST_BACKTRACE=1 ./target/debug/fsdr-cli csdr \
+	./target/release/fsdr-cli csdr \
+	fmdemod_quadri_cf ! \
+ 	rational_resampler_ff 12 25 ! \
+	gain_ff 4 ! \
+	dsb_fc ! \
+	timing_recovery_cc GARDNER 20 0.5 2 ! \
+	realpart_cf ! \
+	binary_slicer_f_u8 ! \
 	pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
 	pack_bits_8to1_u8_u8 ! dump_u8	

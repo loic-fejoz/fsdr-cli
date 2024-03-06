@@ -1,7 +1,7 @@
 {
-    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
-    // Pointez pour afficher la description des attributs existants.
-    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -38,7 +38,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["csdr --output /tmp/test.grc limit_ff 2.0"],
+            "args": [],
             "cwd": "${workspaceFolder}"
         },
         {
@@ -55,25 +55,6 @@
                 "filter": {
                     "name": "fsdr-cli",
                     "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug integration test 'csdr'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--test=csdr",
-                    "--package=fsdr-cli"
-                ],
-                "filter": {
-                    "name": "csdr",
-                    "kind": "test"
                 }
             },
             "args": [],
@@ -101,38 +82,43 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "IQEngine Debug executable 'fsdr-cli'",
+            "name": "Debug integration test 'pattern_search'",
             "cargo": {
                 "args": [
-                    "build",
-                    "--bin=fsdr-cli",
-                    "--package=fsdr-cli"
+                    "test",
+                    "--no-run",
+                    "--test=pattern_search",
+                    "--package=fsdr-cli",
+                    "three_bytes",
+                    "--",
+                    "--nocapture"
                 ],
                 "filter": {
-                    "name": "fsdr-cli",
-                    "kind": "bin"
+                    "name": "pattern_search",
+                    "kind": "test"
                 }
             },
-            "args": ["iqengine"],
+            "args": [],
             "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "pack Debug executable 'fsdr-cli'",
+            "name": "Debug integration test 'csdr'",
             "cargo": {
                 "args": [
-                    "build",
-                    "--bin=fsdr-cli",
+                    "test",
+                    "--no-run",
+                    "--test=csdr",
                     "--package=fsdr-cli"
                 ],
                 "filter": {
-                    "name": "fsdr-cli",
-                    "kind": "bin"
+                    "name": "csdr",
+                    "kind": "test"
                 }
             },
-            "args": ["csdr", "pack_bits_8to1_u8_u8"],
+            "args": [],
             "cwd": "${workspaceFolder}"
-        }      
+        }
     ]
 }

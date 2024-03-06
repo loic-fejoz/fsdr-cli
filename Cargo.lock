@@ -932,7 +932,6 @@ dependencies = [
  "axum",
  "cpal",
  "fsdr-blocks",
- "futures",
  "futuresdr",
  "http 1.1.0",
  "iqengine-plugin",
