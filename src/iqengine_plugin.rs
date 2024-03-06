@@ -1,4 +1,4 @@
-use futuresdr::{
+use fsdr_blocks::futuresdr::{
     anyhow::{Ok, Result},
     log::debug,
 };

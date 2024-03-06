@@ -1,9 +1,9 @@
-use crate::blocks::OctaveComplex;
+use fsdr_blocks::octave::OctaveComplex;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::{anyhow, Result};
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::{anyhow, Result};
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 pub struct OctaveComplexConverter {}
 

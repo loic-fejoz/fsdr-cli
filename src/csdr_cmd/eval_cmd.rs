@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::Grc;
-use futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::Result;
 use pest::iterators::Pair;
 use std::f32::consts::{E, PI};
 

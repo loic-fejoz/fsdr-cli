@@ -4,7 +4,6 @@
     // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "type": "lldb",
             "request": "launch",
@@ -116,6 +115,24 @@
             },
             "args": ["iqengine"],
             "cwd": "${workspaceFolder}"
-        }        
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "pack Debug executable 'fsdr-cli'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=fsdr-cli",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "fsdr-cli",
+                    "kind": "bin"
+                }
+            },
+            "args": ["csdr", "pack_bits_8to1_u8_u8"],
+            "cwd": "${workspaceFolder}"
+        }      
     ]
 }

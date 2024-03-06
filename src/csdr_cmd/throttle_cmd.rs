@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::Result;
 use pest::iterators::Pair;
 
 pub trait ThrottleCmd<'i> {

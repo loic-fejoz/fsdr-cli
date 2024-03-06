@@ -98,3 +98,64 @@ test-ssb-csdr:
 	$(FSDR_CLI) csdr load_c tests/ssb_lsb_256k_complex2.dat ! csdr shift_addition_cc -0.201171875 ! csdr fir_decimate_cc 5 0.005 HAMMING ! csdr bandpass_fir_fft_cc 0.0 0.1 0.05 ! csdr realpart_cf ! csdr agc_ff ! csdr limit_ff ! csdr convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 
 .PHONY: csdr-compare cargo-test csdr-compare-realpart-c-f csdr-compare-dump-u8
+
+
+spino-csdr:
+	cd ~/projets/csdr/build/src && \
+	cat /home/loic/download/beacon_cycling_IQ.sigmf-data | \
+	./csdr shift_addition_cc "-0.2285" 2>/dev/null | \
+	./csdr fmdemod_quadri_cf | \
+	./csdr gain_ff 4 | \
+ 	./csdr rational_resampler_ff 12 25 | \
+	./csdr dsb_fc | \
+	./csdr timing_recovery_cc GARDNER 20 0.5 2 | \
+	./csdr realpart_cf | \
+	./csdr binary_slicer_f_u8 | \
+	CSDR_FIXED_BUFSIZE=1 ./csdr pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 | \
+	CSDR_FIXED_BUFSIZE=1920 ./csdr pack_bits_8to1_u8_u8 | \
+	xxd -g 1
+
+spino-fsdr:
+	cargo run -- csdr load_c /home/loic/download/beacon_cycling_IQ.sigmf-data ! \
+	shift_addition_cc "(-22850/100000)" ! \
+	fmdemod_quadri_cf ! \
+	gain_ff 4 ! \
+ 	rational_resampler_ff 12 25 ! \
+	dsb_fc ! \
+	timing_recovery_cc GARDNER 20 0.5 2 ! \
+	realpart_cf ! \
+	binary_slicer_f_u8 ! \
+	pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+	pack_bits_8to1_u8_u8 ! dump_u8
+
+spino-mixed:
+	# cargo build && \
+	cat /home/loic/download/beacon_cycling_IQ.sigmf-data | \
+	RUST_BACKTRACE=1 ./target/debug/fsdr-cli csdr \
+	shift_addition_cc "-0.22850" ! \
+	fmdemod_quadri_cf ! \
+	gain_ff 4 ! \
+ 	rational_resampler_ff 12 25 ! \
+	dsb_fc | \
+	~/projets/csdr/build/src/csdr timing_recovery_cc GARDNER 20 0.5 2 | \
+	./target/debug/fsdr-cli csdr realpart_cf ! \
+	binary_slicer_f_u8 | \
+	CSDR_FIXED_BUFSIZE=1 ~/projets/csdr/build/src/csdr pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 | \
+	CSDR_FIXED_BUFSIZE=1920 ~/projets/csdr/build/src/csdr pack_bits_8to1_u8_u8 | \
+	xxd -g 1
+
+
+spino-mixed1:
+	# cargo build && \
+	cat /home/loic/download/beacon_cycling_IQ.sigmf-data | \
+	~/projets/csdr/build/src/csdr shift_addition_cc "-0.22850" | \
+	~/projets/csdr/build/src/csdr fmdemod_quadri_cf | \
+	~/projets/csdr/build/src/csdr gain_ff 4 | \
+ 	~/projets/csdr/build/src/csdr rational_resampler_ff 12 25 | \
+	~/projets/csdr/build/src/csdr dsb_fc | \
+	~/projets/csdr/build/src/csdr timing_recovery_cc GARDNER 20 0.5 2 | \
+	~/projets/csdr/build/src/csdr realpart_cf | \
+	~/projets/csdr/build/src/csdr binary_slicer_f_u8 | \
+	RUST_BACKTRACE=1 ./target/debug/fsdr-cli csdr \
+	pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+	pack_bits_8to1_u8_u8 ! dump_u8	

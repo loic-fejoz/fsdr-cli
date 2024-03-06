@@ -1,7 +1,7 @@
 use pest::iterators::Pair;
 use pest::Parser;
 
-use futuresdr::anyhow::{Context, Result};
+use fsdr_blocks::futuresdr::anyhow::{Context, Result};
 
 #[derive(Parser)]
 #[grammar = "src/cmd_line.pest"]

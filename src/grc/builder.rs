@@ -1,5 +1,5 @@
 use crate::grc::{BlockInstance, Grc, Metadata, Options, States};
-use futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::Result;
 use std::collections::BTreeMap;
 
 #[derive(Clone)]
@@ -47,7 +47,7 @@ impl GrcItemType {
 
     pub fn as_grc(self) -> &'static str {
         match self {
-            Self::U8 => "uchar",
+            Self::U8 => "byte",
             Self::S8 => "char",
             Self::U16 => "short",
             Self::S16 => "short",
@@ -71,6 +71,7 @@ impl From<&str> for GrcItemType {
             "f32" => Self::F32,
             "c" => Self::C32,
             "c32" => Self::C32,
+            "complex" => Self::C32,
             "uchar" => Self::U8,
             "byte" => Self::U8,
             "char" => Self::S8,
@@ -81,6 +82,12 @@ impl From<&str> for GrcItemType {
             "f64" => Self::F64,
             _ => todo!("Unknown GNU Radio type: {value}"),
         }
+    }
+}
+
+impl From<&String> for GrcItemType {
+    fn from(value: &String) -> Self {
+        GrcItemType::from(&value[..])
     }
 }
 

@@ -1,16 +1,13 @@
-use futuresdr::anyhow::anyhow;
-use futuresdr::log::debug;
-use futuresdr::num_complex::Complex32;
+use fsdr_blocks::futuresdr::anyhow::anyhow;
+use fsdr_blocks::futuresdr::log::debug;
 use iqengine_plugin::server::{
     error::IQEngineError, CustomParamType, FunctionParameters, FunctionParamsBuilder,
-    FunctionPostRequest, FunctionPostResponse, SamplesB64Builder,
-};
+    FunctionPostRequest, FunctionPostResponse,};
 use serde_derive::{Deserialize, Serialize};
 
 use crate::csdr_cmd::CsdrCmd;
-use crate::grc::converter;
 use crate::grc::converter_helper::{
-    ConnectorAdapter, DefaultPortAdapter, MutBlockConverter, PredefinedBlockConverter,
+    MutBlockConverter, PredefinedBlockConverter,
 };
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 use crate::{cmd_grammar::Rule, cmd_line::HighLevelCmdLine};
@@ -76,7 +73,7 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
     ) -> Result<FunctionPostResponse, IQEngineError> {
         if let Some(samples_cloud) = request.samples_cloud {
             if !samples_cloud.is_empty() {
-                let metadata = samples_cloud
+                let _metadata = samples_cloud
                     .get(0)
                     .expect("need at least one IQ")
                     .sigmf()
@@ -101,7 +98,7 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
             let grc = self.create_grc(cli)?;
             let tmp = fun_name(samples_b64, grc);
             let (fg, cvter) = tmp?;
-            let fg = futuresdr::runtime::Runtime::new().run_async(fg).await?;
+            let fg = fsdr_blocks::futuresdr::runtime::Runtime::new().run_async(fg).await?;
             let result: FunctionPostResponse = cvter.as_result(fg);
             return Ok(result);
         }
@@ -114,7 +111,7 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
 fn fun_name(
     samples_b64: Vec<iqengine_plugin::server::SamplesB64>,
     grc: crate::grc::Grc,
-) -> Result<(futuresdr::runtime::Flowgraph, IQEngineOutputBlockConverter), IQEngineError> {
+) -> Result<(fsdr_blocks::futuresdr::runtime::Flowgraph, IQEngineOutputBlockConverter), IQEngineError> {
     let stream1 = samples_b64.get(0).unwrap();
     let sample_rate = stream1.sample_rate.unwrap_or(1_800_000.0);
     debug!("sample_rate is {}", sample_rate);
@@ -125,7 +122,7 @@ fn fun_name(
         iqengine_plugin::server::DataType::IqSlashCf32Le => {
             let v = stream1.clone().samples_cf32()?;
 
-            let src = futuresdr::blocks::VectorSource::new(v);
+            let src = fsdr_blocks::futuresdr::blocks::VectorSource::new(v);
             let blk_cvter = PredefinedBlockConverter::new(src);
             converter
                 .with_blocktype_conversion("blocks_file_source".to_string(), Box::new(blk_cvter));

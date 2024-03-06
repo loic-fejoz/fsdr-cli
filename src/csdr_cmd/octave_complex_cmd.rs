@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::{bail, Result};
+use fsdr_blocks::futuresdr::anyhow::{bail, Result};
 use pest::iterators::Pair;
 
 pub trait OctaveComplexCmd<'i> {

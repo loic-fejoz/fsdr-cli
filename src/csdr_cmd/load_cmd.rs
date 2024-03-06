@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::{bail, Context, Result};
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use pest::iterators::Pair;
 
 pub trait LoadCmd<'i> {

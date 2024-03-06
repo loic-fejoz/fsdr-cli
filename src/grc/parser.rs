@@ -1,5 +1,5 @@
 use crate::grc::Grc;
-use futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::Result;
 // use serde_yaml;
 use std::path::Path;
 

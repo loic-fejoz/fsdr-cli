@@ -1,11 +1,11 @@
-use fsdr_cli::blocks::PatternSearch;
-use futuresdr::anyhow::Result;
-use futuresdr::blocks::VectorSink;
-use futuresdr::blocks::VectorSinkBuilder;
-use futuresdr::blocks::VectorSource;
-use futuresdr::macros::connect;
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Runtime;
+use fsdr_blocks::packet::PatternSearch;
+use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::blocks::VectorSink;
+use fsdr_blocks::futuresdr::blocks::VectorSinkBuilder;
+use fsdr_blocks::futuresdr::blocks::VectorSource;
+use fsdr_blocks::futuresdr::macros::connect;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::runtime::Runtime;
 
 #[test]
 fn pattern_search_two_bytes_found() -> Result<()> {

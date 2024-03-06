@@ -1,9 +1,9 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
-use futuresdr::anyhow::{bail, Result};
-use futuresdr::blocks::Combine;
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::{bail, Result};
+use fsdr_blocks::futuresdr::blocks::Combine;
+use fsdr_blocks::futuresdr::num_complex::Complex32;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 #[derive(Clone, Copy)]
 pub struct FloatToComplexPortAdapter {

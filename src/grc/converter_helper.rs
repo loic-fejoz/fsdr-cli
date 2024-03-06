@@ -1,8 +1,8 @@
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 
 use super::BlockInstance;
-use futuresdr::anyhow::{anyhow, bail, Result};
-use futuresdr::runtime::{Block, Flowgraph};
+use fsdr_blocks::futuresdr::anyhow::{anyhow, bail, Result};
+use fsdr_blocks::futuresdr::runtime::{Block, Flowgraph};
 
 /// Do the actual conversion from GNU Radio block description into
 /// one or several FutureSDR block.

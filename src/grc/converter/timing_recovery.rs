@@ -1,8 +1,8 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use crate::blocks::{TimingAlgorithm, TimingRecovery};
-use futuresdr::anyhow::{bail, Result};
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::synchronizers::{TimingAlgorithm, TimingRecovery};
+use fsdr_blocks::futuresdr::anyhow::{bail, Result};
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 pub struct TimingRecoveryConverter {}
 

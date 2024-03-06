@@ -1,4 +1,4 @@
-use futuresdr::{blocks::VectorSink, num_complex::Complex32, runtime::Flowgraph};
+use fsdr_blocks::futuresdr::{blocks::VectorSink, num_complex::Complex32, runtime::Flowgraph};
 use iqengine_plugin::server::{FunctionPostResponse, SamplesB64, SamplesB64Builder};
 
 use crate::grc::converter_helper::{ConnectorAdapter, DefaultPortAdapter, MutBlockConverter};
@@ -52,8 +52,8 @@ impl MutBlockConverter for IQEngineOutputBlockConverter {
     fn convert(
         &mut self,
         blk: &crate::grc::BlockInstance,
-        fg: &mut futuresdr::runtime::Flowgraph,
-    ) -> futuresdr::anyhow::Result<Box<dyn crate::grc::converter_helper::ConnectorAdapter>> {
+        fg: &mut fsdr_blocks::futuresdr::runtime::Flowgraph,
+    ) -> fsdr_blocks::futuresdr::anyhow::Result<Box<dyn crate::grc::converter_helper::ConnectorAdapter>> {
         let filename = blk
             .parameters
             .get("file")

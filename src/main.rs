@@ -1,3 +1,4 @@
+#[macro_use]
 pub extern crate async_trait;
 
 #[macro_use]
@@ -14,15 +15,15 @@ use std::{eprintln, println};
 use self::grc::GrcParser;
 use cmd_line::HighLevelCmdLine;
 use fsdr_cli::join;
-use futuresdr::anyhow::{bail, Ok, Result};
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Runtime;
+use fsdr_blocks::futuresdr::anyhow::{bail, Ok, Result};
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::runtime::Runtime;
 mod grc;
 use grc::Grc;
 // mod csdr;
 // use csdr::CsdrParser;
 use grc::converter::Grc2FutureSdr;
-pub mod blocks;
+
 pub mod cmd_line;
 pub mod csdr_cmd;
 use crate::csdr_cmd::CsdrCmd;

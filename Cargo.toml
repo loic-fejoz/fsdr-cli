@@ -11,20 +11,20 @@ description = "`fsdr-cli` is a command line tool to carry out DSP tasks for Soft
 
 [features]
 default=['iqengine']
-audio = ["futuresdr/audio"]
+audio =  [] #["futuresdr/audio"]
 iqengine = [ 'dep:axum', 'dep:http', 'dep:tokio', 'dep:tower', 'dep:tower-http', 'dep:iqengine-plugin', 'dep:serde_derive', 'dep:simple_logger']
 
 [dependencies]
 # futuresdr = { version = "0.0", features=['audio']}
-# futuresdr = { path="../FutureSDR", features=['audio']}
+futuresdr = { path="../FutureSDR", features=['audio']}
 # futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
+# futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
 
-async-trait = "0.1.52"
+async-trait = "0.1"
 cpal = { version = "0.15.2"}
 # fsdr-blocks = {  version="0.1"}
-# fsdr-blocks = { path="../fsdr-blocks" }
-fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
+fsdr-blocks = { path="../fsdr-blocks" }
+# fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
 futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
@@ -41,7 +41,7 @@ tokio = { version = "1.33.0", features = ["full"], optional = true }
 tower = {version="0.4.13", optional = true }
 tower-http = { version = "0.5.2", features = ["cors"], optional = true  }
 
-# [profile.release]
+# [profile.dev]
 # codegen-units = 1
 # debug = true
 # lto = "fat"
@@ -58,7 +58,7 @@ lto = "fat"
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.0.5"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
-rust-toolchain-version = "1.67.1"
+rust-toolchain-version = "1.78.0-nightly"
 # CI backends to support (see 'cargo dist generate-ci')
 ci = ["github"]
 # Target platforms to build apps for (Rust target-triple syntax)

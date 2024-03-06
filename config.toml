@@ -1,0 +1,10 @@
+log_level = "info"
+buffer_size = 32768
+queue_size = 8192
+ctrlport_enable = false
+ctrlport_bind = "127.0.0.1:1337"
+
+[my]
+a = 1
+b = "foo"
+

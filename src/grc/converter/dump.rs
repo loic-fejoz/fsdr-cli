@@ -1,9 +1,9 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use futuresdr::anyhow::Result;
-use futuresdr::blocks::Sink;
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::blocks::Sink;
+use fsdr_blocks::futuresdr::num_complex::Complex32;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 pub struct DumpConverter {}
 

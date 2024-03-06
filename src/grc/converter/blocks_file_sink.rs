@@ -1,10 +1,11 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
+use crate::grc::builder::GrcItemType;
 use fsdr_blocks::stdinout::StdInOutBuilder;
-use futuresdr::anyhow::Result;
-use futuresdr::blocks::FileSink;
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::blocks::FileSink;
+use fsdr_blocks::futuresdr::num_complex::Complex32;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 pub struct FileSinkConverter {}
 
@@ -18,25 +19,26 @@ impl BlockConverter for FileSinkConverter {
             .parameters
             .get("file")
             .expect("filename must be defined");
-        let item_type = blk
+        let item_type: GrcItemType = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .expect("item type must be defined")
+            .into();
         let blk = if "-" == filename {
-            match &(item_type[..]) {
-                "u8" | "uchar" => StdInOutBuilder::<u8>::stdout().as_ne().build(),
-                "i16" | "ishort" | "short" => StdInOutBuilder::<i16>::stdout().as_ne().build(),
-                "f32" | "float" => StdInOutBuilder::<f32>::stdout().as_ne().build(),
-                "c32" | "complex" => StdInOutBuilder::<Complex32>::stdout().as_ne().build(),
-                _ => todo!("Unhandled StdOut FileSink Type {item_type}"),
+            match item_type {
+                GrcItemType::U8 => StdInOutBuilder::<u8>::stdout().as_ne().build(),
+                GrcItemType::S16 => StdInOutBuilder::<i16>::stdout().as_ne().build(),
+                GrcItemType::F32 => StdInOutBuilder::<f32>::stdout().as_ne().build(),
+                GrcItemType::C32 => StdInOutBuilder::<Complex32>::stdout().as_ne().build(),
+                _ => todo!("Unhandled StdOut FileSink Type {:?}", item_type),
             }
         } else {
-            match &(item_type[..]) {
-                "u8" => FileSink::<u8>::new(filename),
-                "i16" | "short" => FileSink::<i16>::new(filename),
-                "f32" | "float" => FileSink::<f32>::new(filename),
-                "c32" | "complex" => FileSink::<Complex32>::new(filename),
-                _ => todo!("Unhandled FileSink Type {item_type}"),
+            match item_type {
+                GrcItemType::U8 => FileSink::<u8>::new(filename),
+                GrcItemType::S16 => FileSink::<i16>::new(filename),
+                GrcItemType::F32 => FileSink::<f32>::new(filename),
+                GrcItemType::C32 => FileSink::<Complex32>::new(filename),
+                _ => todo!("Unhandled FileSink Type {:?}", item_type),
             }
         };
         let blk = fg.add_block(blk);

@@ -1,13 +1,12 @@
 use crate::cmd_grammar::CommandsParser;
 use crate::csdr_cmd::eval_cmd::EvalCmd;
 use crate::grc::Grc;
-use futuresdr::anyhow::bail;
-use futuresdr::anyhow::Context;
-use futuresdr::anyhow::Result;
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::bail;
+use fsdr_blocks::futuresdr::anyhow::Context;
+use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use tower::util::BoxCloneService;
 
 use super::converter_helper::*;
 pub mod analog_agc_xx;
@@ -184,19 +183,19 @@ impl Grc2FutureSdr {
             let src_blk = connection[0].clone();
             let src_blk = names_to_adapter
                 .get(&src_blk)
-                .context("unfound source block: {src_blk}")?;
+                .context(format!("unfound source block: {}", src_blk))?;
             let src_port = connection[1].clone();
             let (src_blk, src_port) = src_blk.adapt_output_port(&src_port)?;
 
             let tgt_blk = connection[2].clone();
             let tgt_blk = names_to_adapter
                 .get(&tgt_blk)
-                .context("unfound target block: {tgt_blk}")?;
+                .context(format!("unfound target block: {}", tgt_blk))?;
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
             fg.connect_stream(src_blk, src_port, tgt_blk, tgt_port)
-                .context("connecting {connection}")?;
+                .context(format!("connecting {:?}", connection))?;
         }
         Ok(fg)
     }

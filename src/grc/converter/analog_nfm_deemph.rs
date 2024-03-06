@@ -1,10 +1,10 @@
-use futuresdr::anyhow::bail;
-use futuresdr::blocks::FirBuilder;
+use fsdr_blocks::futuresdr::anyhow::bail;
+use fsdr_blocks::futuresdr::blocks::FirBuilder;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 pub struct DeemphasisNfmConverter {}
 

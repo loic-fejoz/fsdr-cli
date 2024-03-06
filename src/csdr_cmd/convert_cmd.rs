@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use futuresdr::anyhow::{Context, Result};
+use fsdr_blocks::futuresdr::anyhow::{Context, Result};
 use pest::iterators::Pair;
 
 pub trait ConvertCmd<'i> {

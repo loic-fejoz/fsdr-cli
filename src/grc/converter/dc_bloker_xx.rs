@@ -1,9 +1,9 @@
-use crate::blocks::DCBlocker;
+use fsdr_blocks::filters::DCBlocker;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
-use futuresdr::runtime::Flowgraph;
+use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::runtime::Flowgraph;
 
 pub struct DcBlockerXx {}
 
