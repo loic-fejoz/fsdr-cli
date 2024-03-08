@@ -1,11 +1,11 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
 use crate::grc::builder::GrcItemType;
-use fsdr_blocks::stdinout::StdInOutBuilder;
 use fsdr_blocks::futuresdr::anyhow::Result;
 use fsdr_blocks::futuresdr::blocks::FileSink;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
+use fsdr_blocks::stdinout::StdInOutBuilder;
 
 pub struct FileSinkConverter {}
 

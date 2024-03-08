@@ -14,10 +14,10 @@ use std::{eprintln, println};
 
 use self::grc::GrcParser;
 use cmd_line::HighLevelCmdLine;
-use fsdr_cli::join;
 use fsdr_blocks::futuresdr::anyhow::{bail, Ok, Result};
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
 use fsdr_blocks::futuresdr::runtime::Runtime;
+use fsdr_cli::join;
 mod grc;
 use grc::Grc;
 // mod csdr;

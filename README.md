@@ -121,7 +121,6 @@ fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-5150
 fsdr-cli csdr \
 shift_addition_cc (-22850/100000) ! \
 fmdemod_quadri_cf ! \
-gain_ff 4 ! \
 rational_resampler_ff 12 25 ! \
 dsc_fc ! \
 timing_recovery_cc GARDNER 20 0.5 2 ! \
@@ -130,6 +129,26 @@ binary_slicer_f_u8 ! \
 pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
 pack_bits_8to1_u8_u8 ! \
 dump_u8
+```
+
+```
+csdr shift_addition_cc (-22850/100000)
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! dsb_fc
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2 ! realpart_cf ! binary_slicer_f_u8 ! pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! pack_bits_8to1_u8_u8
 ```
 
 ## TODO
@@ -250,7 +269,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [repeat_u8](https://github.com/jketterl/csdr#repeat_u8)
 - [ ] [uniform_noise_f](https://github.com/jketterl/csdr#uniform_noise_f)
 - [ ] [gaussian_noise_c](https://github.com/jketterl/csdr#gaussian_noise_c)
-- [ ] [pack_bits_8to1_u8_u8](https://github.com/jketterl/csdr#pack_bits_8to1_u8_u8)
+- [x] [pack_bits_8to1_u8_u8](https://github.com/jketterl/csdr#pack_bits_8to1_u8_u8)
 - [ ] [pack_bits_1to8_u8_u8](https://github.com/jketterl/csdr#pack_bits_1to8_u8_u8)
 - [ ] [awgn_cc](https://github.com/jketterl/csdr#awgn_cc)
 - [ ] [add_n_zero_samples_at_beginning_f](https://github.com/jketterl/csdr#add_n_zero_samples_at_beginning_f)
@@ -261,10 +280,10 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [_fft2octave](https://github.com/jketterl/csdr#_fft2octave)
 - [ ] [invert_u8_u8](https://github.com/jketterl/csdr#invert_u8_u8)
 - [ ] [rtty_baudot2ascii_u8_u8](https://github.com/jketterl/csdr#rtty_baudot2ascii_u8_u8)
-- [ ] [binary_slicer_f_u8](https://github.com/jketterl/csdr#binary_slicer_f_u8)
+- [x] [binary_slicer_f_u8](https://github.com/jketterl/csdr#binary_slicer_f_u8)
 - [ ] [serial_line_decoder_f_u8](https://github.com/jketterl/csdr#serial_line_decoder_f_u8)
 - [ ] [pll_cc](https://github.com/jketterl/csdr#pll_cc)
-- [ ] [timing_recovery_cc](https://github.com/jketterl/csdr#timing_recovery_cc)
+- [x] [timing_recovery_cc](https://github.com/jketterl/csdr#timing_recovery_cc)
 - [x] [octave_complex_c](https://github.com/jketterl/csdr#octave_complex_c)
 - [ ] [psk_modulator_u8_c](https://github.com/jketterl/csdr#psk_modulator_u8_c)
 - [ ] [duplicate_samples_ntimes_u8_u8](https://github.com/jketterl/csdr#duplicate_samples_ntimes_u8_u8)

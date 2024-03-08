@@ -1,5 +1,3 @@
-use fsdr_cli::csdr_cmd::CsdrParser;
-use fsdr_cli::grc::converter::Grc2FutureSdr;
 use fsdr_blocks::futuresdr::anyhow::Result;
 use fsdr_blocks::futuresdr::blocks::VectorSink;
 use fsdr_blocks::futuresdr::blocks::VectorSinkBuilder;
@@ -8,6 +6,8 @@ use fsdr_blocks::futuresdr::macros::connect;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
 use fsdr_blocks::futuresdr::runtime::Runtime;
+use fsdr_cli::csdr_cmd::CsdrParser;
+use fsdr_cli::grc::converter::Grc2FutureSdr;
 
 #[test]
 pub fn parse_convert_u8_f() {

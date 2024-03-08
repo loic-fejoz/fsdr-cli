@@ -1,7 +1,7 @@
+use crate::grc::builder::GrcItemType;
+use crate::grc::converter_helper::{ConnectorAdapter, DefaultPortAdapter, MutBlockConverter};
 use fsdr_blocks::futuresdr::{blocks::VectorSink, num_complex::Complex32, runtime::Flowgraph};
 use iqengine_plugin::server::{FunctionPostResponse, SamplesB64, SamplesB64Builder};
-
-use crate::grc::converter_helper::{ConnectorAdapter, DefaultPortAdapter, MutBlockConverter};
 
 #[derive(Clone, Copy)]
 pub struct IQEngineOutputBlockConverter {
@@ -53,32 +53,38 @@ impl MutBlockConverter for IQEngineOutputBlockConverter {
         &mut self,
         blk: &crate::grc::BlockInstance,
         fg: &mut fsdr_blocks::futuresdr::runtime::Flowgraph,
-    ) -> fsdr_blocks::futuresdr::anyhow::Result<Box<dyn crate::grc::converter_helper::ConnectorAdapter>> {
+    ) -> fsdr_blocks::futuresdr::anyhow::Result<
+        Box<dyn crate::grc::converter_helper::ConnectorAdapter>,
+    > {
         let filename = blk
             .parameters
             .get("file")
             .expect("filename must be defined");
-        let item_type = blk
+        let item_type: GrcItemType = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .expect("item type must be defined")
+            .into();
         let blk = if "-" == filename {
-            match &(item_type[..]) {
-                "u8" | "uchar" => {
+            match item_type {
+                GrcItemType::U8 => {
                     self.data_type =
                         Some(iqengine_plugin::server::DataType::ApplicationSlashOctetStream);
                     VectorSink::<u8>::new(0)
                 }
-                "i16" | "ishort" | "short" => VectorSink::<i16>::new(0),
-                "f32" | "float" => {
+                GrcItemType::S16 => VectorSink::<i16>::new(0),
+                GrcItemType::F32 => {
                     self.data_type = Some(iqengine_plugin::server::DataType::AudioSlashWav);
                     VectorSink::<f32>::new(0)
                 }
-                "c32" | "complex" => {
+                GrcItemType::C32 => {
                     self.data_type = Some(iqengine_plugin::server::DataType::IqSlashCf32Le);
                     VectorSink::<Complex32>::new(0)
                 }
-                _ => todo!("Unhandled FileSink Type {item_type}"),
+                _ => {
+                    let item_type = item_type.as_csdr();
+                    todo!("Unhandled FileSink Type {item_type}")
+                }
             }
         } else {
             todo!("bizarre")

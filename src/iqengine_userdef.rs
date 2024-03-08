@@ -2,13 +2,12 @@ use fsdr_blocks::futuresdr::anyhow::anyhow;
 use fsdr_blocks::futuresdr::log::debug;
 use iqengine_plugin::server::{
     error::IQEngineError, CustomParamType, FunctionParameters, FunctionParamsBuilder,
-    FunctionPostRequest, FunctionPostResponse,};
+    FunctionPostRequest, FunctionPostResponse,
+};
 use serde_derive::{Deserialize, Serialize};
 
 use crate::csdr_cmd::CsdrCmd;
-use crate::grc::converter_helper::{
-    MutBlockConverter, PredefinedBlockConverter,
-};
+use crate::grc::converter_helper::{MutBlockConverter, PredefinedBlockConverter};
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 use crate::{cmd_grammar::Rule, cmd_line::HighLevelCmdLine};
 
@@ -98,7 +97,9 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
             let grc = self.create_grc(cli)?;
             let tmp = fun_name(samples_b64, grc);
             let (fg, cvter) = tmp?;
-            let fg = fsdr_blocks::futuresdr::runtime::Runtime::new().run_async(fg).await?;
+            let fg = fsdr_blocks::futuresdr::runtime::Runtime::new()
+                .run_async(fg)
+                .await?;
             let result: FunctionPostResponse = cvter.as_result(fg);
             return Ok(result);
         }
@@ -111,7 +112,13 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
 fn fun_name(
     samples_b64: Vec<iqengine_plugin::server::SamplesB64>,
     grc: crate::grc::Grc,
-) -> Result<(fsdr_blocks::futuresdr::runtime::Flowgraph, IQEngineOutputBlockConverter), IQEngineError> {
+) -> Result<
+    (
+        fsdr_blocks::futuresdr::runtime::Flowgraph,
+        IQEngineOutputBlockConverter,
+    ),
+    IQEngineError,
+> {
     let stream1 = samples_b64.get(0).unwrap();
     let sample_rate = stream1.sample_rate.unwrap_or(1_800_000.0);
     debug!("sample_rate is {}", sample_rate);

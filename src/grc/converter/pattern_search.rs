@@ -1,8 +1,8 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use fsdr_blocks::packet::PatternSearch;
 use fsdr_blocks::futuresdr::anyhow::Result;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
+use fsdr_blocks::packet::PatternSearch;
 
 pub struct PatternSearchConverter {}
 
