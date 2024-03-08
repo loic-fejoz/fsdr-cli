@@ -103,7 +103,7 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
             let result: FunctionPostResponse = cvter.as_result(fg);
             return Ok(result);
         }
-        return Err(IQEngineError::NotYetImplemented(
+        Err(IQEngineError::NotYetImplemented(
             "Something wen't wrong".to_string(),
         ));
     }

@@ -9,6 +9,12 @@ pub struct IQEngineOutputBlockConverter {
     data_type: Option<iqengine_plugin::server::DataType>,
 }
 
+impl Default for IQEngineOutputBlockConverter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IQEngineOutputBlockConverter {
     pub fn new() -> IQEngineOutputBlockConverter {
         IQEngineOutputBlockConverter {
