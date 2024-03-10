@@ -105,7 +105,7 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
         }
         Err(IQEngineError::NotYetImplemented(
             "Something wen't wrong".to_string(),
-        ));
+        ))
     }
 }
 

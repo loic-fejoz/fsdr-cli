@@ -116,8 +116,33 @@ spino-csdr:
 	xxd -g 1
 
 spino-fsdr:
-	# cargo run -- \
 	./target/release/fsdr-cli csdr \
+	load_c /home/loic/download/beacon_cycling_IQ.sigmf-data ! \
+	shift_addition_cc "(-22850/100000)" ! \
+	fmdemod_quadri_cf ! \
+ 	rational_resampler_ff 12 25 ! \
+	dsb_fc ! \
+	timing_recovery_cc GARDNER 20 0.5 2 ! \
+	realpart_cf ! \
+	binary_slicer_f_u8 ! \
+	pattern_search_u8_u8 \(8*240\) 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+	pack_bits_8to1_u8_u8 ! dump_u8
+
+spino-fsdr-atan:
+	./target/release/fsdr-cli csdr \
+	load_c /home/loic/download/beacon_cycling_IQ.sigmf-data ! \
+	shift_addition_cc "(-22850/100000)" ! \
+	fmdemod_atan_cf ! \
+ 	rational_resampler_ff 12 25 ! \
+	dsb_fc ! \
+	timing_recovery_cc GARDNER 20 0.5 2 ! \
+	realpart_cf ! \
+	binary_slicer_f_u8 ! \
+	pattern_search_u8_u8 \(8*240\) 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+	pack_bits_8to1_u8_u8 ! dump_u8
+
+spino-fsdr-flamegraph:
+	cargo flamegraph -- csdr \
 	load_c /home/loic/download/beacon_cycling_IQ.sigmf-data ! \
 	shift_addition_cc "(-22850/100000)" ! \
 	fmdemod_quadri_cf ! \

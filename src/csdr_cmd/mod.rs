@@ -89,6 +89,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
             Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
+            Rule::fmdemod_atan_cmd => self.build_fm_demod_atan(grc),
             Rule::gain_cmd => self.build_gain(grc),
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
