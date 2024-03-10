@@ -232,7 +232,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [shift_addition_fc](https://github.com/jketterl/csdr#shift_addition_fc)
 - [ ] [dcblock_ff](https://github.com/jketterl/csdr#dcblock_ff)
 - [x] [fastdcblock_ff](https://github.com/jketterl/csdr#fastdcblock_ff)[^3]
-- [ ] [fmdemod_atan_cf](https://github.com/jketterl/csdr#fmdemod_atan_cf)
+- [x] [fmdemod_atan_cf](https://github.com/jketterl/csdr#fmdemod_atan_cf)
 - [x] [fmdemod_quadri_cf](https://github.com/jketterl/csdr#fmdemod_quadri_cf)[^1]
 - [ ] [fmdemod_quadri_novect_cf](https://github.com/jketterl/csdr#fmdemod_quadri_novect_cf)
 - [x] [deemphasis_wfm_ff](https://github.com/jketterl/csdr#deemphasis_wfm_ff)[^1]
@@ -257,7 +257,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [decode_ima_adpcm_u8_i16](https://github.com/jketterl/csdr#decode_ima_adpcm_u8_i16)
 - [ ] [compress_fft_adpcm_f_u8](https://github.com/jketterl/csdr#compress_fft_adpcm_f_u8)
 - [ ] [fft_exchange_sides_ff](https://github.com/jketterl/csdr#fft_exchange_sides_ff)
-- [ ] [dsb_fc](https://github.com/jketterl/csdr#dsb_fc)
+- [x] [dsb_fc](https://github.com/jketterl/csdr#dsb_fc)
 - [ ] [add_dcoffset_cc](https://github.com/jketterl/csdr#add_dcoffset_cc)
 - [ ] [convert_f_samplerf](https://github.com/jketterl/csdr#convert_f_samplerf)
 - [ ] [fmmod_fc](https://github.com/jketterl/csdr#fmmod_fc)
@@ -302,7 +302,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [dbpsk_decoder_c_u8](https://github.com/jketterl/csdr#dbpsk_decoder_c_u8)
 - [ ] [bfsk_demod_cf](https://github.com/jketterl/csdr#bfsk_demod_cf)
 - [ ] [add_const_cc](https://github.com/jketterl/csdr#add_const_cc)
-- [ ] [pattern_search_u8_u8](https://github.com/jketterl/csdr#pattern_search_u8_u8)
+- [x] [pattern_search_u8_u8](https://github.com/jketterl/csdr#pattern_search_u8_u8)
 - [ ] [tee](https://github.com/jketterl/csdr#tee)
 - [ ] [?](https://github.com/jketterl/csdr#search_the_function_list)
 
