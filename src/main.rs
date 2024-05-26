@@ -73,7 +73,7 @@ fn main() -> Result<()> {
                     eprintln!("{one_liner}");
                     match err.location {
                         pest::error::InputLocation::Pos(x) => {
-                            let marker = "-".repeat(x - 1) + "^";
+                            let marker = "-".repeat(x.max(1) - 1) + "^";
                             eprintln!("\x1b[93m{marker}\x1b[0m");
                         }
                         pest::error::InputLocation::Span(range) => {
