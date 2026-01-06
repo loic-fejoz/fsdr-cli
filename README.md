@@ -14,7 +14,7 @@ Features:
 * GNU Radio flowgraph execution: ongoing
 * all in one flow graph execution: single process, no more pipes!
 * expression evaluation
-* conversion of csdr commands into GNU Radio companion flowgraph wherever possible
+* conversion of csdr commands into a strictly compatible **GNU Radio Companion (GRC)** intermediate graph
 * additional commands
 
 ## WFM decoding

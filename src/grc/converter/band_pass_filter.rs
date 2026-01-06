@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::FirBuilder;
 use fsdr_blocks::futuresdr::futuredsp::{firdes, windows, TapsAccessor};
 use fsdr_blocks::futuresdr::num_complex::Complex32;
@@ -43,9 +43,15 @@ impl BlockConverter for BandPassFilterConverter {
         let _gain = Grc2FutureSdr::parameter_as_f64(blk, "gain", "1.0")?;
         let interp = Grc2FutureSdr::parameter_as_f64(blk, "interp", "1.0")? as usize;
         let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "samp_rate", "1.0")?;
-        let item_type = blk.parameters.get("type").expect("type must be defined");
+        let item_type = blk
+            .parameters
+            .get("type")
+            .context("band_pass_filter: type must be defined")?;
         let transition_bw = Grc2FutureSdr::parameter_as_f64(blk, "width", "1.0")?; // Transition width between stop-band and pass-band in Hz
-        let window = blk.parameters.get("win").expect("win must be defined");
+        let window = blk
+            .parameters
+            .get("win")
+            .context("band_pass_filter: win must be defined")?;
 
         let low_cutoff_freq = low_cutoff_freq / sample_rate;
         let high_cutoff_freq = high_cutoff_freq / sample_rate;
@@ -66,7 +72,7 @@ impl BlockConverter for BandPassFilterConverter {
                 let alpha = Grc2FutureSdr::parameter_as_f64(blk, "beta", "1.0")?;
                 windows::gaussian(taps_length, alpha)
             }
-            _ => todo!("Unknown band_pass_filter window: {window}"),
+            _ => bail!("band_pass_filter: Unknown window: {window}"),
         };
         let blk = match &(item_type[..]) {
             "fir_filter_ccf" => {
@@ -86,7 +92,7 @@ impl BlockConverter for BandPassFilterConverter {
                     Complex32VecTaps,
                 >(interp, decimation, taps)
             }
-            _ => todo!("Unhandled band_pass_filter Type {item_type}"),
+            _ => bail!("band_pass_filter: Unhandled type {item_type}"),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk);

@@ -1,13 +1,19 @@
-[workspace]
 
 [package]
 name = "fsdr-cli"
-version = "0.1.0+202306030813-alpha"
+version = "0.1.0+202406281158-alpha"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/loic-fejoz/fsdr-cli/"
 homepage = "https://fsdr-cli.github.io"
 description = "`fsdr-cli` is a command line tool to carry out DSP tasks for Software Defined Radio. It also comes as a replacement of `csdr`."
+authors=["Loïc Fejoz <loic@fejoz.net>"]
+
+[package.metadata.wix]
+upgrade-guid = "DE2DF6DA-AD53-48D5-A4B2-F4020ECC3592"
+path-guid = "66D9F37F-A1D4-44C6-B9B1-508B9CEF4577"
+license = false
+eula = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -58,10 +64,16 @@ lto = "fat"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.0.5"
+cargo-dist-version = "0.17.0"
 # The preferred Rust toolchain to use in CI (rustup toolchain syntax)
 rust-toolchain-version = "1.78.0-nightly"
-# CI backends to support (see 'cargo dist generate-ci')
-ci = ["github"]
+# CI backends to support
+ci = "github"
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-apple-darwin", "armv7-unknown-linux-gnueabihf"]
+targets = ["armv7-unknown-linux-gnueabihf", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# The installers to generate for each app
+installers = ["shell", "msi"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
+# Whether to install an updater program
+install-updater = false

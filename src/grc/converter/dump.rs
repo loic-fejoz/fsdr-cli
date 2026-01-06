@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::Sink;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
@@ -16,13 +16,13 @@ impl BlockConverter for DumpConverter {
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .context("dump: item type must be defined")?;
 
         let blk = match &(item_type[..]) {
             "u8" => Sink::new(|x: &u8| print!("{:02x} ", *x)),
             "f" | "float" => Sink::new(|x: &f32| print!("{:e} ", *x)),
             "c" => Sink::new(|x: &Complex32| print!("({:e}, {:e})", x.re, x.im)),
-            _ => todo!("Unhandled dump of Type {item_type}"),
+            _ => bail!("dump: Unhandled type {item_type}"),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk);

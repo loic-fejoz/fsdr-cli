@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::FirBuilder;
 use fsdr_blocks::futuresdr::futuredsp::{firdes, windows};
 use fsdr_blocks::futuresdr::num_complex::Complex32;
@@ -19,9 +19,15 @@ impl BlockConverter for LowPassFilterConverter {
         let _gain = Grc2FutureSdr::parameter_as_f64(blk, "gain", "1.0")?;
         let interp = Grc2FutureSdr::parameter_as_f64(blk, "interp", "1.0")? as usize;
         let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "samp_rate", "1.0")?;
-        let item_type = blk.parameters.get("type").expect("type must be defined");
+        let item_type = blk
+            .parameters
+            .get("type")
+            .context("low_pass_filter: type must be defined")?;
         let _width = Grc2FutureSdr::parameter_as_f64(blk, "width", "1.0")?; // Transition width between stop-band and pass-band in Hz
-        let window = blk.parameters.get("win").expect("win must be defined");
+        let window = blk
+            .parameters
+            .get("win")
+            .context("low_pass_filter: win must be defined")?;
         let transition_bw = cutoff_freq / sample_rate;
         let taps_length: usize = (4.0 / transition_bw) as usize;
         let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
@@ -39,7 +45,7 @@ impl BlockConverter for LowPassFilterConverter {
                 let alpha = Grc2FutureSdr::parameter_as_f64(blk, "beta", "1.0")?;
                 windows::gaussian(taps_length, alpha)
             }
-            _ => todo!("Unknown low_pass_filter window: {window}"),
+            _ => bail!("low_pass_filter: Unknown window: {window}"),
         };
         let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
         let blk = match &(item_type[..]) {
@@ -48,7 +54,7 @@ impl BlockConverter for LowPassFilterConverter {
                     interp, decimation, taps,
                 )
             }
-            _ => todo!("Unhandled low_pass_filter Type {item_type}"),
+            _ => bail!("low_pass_filter: Unhandled type {item_type}"),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk);

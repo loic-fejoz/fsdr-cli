@@ -1,11 +1,12 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
 use crate::grc::builder::GrcItemType;
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::FileSink;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
 use fsdr_blocks::stdinout::StdInOutBuilder;
+use std::convert::TryInto;
 
 pub struct FileSinkConverter {}
 
@@ -15,22 +16,23 @@ impl BlockConverter for FileSinkConverter {
         blk: &BlockInstance,
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
+        // Parameters "file" and "type" match the keys defined in GNU Radio's File Sink block.
         let filename = blk
             .parameters
             .get("file")
-            .expect("filename must be defined");
+            .context("blocks_file_sink: filename must be defined")?;
         let item_type: GrcItemType = blk
             .parameters
             .get("type")
-            .expect("item type must be defined")
-            .into();
+            .context("blocks_file_sink: item type must be defined")?
+            .try_into()?;
         let blk = if "-" == filename {
             match item_type {
                 GrcItemType::U8 => StdInOutBuilder::<u8>::stdout().as_ne().build(),
                 GrcItemType::S16 => StdInOutBuilder::<i16>::stdout().as_ne().build(),
                 GrcItemType::F32 => StdInOutBuilder::<f32>::stdout().as_ne().build(),
                 GrcItemType::C32 => StdInOutBuilder::<Complex32>::stdout().as_ne().build(),
-                _ => todo!("Unhandled StdOut FileSink Type {:?}", item_type),
+                _ => bail!("blocks_file_sink: Unhandled StdOut type {:?}", item_type),
             }
         } else {
             match item_type {
@@ -38,7 +40,7 @@ impl BlockConverter for FileSinkConverter {
                 GrcItemType::S16 => FileSink::<i16>::new(filename),
                 GrcItemType::F32 => FileSink::<f32>::new(filename),
                 GrcItemType::C32 => FileSink::<Complex32>::new(filename),
-                _ => todo!("Unhandled FileSink Type {:?}", item_type),
+                _ => bail!("blocks_file_sink: Unhandled type {:?}", item_type),
             }
         };
         let blk = fg.add_block(blk);

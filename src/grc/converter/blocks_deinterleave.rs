@@ -1,7 +1,7 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
 // use crate::grc::builder::GrcItemType;
-use fsdr_blocks::futuresdr::anyhow::{bail, Result};
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
 use fsdr_blocks::stream::Deinterleave;
@@ -17,7 +17,7 @@ impl BlockConverter for DeinterleaveBlockConverter {
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .context("blocks_deinterleave: item type must be defined")?;
         let blk = match &(item_type[..]) {
             "char" => Deinterleave::<u8>::new(),
             "short" => Deinterleave::<i16>::new(),

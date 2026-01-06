@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::NullSink;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
@@ -16,13 +16,13 @@ impl BlockConverter for NullSinkConverter {
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .context("blocks_null_sink: item type must be defined")?;
         let blk = match &(item_type[..]) {
             "char" => NullSink::<u8>::new(),
             "short" => NullSink::<i16>::new(),
             "float" => NullSink::<f32>::new(),
             "complex" => NullSink::<Complex32>::new(),
-            _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
+            _ => bail!("blocks_null_sink: Unhandled type {item_type}"),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk);

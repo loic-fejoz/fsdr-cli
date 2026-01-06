@@ -11,10 +11,10 @@ pub trait DumpCmd<'i> {
         let mut grc = grc;
         let input_type = self.input_type()?;
         grc = grc
-            .ensure_source(input_type)
+            .ensure_source(input_type)?
             .create_block_instance(self.block_name()?)
             .with_parameter("type", input_type.as_csdr())
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

@@ -11,12 +11,12 @@ pub trait PatternSearchCmd<'i> {
     fn build_pattern_search(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
         let mut grc = grc;
         grc = grc
-            .ensure_source(GrcItemType::U8)
+            .ensure_source(GrcItemType::U8)?
             .create_block_instance("pattern_search")
             .with_parameter("values_after", self.values_after()?)
             .with_parameter("pattern_values", self.pattern_values()?.join(","))
             .assert_output(GrcItemType::U8)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

@@ -113,12 +113,12 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
 }
 
 pub trait CsdrCmd<'i> {
-    fn output(&self) -> Option<&'i str>;
+    fn output(&self) -> Result<Option<&'i str>>;
     fn parse(&self) -> Result<Option<Grc>>;
 }
 
 impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
-    fn output(&self) -> Option<&'i str> {
+    fn output(&self) -> Result<Option<&'i str>> {
         let cmd = self.clone();
         let mut args = cmd.into_inner();
         if let Some(first_inner) = args.next() {
@@ -127,14 +127,14 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
                     let filename = first_inner
                         .into_inner()
                         .next()
-                        .expect("output filepath expected");
+                        .context("output filepath expected")?;
                     let filename = filename.as_str();
-                    Some(filename)
+                    Ok(Some(filename))
                 }
-                _ => None,
+                _ => Ok(None),
             }
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -143,7 +143,7 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
         for sub_cmd in self.clone().into_inner() {
             grc_builder = AnyCmd::parse(&sub_cmd, grc_builder)?;
         }
-        grc_builder.ensure_sink();
+        grc_builder.ensure_sink()?;
         let grc = grc_builder.build()?;
         Ok(Some(grc))
     }
@@ -162,7 +162,7 @@ impl CsdrParser {
             .context("Parsing commands")?;
         let grc_builder = GrcBuilder::new();
         let mut grc_builder = AnyCmd::parse(&input, grc_builder)?;
-        grc_builder.ensure_sink();
+        grc_builder.ensure_sink()?;
         let grc = grc_builder.build()?;
         Ok(Some(grc))
     }

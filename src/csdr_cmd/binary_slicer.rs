@@ -7,10 +7,10 @@ pub trait BinarySlicerCmd<'i> {
     fn build_binary_slicer(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
         let mut grc = grc;
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("digital_binary_slicer_fb")
             .assert_output(GrcItemType::U8)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

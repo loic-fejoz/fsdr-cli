@@ -2,7 +2,7 @@ use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPo
 use super::{BlockInstance, Grc2FutureSdr};
 use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::{BufferSize, SampleRate, StreamConfig};
-use fsdr_blocks::futuresdr::anyhow::{bail, Result};
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::audio::AudioSink;
 use fsdr_blocks::futuresdr::blocks::ApplyNM;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
@@ -51,7 +51,7 @@ impl BlockConverter for AudioSinkConverter {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
-            .expect("no output device available");
+            .context("no output device available")?;
         let mut actual_channels: Option<u16> = None;
         // On Windows there is an issue in cpal with
         // shared devices, if the requested configuration

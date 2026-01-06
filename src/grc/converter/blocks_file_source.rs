@@ -1,10 +1,11 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
 use crate::grc::builder::GrcItemType;
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::FileSource;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
+use std::convert::TryInto;
 
 pub struct FileSourceConverter {}
 
@@ -17,13 +18,13 @@ impl BlockConverter for FileSourceConverter {
         let item_type: GrcItemType = blk
             .parameters
             .get("type")
-            .expect("item type must be defined")
-            .into();
+            .context("blocks_file_source: item type must be defined")?
+            .try_into()?;
 
         let filename = blk
             .parameters
             .get("file")
-            .expect("filename must be defined");
+            .context("blocks_file_source: filename must be defined")?;
         let repeat = blk
             .parameters
             .get("repeat")
@@ -40,7 +41,7 @@ impl BlockConverter for FileSourceConverter {
             GrcItemType::S8 => FileSource::<i8>::new(filename, repeat),
             GrcItemType::F32 => FileSource::<f32>::new(filename, repeat),
             GrcItemType::C32 => FileSource::<Complex32>::new(filename, repeat),
-            _ => todo!("Unhandled FileSource Type {:?}", item_type),
+            _ => bail!("blocks_file_source: Unhandled type {:?}", item_type),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk);

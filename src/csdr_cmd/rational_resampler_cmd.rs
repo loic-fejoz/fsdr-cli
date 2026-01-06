@@ -26,7 +26,7 @@ pub trait RationalResamplerCmd<'i> {
             _ => bail!("Unknown rational resampler type: {block_type}"),
         };
         grc = grc
-            .ensure_source(input_type)
+            .ensure_source(input_type)?
             .create_block_instance("rational_resampler_xxx")
             .with_parameter("decim", decimation)
             .with_parameter("interp", interpolation)
@@ -35,7 +35,7 @@ pub trait RationalResamplerCmd<'i> {
             .with_parameter("taps", "")
             .with_parameter("type", block_type)
             .assert_output(input_type)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

@@ -100,7 +100,7 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
             let fg = fsdr_blocks::futuresdr::runtime::Runtime::new()
                 .run_async(fg)
                 .await?;
-            let result: FunctionPostResponse = cvter.as_result(fg);
+            let result: FunctionPostResponse = cvter.as_result(fg).map_err(IQEngineError::FutureSDRError)?;
             return Ok(result);
         }
         Err(IQEngineError::NotYetImplemented(

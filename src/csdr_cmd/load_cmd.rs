@@ -18,7 +18,7 @@ pub trait LoadCmd<'i> {
             .with_parameter("file", filename)
             .with_parameter("repeat", "false")
             .assert_output(input_type)
-            .push();
+            .push()?;
         Ok(grc)
     }
 }
@@ -27,7 +27,7 @@ impl<'i> LoadCmd<'i> for Pair<'i, Rule> {
     fn block_name(&self) -> Result<&str> {
         let cmd = self.clone();
         let mut args = cmd.into_inner();
-        let first = args.next().expect("");
+        let first = args.next().context("Expected command name")?;
         Ok(first.as_str())
     }
 

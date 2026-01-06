@@ -11,11 +11,11 @@ pub trait OctaveComplexCmd<'i> {
         let samples_to_plot = self.samples_to_plot()?;
         let out_of_n_samples = self.out_of_n_samples()?;
         grc = grc
-            .ensure_source(GrcItemType::C32)
+            .ensure_source(GrcItemType::C32)?
             .create_block_instance("octave_complex_c")
             .with_parameter("samples_to_plot", samples_to_plot)
             .with_parameter("out_of_n_samples", out_of_n_samples)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

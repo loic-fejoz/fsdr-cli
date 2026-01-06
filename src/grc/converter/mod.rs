@@ -1,3 +1,10 @@
+//! This module contains converters that map GNU Radio Companion (GRC) block definitions
+//! to FutureSDR kernels.
+//!
+//! **IMPORTANT**: All converters must use the exact block IDs and parameter names
+//! defined in the corresponding GRC block YAML files. This ensures that `fsdr-cli`
+//! can execute native `.grc` files without modification.
+
 use crate::cmd_grammar::CommandsParser;
 use crate::csdr_cmd::eval_cmd::EvalCmd;
 use crate::grc::Grc;

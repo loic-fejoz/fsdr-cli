@@ -26,12 +26,12 @@ pub async fn start_iqengine_daemon(_filename: Option<&str>) -> Result<()> {
     // initialize tracing
     //tracing_subscriber::fmt::init();
 
-    // let cors = CorsLayer::new()
-    //     .allow_origin(Any)
-    //     .allow_headers(Any)
-    //     // .allow_credentials(true)
-    //     .allow_methods(vec![Method::GET, Method::POST]);
-    let cors = CorsLayer::very_permissive();
+    let cors = CorsLayer::new()
+        .allow_origin(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any)
+        // .allow_credentials(true)
+        .allow_methods(vec![http::Method::GET, http::Method::POST]);
+    // let cors = CorsLayer::very_permissive();
 
     // build our application with a route
     let app = Router::new()

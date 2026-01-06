@@ -14,7 +14,7 @@ use std::{eprintln, println};
 
 use self::grc::GrcParser;
 use cmd_line::HighLevelCmdLine;
-use fsdr_blocks::futuresdr::anyhow::{bail, Ok, Result};
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Ok, Result};
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
 use fsdr_blocks::futuresdr::runtime::Runtime;
 use fsdr_cli::join;
@@ -104,8 +104,7 @@ fn main() -> Result<()> {
     if let Some(iqengine_cmd) = input.as_iqengine_cmd() {
         #[cfg(not(feature = "iqengine"))]
         {
-            println!("iqengine feature not available. Please download another version.");
-            return Err(());
+            bail!("iqengine feature not available. Please download another version.");
         }
         //#[cfg(feature = "iqengine")]
         {
@@ -123,15 +122,15 @@ fn main() -> Result<()> {
             return Ok(());
         }
 
-        if let Some(output) = csdr_cmd.output() {
-            let fg = fg.expect("");
-            GrcParser::save(output, &fg);
+        if let Some(output) = csdr_cmd.output()? {
+            let fg = fg.context("Failed to get flowgraph for saving")?;
+            GrcParser::save(output, &fg).context("failed to save GRC file")?;
             println!("Flowgraph saved into {output:?}");
             return Ok(());
         }
     }
 
-    let fg = fg.expect("undefined flowgraph");
+    let fg = fg.context("No flowgraph was defined. Please check your command line arguments.")?;
     let fg: Flowgraph = Grc2FutureSdr::new().convert_grc(fg)?;
     Runtime::new().run(fg)?;
     Ok(())

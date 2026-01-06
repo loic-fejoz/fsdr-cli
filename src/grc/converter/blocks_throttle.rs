@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use fsdr_blocks::futuresdr::anyhow::Result;
+use fsdr_blocks::futuresdr::anyhow::{bail, Context, Result};
 use fsdr_blocks::futuresdr::blocks::Throttle;
 use fsdr_blocks::futuresdr::num_complex::Complex32;
 use fsdr_blocks::futuresdr::runtime::Flowgraph;
@@ -17,13 +17,13 @@ impl BlockConverter for ThrottleConverter {
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .context("blocks_throttle: item type must be defined")?;
         let blk = match &(item_type[..]) {
             "char" => Throttle::<u8>::new(rate),
             "short" => Throttle::<i16>::new(rate),
             "float" => Throttle::<f32>::new(rate),
             "complex" => Throttle::<Complex32>::new(rate),
-            _ => todo!("Unhandled blocks_throttle Type {item_type}"),
+            _ => bail!("blocks_throttle: Unhandled type {item_type}"),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk);

@@ -18,14 +18,14 @@ pub trait TimingRecoveryCmd<'i> {
         let mu = self.mu()?.unwrap_or("0.5");
         let max_error = self.max_error()?.unwrap_or("2");
         grc = grc
-            .ensure_source(GrcItemType::C32)
+            .ensure_source(GrcItemType::C32)?
             .create_block_instance("timing_recovery")
             .with_parameter("algorithm", algo)
             .with_parameter("decimation", decim)
             .with_parameter("mu", mu)
             .with_parameter("max_error", max_error)
             .assert_output(GrcItemType::C32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

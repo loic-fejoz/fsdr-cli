@@ -10,12 +10,12 @@ pub trait ShiftAdditionCmd<'i> {
         let mut grc = grc;
         let phase_rate = self.phase_rate()?;
         grc = grc
-            .ensure_source(GrcItemType::C32)
+            .ensure_source(GrcItemType::C32)?
             .create_block_instance("blocks_freqshift_cc")
             .with_parameter("freq", phase_rate)
             .with_parameter("sample_rate", "1.0")
             .assert_output(GrcItemType::C32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }
