@@ -1,5 +1,5 @@
 use crate::grc::{BlockInstance, Grc, Metadata, Options, States};
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use std::collections::BTreeMap;
 
 #[derive(Clone)]

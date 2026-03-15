@@ -2,7 +2,7 @@ use crate::blocks::OctaveComplex;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::{anyhow, Result};
+use anyhow::{anyhow, Result};
 use futuresdr::runtime::Flowgraph;
 
 pub struct OctaveComplexConverter {}
@@ -20,9 +20,9 @@ impl BlockConverter for OctaveComplexConverter {
         if out_of_n_samples < samples_to_plot {
             return Err(anyhow!("out_of_n_samples should be < samples_to_plot"));
         }
-        let blk = OctaveComplex::build(samples_to_plot, out_of_n_samples);
+        let blk: OctaveComplex = OctaveComplex::new(samples_to_plot, out_of_n_samples);
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
+        let blk = DefaultPortAdapter::new(blk.into());
         let blk = Box::new(blk);
         Ok(blk)
     }

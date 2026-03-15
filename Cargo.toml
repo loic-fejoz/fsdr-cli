@@ -28,6 +28,7 @@ serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
 pest = "2.0"
 pest_derive = "2.0"
+anyhow = "1.0.102"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

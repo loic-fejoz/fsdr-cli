@@ -1,7 +1,7 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
-use futuresdr::blocks::AgcBuilder;
+use anyhow::Result;
+use fsdr_blocks::AgcBuilder;
 use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogAgcXxConverter {}
@@ -30,7 +30,7 @@ impl BlockConverter for AnalogAgcXxConverter {
             _ => todo!("Unhandled analog_agc_xx Type {item_type}"),
         };
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
+        let blk = DefaultPortAdapter::new(blk.into());
         let blk = Box::new(blk);
         Ok(blk)
     }

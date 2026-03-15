@@ -1,10 +1,8 @@
+use anyhow::Result;
 use fsdr_cli::csdr_cmd::CsdrParser;
 use fsdr_cli::grc::converter::Grc2FutureSdr;
-use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
-use futuresdr::blocks::VectorSinkBuilder;
 use futuresdr::blocks::VectorSource;
-use futuresdr::macros::connect;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
@@ -162,19 +160,19 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let orig: Vec<f32> = vec![
         -10.0, -5.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0,
     ];
-    let src = VectorSource::<f32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+    let src = fg.add_block(VectorSource::<f32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let snk_0 = snk_0.items();
     // assert!(snk_0.iter().all(|v| -3.0 <= *v && *v <= 3.0));
     let expected: Vec<f32> = vec![
@@ -213,19 +211,19 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
     let orig: Vec<f32> = vec![
         -10.0, -5.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0,
     ];
-    let src = VectorSource::<f32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+    let src = fg.add_block(VectorSource::<f32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let snk_0 = snk_0.items();
     // assert!(snk_0.iter().all(|v| -3.0 <= *v && *v <= 3.0));
     let expected: Vec<f32> = vec![
@@ -304,19 +302,19 @@ pub fn parse_fastdc_block() -> Result<()> {
     let orig: Vec<f32> = vec![0.0, -1.0, -2.0, -1.0, 0.0, 1.0, 2.0, 1.0];
     let orig: Vec<f32> = orig.iter().map(|x| x + 5.0).collect();
     let orig = orig.repeat(32);
-    let src = VectorSource::<f32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+    let src = fg.add_block(VectorSource::<f32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let snk_0 = snk_0.items();
     // println!("{snk_0:?}");
     assert!(snk_0.iter().skip(110).all(|v| -5.0 <= *v && *v <= 5.0));
@@ -340,19 +338,19 @@ pub fn parse_amdemod_cf() -> Result<()> {
         .map(|x| x as f32)
         .map(|x| Complex32::new(x * x, 0.0))
         .collect();
-    let src = VectorSource::<Complex32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+    let src = fg.add_block(VectorSource::<Complex32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let snk_0 = snk_0.items();
     // println!("{snk_0:?}");
     assert!(snk_0
@@ -395,19 +393,19 @@ pub fn parse_agc_ff() -> Result<()> {
     let mut fg = Flowgraph::new();
     let orig: Vec<f32> = (0..256).map(|x| (x as f32).sin() * 0.5).collect();
     let orig = orig.repeat(256);
-    let src = VectorSource::<f32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+    let src = fg.add_block(VectorSource::<f32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let snk_0 = snk_0.items();
     // println!("{snk_0:?}");
     assert!(snk_0.iter().any(|v| *v > 0.7));
@@ -542,19 +540,19 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
         .collect();
     let orig = orig.repeat(10);
     let original_length = orig.len();
-    let src = VectorSource::<Complex32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<Complex32>::new().build();
+    let src = fg.add_block(VectorSource::<Complex32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<Complex32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<Complex32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let snk_0 = snk_0.items();
     // println!("{snk_0:?}");
     assert_eq!(original_length / 50 - 2, snk_0.len());
@@ -641,19 +639,19 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let mut fg = Flowgraph::new();
     let orig: Vec<f32> = (0..360).map(|x| (x as f32).cos() * 0.5).collect();
     let orig = orig.repeat(10);
-    let src = VectorSource::<f32>::new(orig);
-    let vect_sink_0 = VectorSinkBuilder::<f32>::new().build();
+    let src = fg.add_block(VectorSource::<f32>::new(orig));
+    let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
     let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
-    let (block_under_test, _) = block_under_test.adapt_input_port("in")?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+    let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
-    connect!(fg,
-        src > block_under_test;
-        block_under_test > vect_sink_0;
-    );
-    fg = Runtime::new().run(fg)?;
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+    fg.connect_dyn(but_out, out_name, &vect_sink_0, "input")?;
 
-    let snk_0 = fg.kernel::<VectorSink<f32>>(vect_sink_0).unwrap();
+    Runtime::new().run(fg)?;
+
+    let snk_0 = vect_sink_0.get().unwrap();
     let _snk_0 = snk_0.items();
     // println!("{snk_0:?}");
     Ok(())

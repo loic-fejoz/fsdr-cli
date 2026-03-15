@@ -1,9 +1,9 @@
 use crate::cmd_grammar::CommandsParser;
 use crate::csdr_cmd::eval_cmd::EvalCmd;
 use crate::grc::Grc;
-use futuresdr::anyhow::bail;
-use futuresdr::anyhow::Context;
-use futuresdr::anyhow::Result;
+use anyhow::bail;
+use anyhow::Context;
+use anyhow::Result;
 use futuresdr::runtime::Flowgraph;
 use std::collections::BTreeMap;
 
@@ -148,7 +148,7 @@ impl Grc2FutureSdr {
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
-            fg.connect_stream(src_blk, src_port, tgt_blk, tgt_port)
+            fg.connect_dyn(src_blk, src_port, tgt_blk, tgt_port)
                 .context("connecting {connection}")?;
         }
         Ok(fg)
