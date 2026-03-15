@@ -652,7 +652,7 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     Runtime::new().run(fg)?;
 
     let snk_0 = vect_sink_0.get().unwrap();
-    let snk_0 = snk_0.items();
+    let _snk_0 = snk_0.items();
     // println!("{snk_0:?}");
     Ok(())
 }
