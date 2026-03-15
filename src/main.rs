@@ -1,4 +1,3 @@
-#[macro_use]
 pub extern crate async_trait;
 #[macro_use]
 extern crate pest_derive;
@@ -8,8 +7,8 @@ use pest::error::ErrorVariant;
 use std::{eprintln, println};
 
 use self::grc::GrcParser;
+use anyhow::{bail, Ok, Result};
 use cmd_line::HighLevelCmdLine;
-use futuresdr::anyhow::{bail, Ok, Result};
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 mod grc;

@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::blocks::NullSink;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
@@ -17,16 +17,25 @@ impl BlockConverter for NullSinkConverter {
             .parameters
             .get("type")
             .expect("item type must be defined");
-        let blk = match &(item_type[..]) {
-            "char" => NullSink::<u8>::new(),
-            "short" => NullSink::<i16>::new(),
-            "float" => NullSink::<f32>::new(),
-            "complex" => NullSink::<Complex32>::new(),
+        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
+            "char" => {
+                let blk = NullSink::<u8>::new();
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
+            "short" => {
+                let blk = NullSink::<i16>::new();
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
+            "float" => {
+                let blk = NullSink::<f32>::new();
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
+            "complex" => {
+                let blk = NullSink::<Complex32>::new();
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
             _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
-        let blk = Box::new(blk);
         Ok(blk)
     }
 }

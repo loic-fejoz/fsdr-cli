@@ -1,47 +1,36 @@
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Block;
-use futuresdr::runtime::BlockMeta;
-use futuresdr::runtime::BlockMetaBuilder;
-use futuresdr::runtime::Kernel;
-use futuresdr::runtime::MessageIo;
-use futuresdr::runtime::MessageIoBuilder;
-use futuresdr::runtime::StreamIo;
-use futuresdr::runtime::StreamIoBuilder;
-use futuresdr::runtime::WorkIo;
+use futuresdr::prelude::*;
 use std::io::Write;
 
-pub struct OctaveComplex {
+#[derive(Block)]
+pub struct OctaveComplex<I: CpuBufferReader<Item = Complex32> = DefaultCpuReader<Complex32>> {
     samples_to_plot: usize,
     out_of_n_samples: usize,
+    #[input]
+    input: I,
 }
 
-impl OctaveComplex {
-    pub fn build(samples_to_plot: usize, out_of_n_samples: usize) -> Block {
+impl<I: CpuBufferReader<Item = Complex32>> OctaveComplex<I> {
+    pub fn new(samples_to_plot: usize, out_of_n_samples: usize) -> Self {
         assert!(samples_to_plot <= out_of_n_samples);
-        Block::new(
-            BlockMetaBuilder::new("OctaveComplex".to_string()).build(),
-            StreamIoBuilder::new().add_input::<Complex32>("in").build(),
-            MessageIoBuilder::<Self>::new().build(),
-            OctaveComplex {
-                samples_to_plot,
-                out_of_n_samples,
-            },
-        )
+        Self {
+            samples_to_plot,
+            out_of_n_samples,
+            input: I::default(),
+        }
     }
 }
 
 #[doc(hidden)]
-#[async_trait]
-impl Kernel for OctaveComplex {
+impl<I: CpuBufferReader<Item = Complex32>> Kernel for OctaveComplex<I> {
     async fn work(
         &mut self,
         io: &mut WorkIo,
-        sio: &mut StreamIo,
-        _mio: &mut MessageIo<Self>,
+        _mio: &mut MessageOutputs,
         _meta: &mut BlockMeta,
     ) -> Result<()> {
-        let i = sio.input(0).slice::<Complex32>();
+        let i = self.input.slice();
 
         let m = i.len();
         if m >= self.out_of_n_samples {
@@ -58,10 +47,10 @@ impl Kernel for OctaveComplex {
             println!("];\nzsig = [0:N-1];");
             println!("plot3(isig,zsig,qsig);");
             stdout.flush().expect("flush error on stdout");
-            sio.input(0).consume(self.out_of_n_samples);
+            self.input.consume(self.out_of_n_samples);
         }
 
-        if sio.input(0).finished() && m - self.out_of_n_samples < self.out_of_n_samples {
+        if self.input.finished() && m - self.out_of_n_samples < self.out_of_n_samples {
             io.finished = true;
         }
 

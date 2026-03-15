@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::blocks::Apply;
 use futuresdr::runtime::Flowgraph;
 
@@ -18,17 +18,18 @@ impl BlockConverter for AddConstVxConverter {
             .get("type")
             .expect("item type must be defined");
 
-        let blk = match &(item_type[..]) {
+        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
             "u8" => {
                 let constant = constant as u8;
-                Apply::new(move |v: &u8| -> u8 { v + constant })
+                let blk: Apply<_, u8, u8> = Apply::new(move |v: &u8| -> u8 { v + constant });
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
             }
-            "float" => Apply::new(move |v: &f32| -> f32 { v + constant }),
+            "float" => {
+                let blk: Apply<_, f32, f32> = Apply::new(move |v: &f32| -> f32 { v + constant });
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
             _ => todo!("Unhandled blocks_add_const_vxx Type {item_type}"),
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
-        let blk = Box::new(blk);
         Ok(blk)
     }
 }

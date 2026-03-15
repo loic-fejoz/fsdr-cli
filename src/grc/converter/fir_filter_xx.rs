@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::blocks::FirBuilder;
 use futuresdr::futuredsp::{firdes, windows};
 use futuresdr::num_complex::Complex32;
@@ -29,7 +29,7 @@ impl BlockConverter for FirFilterXxConverter {
                 .get("window")
                 .expect("window must be defined");
             let taps_length: usize = (4.0 / transition_bw) as usize;
-            let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
+            let taps_length = taps_length + if taps_length.is_multiple_of(2) { 1 } else { 0 };
             assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
 
             // Building firdes_lowpass_f(taps,taps_length,0.5/(float)factor,window);
@@ -47,13 +47,13 @@ impl BlockConverter for FirFilterXxConverter {
             todo!("Unhandled fir_filter_xx taps definition")
         };
         let blk = match &(item_type[..]) {
-            "ccc" => FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
+            "ccc" => FirBuilder::resampling_with_taps::<Complex32, Complex32, Vec<f32>>(
                 1, decimation, taps,
             ),
             _ => todo!("Unhandled fir_filter_xx Type {item_type}"),
         };
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
+        let blk = DefaultPortAdapter::new(blk.into());
         let blk = Box::new(blk);
         Ok(blk)
     }

@@ -1,10 +1,11 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
+use anyhow::{bail, Result};
 use cpal::traits::{DeviceTrait, HostTrait};
 use cpal::{BufferSize, SampleRate, StreamConfig};
-use futuresdr::anyhow::{bail, Result};
 use futuresdr::blocks::audio::AudioSink;
 use futuresdr::blocks::ApplyNM;
+use futuresdr::runtime::BlockId;
 use futuresdr::runtime::Flowgraph;
 
 // #[derive(Clone, Copy)]
@@ -82,12 +83,12 @@ impl BlockConverter for AudioSinkConverter {
             buffer_size: BufferSize::Default,
         };
 
-        let blk = AudioSink::new(sample_rate, config.channels);
+        let blk: AudioSink = AudioSink::new(sample_rate, config.channels);
         let blk = fg.add_block(blk);
 
         match (num_inputs, config.channels) {
             (1, 1) => {
-                let blk = DefaultPortAdapter::new(blk);
+                let blk = DefaultPortAdapter::new(blk.into());
                 let blk = Box::new(blk);
                 Ok(blk)
             }
@@ -99,9 +100,10 @@ impl BlockConverter for AudioSinkConverter {
                         d[1] = v[0]; // right
                     });
                 let mono_to_stereo = fg.add_block(mono_to_stereo);
-                fg.connect_stream(mono_to_stereo, "out", blk, "in")?;
+                let mono_to_stereo_id: BlockId = mono_to_stereo.into();
+                let _ = fg.connect_dyn(mono_to_stereo_id, "out", blk, "in");
 
-                let adapter = DefaultPortAdapter::new(mono_to_stereo);
+                let adapter = DefaultPortAdapter::new(mono_to_stereo_id);
                 let adapter = Box::new(adapter);
                 Ok(adapter)
             }

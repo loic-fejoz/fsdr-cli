@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::Grc;
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use pest::iterators::Pair;
 use std::f32::consts::{E, PI};
 
@@ -133,7 +133,7 @@ impl<'i> EvalCmd<'i> for Pair<'i, Rule> {
                 match first.as_rule() {
                     Rule::minus => {
                         let term = it.next().expect("expr4");
-                        Ok(-1.0 * (term).eval()?)
+                        Ok(-(term).eval()?)
                     }
                     Rule::term => first.eval(),
                     _ => {

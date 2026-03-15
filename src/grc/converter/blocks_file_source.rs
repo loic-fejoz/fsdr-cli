@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::blocks::FileSource;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
@@ -33,16 +33,25 @@ impl BlockConverter for FileSourceConverter {
         } else {
             filename
         };
-        let blk = match &(item_type[..]) {
-            "u8" | "uchar" => FileSource::<u8>::new(filename, repeat),
-            "byte" => FileSource::<i8>::new(filename, repeat),
-            "f32" | "float" => FileSource::<f32>::new(filename, repeat),
-            "c32" | "complex" => FileSource::<Complex32>::new(filename, repeat),
+        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
+            "u8" | "uchar" => {
+                let blk = FileSource::<u8>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
+            "byte" => {
+                let blk = FileSource::<i8>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
+            "f32" | "float" => {
+                let blk = FileSource::<f32>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
+            "c32" | "complex" => {
+                let blk = FileSource::<Complex32>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+            }
             _ => todo!("Unhandled FileSource Type {item_type}"),
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
-        let blk = Box::new(blk);
         Ok(blk)
     }
 }

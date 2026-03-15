@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::blocks::Sink;
 use futuresdr::runtime::Flowgraph;
 
@@ -17,14 +17,19 @@ impl BlockConverter for DumpConverter {
             .get("type")
             .expect("item type must be defined");
 
-        let blk = match &(item_type[..]) {
-            "float" => Sink::new(|x: &u8| print!("{:02x} ", *x)),
-            "u8" => Sink::new(|x: &f32| print!("{:e} ", *x)),
+        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
+            "float" => {
+                let blk: futuresdr::blocks::Sink<_, u8> = Sink::new(|x: &u8| print!("{:02x} ", *x));
+                let blk = fg.add_block(blk);
+                Box::new(DefaultPortAdapter::new(blk.into()))
+            }
+            "u8" => {
+                let blk: futuresdr::blocks::Sink<_, f32> = Sink::new(|x: &f32| print!("{:e} ", *x));
+                let blk = fg.add_block(blk);
+                Box::new(DefaultPortAdapter::new(blk.into()))
+            }
             _ => todo!("Unhandled dump of Type {item_type}"),
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
-        let blk = Box::new(blk);
         Ok(blk)
     }
 }

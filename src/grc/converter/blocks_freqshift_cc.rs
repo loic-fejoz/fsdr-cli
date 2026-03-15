@@ -1,7 +1,7 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
+use anyhow::Result;
 use fsdr_blocks::math::FrequencyShifter;
-use futuresdr::anyhow::Result;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 
@@ -17,7 +17,7 @@ impl BlockConverter for FreqShiftCcConverter {
         let freq = Grc2FutureSdr::parameter_as_f64(blk, "freq", "1.0")? as f32;
         let blk = FrequencyShifter::<Complex32>::new(freq, sample_rate);
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
+        let blk = DefaultPortAdapter::new(blk.into());
         let blk = Box::new(blk);
         Ok(blk)
     }

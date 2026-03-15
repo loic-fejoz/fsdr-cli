@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::blocks::FirBuilder;
 use futuresdr::futuredsp::{firdes, windows};
 use futuresdr::num_complex::Complex32;
@@ -24,7 +24,7 @@ impl BlockConverter for LowPassFilterConverter {
         let window = blk.parameters.get("win").expect("win must be defined");
         let transition_bw = cutoff_freq / sample_rate;
         let taps_length: usize = (4.0 / transition_bw) as usize;
-        let taps_length = taps_length + if taps_length % 2 == 0 { 1 } else { 0 };
+        let taps_length = taps_length + if taps_length.is_multiple_of(2) { 1 } else { 0 };
         assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
         let rect_win = match &window[..] {
             "window.WIN_HAMMING" => windows::hamming(taps_length, false),
@@ -43,15 +43,13 @@ impl BlockConverter for LowPassFilterConverter {
         };
         let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
         let blk = match &(item_type[..]) {
-            "fir_filter_ccf" => {
-                FirBuilder::new_resampling_with_taps::<Complex32, Complex32, f32, _>(
-                    interp, decimation, taps,
-                )
-            }
+            "fir_filter_ccf" => FirBuilder::resampling_with_taps::<Complex32, Complex32, Vec<f32>>(
+                interp, decimation, taps,
+            ),
             _ => todo!("Unhandled low_pass_filter Type {item_type}"),
         };
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
+        let blk = DefaultPortAdapter::new(blk.into());
         let blk = Box::new(blk);
         Ok(blk)
     }

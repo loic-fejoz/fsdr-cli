@@ -2,7 +2,7 @@ use futuresdr::blocks::Apply;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use futuresdr::anyhow::Result;
+use anyhow::Result;
 use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogFmDeemphConverter {}
@@ -18,13 +18,13 @@ impl BlockConverter for AnalogFmDeemphConverter {
         let dt = 1.0 / sample_rate;
         let alpha = dt / (tau + dt);
         let mut last = 0.0; // store sample x[n-1]
-        let blk = Apply::new(move |v: &f32| -> f32 {
+        let blk: Apply<_, f32, f32> = Apply::new(move |v: &f32| -> f32 {
             let r = alpha * v + (1.0 - alpha) * last; //this is the simplest IIR LPF
             last = r;
             r
         });
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk);
+        let blk = DefaultPortAdapter::new(blk.into());
         let blk = Box::new(blk);
         Ok(blk)
     }
