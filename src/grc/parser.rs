@@ -1,5 +1,5 @@
 use crate::grc::Grc;
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use serde_yaml::{self};
 use std::path::Path;
 

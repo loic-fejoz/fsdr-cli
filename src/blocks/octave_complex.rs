@@ -1,4 +1,4 @@
-use anyhow::{Result, Context};
+use anyhow::Result;
 use futuresdr::num_complex::Complex32;
 use futuresdr::prelude::*;
 use std::io::Write;

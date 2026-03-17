@@ -12,11 +12,11 @@ use pest::error::ErrorVariant;
 use std::{eprintln, println};
 
 use self::grc::GrcParser;
-use anyhow::{bail, Result, Context};
-use itertools::join;
+use anyhow::{bail, Context, Result};
 use cmd_line::HighLevelCmdLine;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
+use itertools::join;
 mod grc;
 use grc::Grc;
 // mod csdr;
@@ -31,9 +31,9 @@ pub mod grc_cmd;
 use grc_cmd::GrcCmd;
 pub mod iqengine_cmd;
 use iqengine_cmd::IQEngineCmd;
+pub mod blocks;
 pub mod iqengine_blockconverter;
 mod iqengine_plugin;
-pub mod blocks;
 
 fn usage() -> Result<Grc> {
     let msg = "Usage:\n\

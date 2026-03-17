@@ -89,11 +89,7 @@ where
     // _phantom_c: PhantomData<C>,
 }
 
-fn new_dequeue_of_len(len: usize) -> VecDeque<Complex32> {
-    let zero = Complex32::default();
-    let iter = std::iter::repeat(zero).nth(len);
-    return VecDeque::from_iter(iter);
-}
+
 
 impl<'a, A, C, L, D> TimingErrorDetector<'a, A, C, L, D>
 where
@@ -102,8 +98,12 @@ where
     A: TimingErrorDetectorAlgorithm<LookAhead = L, Derivative = D>,
     C: Constellation,
 {
-    pub fn new(inputs_per_symbol: usize, error_computation_depth: usize, constellation: Option<&'a C>) -> TimingErrorDetector<A, C, L, D> {
-        let mut ted = TimingErrorDetector{
+    pub fn new(
+        inputs_per_symbol: usize,
+        error_computation_depth: usize,
+        constellation: Option<&'a C>,
+    ) -> TimingErrorDetector<'a, A, C, L, D> {
+        let mut ted = TimingErrorDetector {
             d_constellation: constellation,
             d_error: 0.0,
             d_prev_error: 0.0,
@@ -118,21 +118,21 @@ where
             _phantom_a: PhantomData,
         };
         ted.sync_reset();
-        return ted;
+        ted
     }
 
-    fn inputs_per_symbol(&self) -> usize {
-        return self.d_inputs_per_symbol;
+    pub fn inputs_per_symbol(&self) -> usize {
+        self.d_inputs_per_symbol
     }
-    fn error(&self) -> f32 {
-        return self.d_error;
+    pub fn error(&self) -> f32 {
+        self.d_error
     }
 
-    fn advance_input_clock(&mut self) {
+    pub fn advance_input_clock(&mut self) {
         self.d_input_clock = (self.d_input_clock + 1) % self.d_inputs_per_symbol;
     }
 
-    fn revert_input_clock(&mut self) {
+    pub fn revert_input_clock(&mut self) {
         if self.d_input_clock == 0 {
             self.d_input_clock = self.d_inputs_per_symbol - 1;
         } else {
@@ -140,41 +140,38 @@ where
         }
     }
 
-    fn sync_reset_input_clock(&mut self) {
+    pub fn sync_reset_input_clock(&mut self) {
         self.d_input_clock = self.d_inputs_per_symbol - 1;
     }
 
-    fn sync_reset(&mut self) {
+    pub fn sync_reset(&mut self) {
         self.d_error = 0.0;
         self.d_prev_error = 0.0;
 
-        self.d_input = new_dequeue_of_len(self.d_error_depth);
+        self.d_input = std::iter::repeat_n(Complex32::default(), self.d_error_depth).collect();
 
-        self.d_input_derivative = new_dequeue_of_len(self.d_error_depth);
+        self.d_input_derivative = std::iter::repeat_n(Complex32::default(), self.d_error_depth).collect();
 
         if self.d_constellation.is_some() {
-            self.d_decision = new_dequeue_of_len(self.d_input.len());
+            self.d_decision = std::iter::repeat_n(Complex32::default(), self.d_input.len()).collect();
         }
 
         self.sync_reset_input_clock();
     }
 
-    fn slice(&self, x: Complex32) -> Complex32 {
+    pub fn slice(&self, x: Complex32) -> Complex32 {
         /* Passing a length 1 array is OK since we only accept 1D constellations */
         let mut z = [Complex32 { re: 0.0, im: 0.0 }];
-        match self.d_constellation.as_ref() {
-            Some(constellation) => {
-                let index = constellation.decision_maker(x);
-                constellation.map_to_points(index, &mut z);
-            }
-            _ => {}
+        if let Some(constellation) = self.d_constellation.as_ref() {
+            let index = constellation.decision_maker(x);
+            constellation.map_to_points(index, &mut z);
         }
-        return z[0];
+        z[0]
     }
 }
 
 #[inline]
-fn dup_back_same_size(v: &mut VecDeque<Complex32>) {
+pub fn dup_back_same_size(v: &mut VecDeque<Complex32>) {
     let elt = v.back();
     match elt {
         Some(elt) => {
@@ -193,7 +190,7 @@ where
     C: Constellation,
     L: LookAheadType,
 {
-    fn compute_error_cf(&mut self) -> f32 {
+    pub fn compute_error_cf(&mut self) -> f32 {
         A::compute_error_cf(&self.d_decision, &self.d_input, &self.d_input_derivative)
     }
 
@@ -201,13 +198,10 @@ where
     //     A::compute_error_ff(self.d_decision, self.d_input, self.d_input_derivative)
     // }
 
-    fn revert(&mut self, err_policy: ErrorPolicy) {
+    pub fn revert(&mut self, err_policy: ErrorPolicy) {
         if self.d_input_clock == 0 {
-            match err_policy {
-                ErrorPolicy::Preserve => {
-                    self.d_error = self.d_prev_error;
-                }
-                _ => {}
+            if let ErrorPolicy::Preserve = err_policy {
+                self.d_error = self.d_prev_error;
             }
         }
         self.revert_input_clock();
@@ -228,7 +222,7 @@ where
     C: Constellation,
     L: LookAheadType,
 {
-    fn compute_error_cf(&mut self) -> f32 {
+    pub fn compute_error_cf(&mut self) -> f32 {
         A::compute_error_cf(&self.d_decision, &self.d_input)
     }
 
@@ -236,13 +230,10 @@ where
     //     A::compute_error_ff(self.d_decision, self.d_input)
     // }
 
-    fn revert(&mut self, err_policy: ErrorPolicy) {
+    pub fn revert(&mut self, err_policy: ErrorPolicy) {
         if self.d_input_clock == 0 {
-            match err_policy {
-                ErrorPolicy::Preserve => {
-                    self.d_error = self.d_prev_error;
-                }
-                _ => {}
+            if let ErrorPolicy::Preserve = err_policy {
+                self.d_error = self.d_prev_error;
             }
         }
         self.revert_input_clock();
@@ -264,7 +255,7 @@ where
         >,
     C: Constellation,
 {
-    fn input_lookahead(&mut self, x: Complex32, d_x: Complex32) {
+    pub fn input_lookahead(&mut self, x: Complex32, d_x: Complex32) {
         if self.d_input_clock != 0 {
             return;
         }
@@ -284,7 +275,7 @@ where
         self.d_input.pop_front();
     }
 
-    fn input(&mut self, x: Complex32, d_x: Complex32) {
+    pub fn input(&mut self, x: Complex32, d_x: Complex32) {
         self.d_input.push_front(x);
         self.d_input.pop_back();
 
@@ -306,7 +297,7 @@ where
         + TimingErrorDetectorAlgorithmNoDerivatives<WithLookAhead, Derivative = NoDerivativeType>,
     C: Constellation,
 {
-    fn input_lookahead(&mut self, x: Complex32) {
+    pub fn input_lookahead(&mut self, x: Complex32) {
         if self.d_input_clock != 0 {
             return;
         }
@@ -324,7 +315,7 @@ where
         self.d_input.pop_front();
     }
 
-    fn input(&mut self, x: Complex32) {
+    pub fn input(&mut self, x: Complex32) {
         self.d_input.push_front(x);
         self.d_input.pop_back();
 
@@ -343,7 +334,7 @@ where
     A: TimingErrorDetectorAlgorithmNoLookahead<D, LookAhead = WithoutLookAhead>,
     C: Constellation,
 {
-    fn input_lookahead(&mut self, _x: Complex32, _d_x: Option<Complex32>) {
+    pub fn input_lookahead(&mut self, _x: Complex32, _d_x: Option<Complex32>) {
         // Nothing to do
     }
 }
@@ -357,7 +348,7 @@ where
         >,
     C: Constellation,
 {
-    fn input(&mut self, x: Complex32, d_x: Complex32) {
+    pub fn input(&mut self, x: Complex32, d_x: Complex32) {
         self.d_input.push_front(x);
         self.d_input.pop_back();
 
@@ -383,7 +374,7 @@ where
         + TimingErrorDetectorAlgorithmNoDerivatives<WithoutLookAhead, Derivative = NoDerivativeType>,
     C: Constellation,
 {
-    fn input(&mut self, x: Complex32) {
+    pub fn input(&mut self, x: Complex32) {
         self.d_input.push_front(x);
         self.d_input.pop_back();
 

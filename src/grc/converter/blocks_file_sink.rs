@@ -1,7 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
-use crate::grc::builder::GrcItemType;
-use anyhow::{Result, Context};
+use super::BlockInstance;
+use anyhow::{Context, Result};
 use fsdr_blocks::stdinout::StdInOutBuilder;
 use futuresdr::blocks::FileSink;
 use futuresdr::num_complex::Complex32;

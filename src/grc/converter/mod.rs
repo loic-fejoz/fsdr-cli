@@ -94,13 +94,15 @@ impl Grc2FutureSdr {
         }
     }
 
+    #[allow(dead_code)]
     pub fn take(
         &mut self,
         k: &str,
-    ) -> std::option::Option<&mut Box<dyn MutBlockConverter + 'static>> {
-        self.specific_converter.get_mut(k).take()
+    ) -> std::option::Option<Box<dyn MutBlockConverter + 'static>> {
+        self.specific_converter.remove(k)
     }
 
+    #[allow(dead_code)]
     pub fn with_blocktype_conversion(
         &mut self,
         blocktype: impl ToString,
@@ -161,7 +163,7 @@ impl Grc2FutureSdr {
         fg: &mut Flowgraph,
         blk: &BlockInstance,
     ) -> Result<Box<dyn ConnectorAdapter>> {
-        let cvter = self.specific_converter.get_mut(&blk.id).take();
+        let cvter = self.specific_converter.get_mut(&blk.id);
         if let Some(cvter) = cvter {
             if let Ok(res) = cvter.convert(blk, fg) {
                 Ok(res)
@@ -207,7 +209,7 @@ impl Grc2FutureSdr {
         Ok(fg)
     }
 
-    fn parameter_as_f32<'i>(
+    pub fn parameter_as_f32<'i>(
         blk_def: &'i BlockInstance,
         key: &'i str,
         default_value: impl Into<&'i str>,
@@ -217,7 +219,7 @@ impl Grc2FutureSdr {
         EvalCmd::eval(&expr)
     }
 
-    fn parameter_as_f64<'i>(
+    pub fn parameter_as_f64<'i>(
         blk_def: &'i BlockInstance,
         key: &'i str,
         default_value: impl Into<&'i str>,

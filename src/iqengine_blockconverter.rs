@@ -1,7 +1,7 @@
 use crate::grc::builder::GrcItemType;
 use crate::grc::converter_helper::{ConnectorAdapter, DefaultPortAdapter, MutBlockConverter};
 use crate::grc::BlockInstance;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use futuresdr::{blocks::VectorSink, num_complex::Complex32, runtime::Flowgraph};
 use iqengine_plugin::server::{FunctionPostResponse, SamplesB64, SamplesB64Builder};
 use std::convert::TryInto;

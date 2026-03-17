@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 use fsdr_blocks::AgcBuilder;
 use futuresdr::runtime::Flowgraph;
 

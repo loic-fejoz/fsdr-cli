@@ -64,7 +64,8 @@ pub struct ClockTrackingLoop {
 }
 
 impl ClockTrackingLoop {
-    fn new(
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
         d_avg_period: f32,
         d_max_avg_period: f32,
         d_min_avg_period: f32,
@@ -105,7 +106,7 @@ impl ClockTrackingLoop {
         self.d_prev_phase = self.d_phase;
 
         // Integral arm of PI filter
-        self.d_avg_period = self.d_avg_period + self.d_beta * error;
+        self.d_avg_period += self.d_beta * error;
         // Limit the integral arm output here, as a large negative
         // error input can lead to a negative d_avg_period, which
         // will cause an infitine loop in the phase wrap method.
@@ -121,7 +122,7 @@ impl ClockTrackingLoop {
             self.d_inst_period = self.d_avg_period;
         }
         // Compute the new, unwrapped clock phase
-        self.d_phase = self.d_phase + self.d_inst_period;
+        self.d_phase += self.d_inst_period;
     }
 
     pub fn revert_loop(&mut self) {
@@ -130,7 +131,7 @@ impl ClockTrackingLoop {
         self.d_phase = self.d_prev_phase;
     }
 
-    fn phase_wrap(&mut self) {
+    pub fn phase_wrap(&mut self) {
         let period = self.d_avg_period; // One could argue d_inst_period instead
         let limit = period / 2.0;
 
@@ -151,18 +152,18 @@ impl ClockTrackingLoop {
         }
     }
 
-    fn update_gains(&mut self) {
-        let omega_n_T = self.d_omega_n_norm;
-        let zeta_omega_n_T = self.d_zeta * omega_n_T;
+    pub fn update_gains(&mut self) {
+        let omega_n_t = self.d_omega_n_norm;
+        let zeta_omega_n_t = self.d_zeta * omega_n_t;
         let k0 = 2.0 / self.d_ted_gain;
-        let k1 = (-zeta_omega_n_T).exp();
-        let sinh_zeta_omega_n_T = zeta_omega_n_T.sinh();
+        let k1 = (-zeta_omega_n_t).exp();
+        let sinh_zeta_omega_n_t = zeta_omega_n_t.sinh();
 
-        let cosx_omega_d_T = if self.d_zeta > 1.0 {
+        let cosx_omega_d_t = if self.d_zeta > 1.0 {
             // Over-damped (or critically-damped too)
 
-            let omega_d_T = omega_n_T * (self.d_zeta * self.d_zeta - 1.0).sqrt();
-            omega_d_T.cosh()
+            let omega_d_t = omega_n_t * (self.d_zeta * self.d_zeta - 1.0).sqrt();
+            omega_d_t.cosh()
         } else if self.d_zeta == 1.0 {
             // Critically-damped
             1.0
@@ -170,18 +171,18 @@ impl ClockTrackingLoop {
         } else {
             // Under-damped (or critically-damped too)
 
-            let omega_d_T = omega_n_T * (1.0 - self.d_zeta * self.d_zeta).sqrt();
-            omega_d_T.cos()
+            let omega_d_t = omega_n_t * (1.0 - self.d_zeta * self.d_zeta).sqrt();
+            omega_d_t.cos()
         };
 
-        let alpha = k0 * k1 * sinh_zeta_omega_n_T;
-        let beta = k0 * (1.0 - k1 * (sinh_zeta_omega_n_T + cosx_omega_d_T));
+        let alpha = k0 * k1 * sinh_zeta_omega_n_t;
+        let beta = k0 * (1.0 - k1 * (sinh_zeta_omega_n_t + cosx_omega_d_t));
 
         self.d_alpha = alpha;
         self.d_beta = beta;
     }
 
-    fn set_loop_bandwidth(&mut self, bw: f32) {
+    pub fn set_loop_bandwidth(&mut self, bw: f32) {
         assert!(
             bw >= 0.0,
             "clock_tracking_loop: loop bandwidth must be greater than 0.0"
@@ -190,7 +191,7 @@ impl ClockTrackingLoop {
         self.update_gains();
     }
 
-    fn set_damping_factor(&mut self, df: f32) {
+    pub fn set_damping_factor(&mut self, df: f32) {
         assert!(
             df >= 0.0,
             "clock_tracking_loop: damping factor must be > 0.0"
@@ -199,7 +200,7 @@ impl ClockTrackingLoop {
         self.update_gains();
     }
 
-    fn set_ted_gain(&mut self, ted_gain: f32) {
+    pub fn set_ted_gain(&mut self, ted_gain: f32) {
         assert!(
             ted_gain > 0.0,
             "clock_tracking_loop: expected ted gain must be > 0.0"
@@ -218,7 +219,7 @@ impl ClockTrackingLoop {
         self.d_prev_inst_period = period;
     }
 
-    fn set_nom_avg_period(&mut self, period: f32) {
+    pub fn set_nom_avg_period(&mut self, period: f32) {
         if period < self.d_min_avg_period || period > self.d_max_avg_period {
             self.d_nom_avg_period = (self.d_max_avg_period + self.d_min_avg_period) / 2.0;
         } else {
@@ -226,12 +227,12 @@ impl ClockTrackingLoop {
         }
     }
 
-    fn loop_bandwidth(&self) -> f32 {
-        return self.d_omega_n_norm;
+    pub fn loop_bandwidth(&self) -> f32 {
+        self.d_omega_n_norm
     }
 
-    fn damping_factor(&self) -> f32 {
-        return self.d_zeta;
+    pub fn damping_factor(&self) -> f32 {
+        self.d_zeta
     }
 
     pub fn set_phase(&mut self, phase: f32) {

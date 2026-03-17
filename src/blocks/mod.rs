@@ -1,7 +1,7 @@
-pub mod pattern_search;
-pub mod synchronizers;
 pub mod modulators;
 pub mod octave_complex;
+pub mod pattern_search;
+pub mod synchronizers;
 pub use octave_complex::OctaveComplex;
 pub mod dcblocker;
 pub use dcblocker::DCBlocker;

@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{Result, Context};
+use anyhow::Result;
 use pest::iterators::Pair;
 
 pub trait FmDemodQuadriCmd<'i> {

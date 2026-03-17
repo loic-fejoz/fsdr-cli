@@ -5,12 +5,12 @@ extern crate pest_derive;
 pub mod cmd_grammar;
 pub mod cmd_line;
 // pub mod csdr;
+pub mod blocks;
 pub mod csdr_cmd;
 pub mod grc;
 pub mod grc_cmd;
 pub mod iqengine_blockconverter;
 pub mod iqengine_userdef;
-pub mod blocks;
 
 pub fn join(iter: impl Iterator<Item = String>) -> String {
     iter.fold(String::new(), |mut a, b| {

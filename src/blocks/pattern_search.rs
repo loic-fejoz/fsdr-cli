@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
-use anyhow::{Result, Context};
+use anyhow::Result;
 use futuresdr::prelude::*;
+use std::collections::VecDeque;
 
 enum State {
-    DUMPING(usize),            // Reminder
-    SEARCHING(VecDeque<bool>), // Current active states of the underlying search non-deterministic automata
+    Dumping(usize),            // Reminder
+    Searching(VecDeque<bool>), // Current active states of the underlying search non-deterministic automata
 }
 
 #[derive(Block)]
@@ -44,7 +44,7 @@ where
             _item_type: std::marker::PhantomData,
             values_after,
             pattern_values,
-            current_state: State::SEARCHING(active_states),
+            current_state: State::Searching(active_states),
             input: Default::default(),
             output: Default::default(),
         }
@@ -69,7 +69,7 @@ impl Kernel for PatternSearch<u8> {
 
             i_len = i.len();
             self.current_state = match &mut self.current_state {
-                State::DUMPING(nb) => {
+                State::Dumping(nb) => {
                     let nb = *nb;
                     let mut counter = 0usize;
                     for (x, y) in i.iter().zip(o).take(nb) {
@@ -79,35 +79,36 @@ impl Kernel for PatternSearch<u8> {
                     m = counter;
                     out_len = counter;
                     if counter == nb {
-                        State::SEARCHING(PatternSearch::<u8>::empty_active_states(
+                        State::Searching(PatternSearch::<u8>::empty_active_states(
                             self.pattern_values.len(),
                         ))
                     } else {
-                        State::DUMPING(nb - counter)
+                        State::Dumping(nb - counter)
                     }
                 }
-                State::SEARCHING(potential_idx) => {
+                State::Searching(potential_idx) => {
                     let mut potential_idx: VecDeque<bool> = potential_idx.clone();
-                    let mut next_state = State::SEARCHING(potential_idx.clone());
+                    let mut next_state = State::Searching(potential_idx.clone());
                     for input in i.iter() {
                         m += 1;
                         potential_idx.push_front(true);
-                        
-                        potential_idx = potential_idx.make_contiguous()
+
+                        potential_idx = potential_idx
+                            .make_contiguous()
                             .iter()
                             .zip(self.pattern_values.iter())
-                            .map(|(previous, expected_value)|
+                            .map(|(previous, expected_value)| {
                                 (*expected_value == *input) & previous
-                            )
+                            })
                             .collect();
-                        
+
                         assert!(!potential_idx.is_empty());
                         let is_last_state_active = *potential_idx.iter().last().expect("");
                         if is_last_state_active {
-                            next_state = State::DUMPING(self.values_after);
+                            next_state = State::Dumping(self.values_after);
                             break;
                         } else {
-                            next_state = State::SEARCHING(potential_idx.clone())
+                            next_state = State::Searching(potential_idx.clone())
                         }
                     }
                     next_state

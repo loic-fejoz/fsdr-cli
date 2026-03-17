@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::Grc;
-use anyhow::{Result, Context};
+use anyhow::Result;
 use pest::iterators::Pair;
 use std::f32::consts::{E, PI};
 

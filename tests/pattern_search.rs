@@ -1,10 +1,10 @@
 use anyhow::Result;
+use fsdr_cli::blocks::pattern_search::PatternSearch;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSource;
 use futuresdr::prelude::connect;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
-use fsdr_cli::blocks::pattern_search::PatternSearch;
 
 #[test]
 fn pattern_search_two_bytes_found() -> Result<()> {

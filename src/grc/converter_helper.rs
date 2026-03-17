@@ -1,8 +1,8 @@
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 
 use super::BlockInstance;
-use anyhow::{anyhow, bail, Result, Context};
-use futuresdr::runtime::{BlockId, BlockMeta, Flowgraph, Kernel, MessageOutputs, WorkIo};
+use anyhow::{anyhow, bail, Result};
+use futuresdr::runtime::{BlockId, Flowgraph};
 
 /// Do the actual conversion from GNU Radio block description into
 /// one or several FutureSDR block.
@@ -19,6 +19,7 @@ pub trait MutBlockConverter {
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>>;
 
+    #[allow(dead_code)]
     fn downcast_iqengine(&self) -> Option<&IQEngineOutputBlockConverter> {
         None
     }
@@ -62,16 +63,21 @@ impl ConnectorAdapter for DefaultPortAdapter {
     }
 }
 
+pub type BlockFactory = Box<dyn FnOnce(&mut Flowgraph) -> BlockId>;
+
 pub struct PredefinedBlockConverter {
-    value: Option<Box<dyn FnOnce(&mut Flowgraph) -> BlockId>>,
+    value: Option<BlockFactory>,
 }
 
 impl PredefinedBlockConverter {
+    #[allow(dead_code)]
     pub fn new<F>(f: F) -> PredefinedBlockConverter
     where
         F: FnOnce(&mut Flowgraph) -> BlockId + 'static,
     {
-        PredefinedBlockConverter { value: Some(Box::new(f)) }
+        PredefinedBlockConverter {
+            value: Some(Box::new(f)),
+        }
     }
 }
 

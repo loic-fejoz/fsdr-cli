@@ -2,7 +2,7 @@ use futuresdr::blocks::Apply;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::{Result, Context};
+use anyhow::Result;
 use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogFmDeemphConverter {}

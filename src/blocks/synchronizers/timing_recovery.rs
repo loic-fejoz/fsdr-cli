@@ -80,24 +80,26 @@ impl Kernel for TimingRecovery<Complex32> {
             let num_samples_bit = self.decimation_rate;
             let num_samples_halfbit = self.decimation_rate / 2;
             let num_samples_quarterbit = self.decimation_rate / 4;
-            let num_samples_earlylate_wing = ((num_samples_bit as f32) * self.earlylate_ratio) as usize;
+            let num_samples_earlylate_wing =
+                ((num_samples_bit as f32) * self.earlylate_ratio) as usize;
 
             loop {
-                if current_bitstart_index + (num_samples_halfbit as usize) * 3 >= m {
+                if current_bitstart_index + num_samples_halfbit * 3 >= m {
                     break;
                 }
 
-                correction_offset =
-                    if correction_offset.abs() >= (0.9 * (num_samples_quarterbit as f32)) as isize {
-                        0isize
-                    } else {
-                        correction_offset
-                    };
+                correction_offset = if correction_offset.abs()
+                    >= (0.9 * (num_samples_quarterbit as f32)) as isize
+                {
+                    0isize
+                } else {
+                    correction_offset
+                };
 
                 let error = match self.algo {
                     TimingAlgorithm::GARDNER => {
                         let el_point_right_index = current_bitstart_index + num_samples_halfbit * 3;
-                        let el_point_left_index = current_bitstart_index + num_samples_halfbit * 1;
+                        let el_point_left_index = current_bitstart_index + num_samples_halfbit;
                         let el_point_mid_index = current_bitstart_index + num_samples_halfbit * 2;
                         o[oindex] = i[el_point_mid_index];
                         oindex += 1;
@@ -109,7 +111,7 @@ impl Kernel for TimingRecovery<Complex32> {
                         let el_point_right_index =
                             current_bitstart_index + num_samples_earlylate_wing * 3;
                         let el_point_left_index =
-                            ((current_bitstart_index + num_samples_earlylate_wing * 1) as isize
+                            ((current_bitstart_index + num_samples_earlylate_wing) as isize
                                 - correction_offset) as usize;
                         let el_point_mid_index = current_bitstart_index + num_samples_halfbit;
                         o[oindex] = i[el_point_mid_index];
@@ -123,10 +125,11 @@ impl Kernel for TimingRecovery<Complex32> {
                     TimingAlgorithm::EARLYLATE => 1isize,
                     TimingAlgorithm::GARDNER => -1,
                 };
-                correction_offset =
-                    (((num_samples_halfbit as isize) * error_sign) as f32 * self.mu * error) as isize;
-                current_bitstart_index =
-                    ((current_bitstart_index + num_samples_bit) as isize + correction_offset) as usize;
+                correction_offset = (((num_samples_halfbit as isize) * error_sign) as f32
+                    * self.mu
+                    * error) as isize;
+                current_bitstart_index = ((current_bitstart_index + num_samples_bit) as isize
+                    + correction_offset) as usize;
             }
         }
         self.last_correction_offset = correction_offset;

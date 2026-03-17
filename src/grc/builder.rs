@@ -1,5 +1,5 @@
 use crate::grc::{BlockInstance, Grc, Metadata, Options, States};
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 
@@ -151,9 +151,19 @@ impl GrcBuilder<GraphLevel> {
     }
 
     fn push_and_link_block(&mut self, block: &mut GrcBlockInstanceBuilder) -> Result<()> {
-        let previous_block_name = self.state.last_block_name.as_ref().context("No previous block to link to")?.clone();
+        let previous_block_name = self
+            .state
+            .last_block_name
+            .as_ref()
+            .context("No previous block to link to")?
+            .clone();
         self.push_block(block)?;
-        let this_block_name = self.state.last_block_name.as_ref().context("Current block name not set")?.clone();
+        let this_block_name = self
+            .state
+            .last_block_name
+            .as_ref()
+            .context("Current block name not set")?
+            .clone();
         self.connect(previous_block_name, "0", this_block_name, "0");
         Ok(())
     }

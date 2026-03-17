@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use futuresdr::tracing::debug;
 use futuresdr::runtime::Flowgraph;
+use futuresdr::tracing::debug;
 use iqengine_plugin::server::{
     error::IQEngineError, CustomParamType, FunctionParameters, FunctionParamsBuilder,
     FunctionPostRequest, FunctionPostResponse,
@@ -26,10 +26,7 @@ impl UserDefinedFunction {
         if let Err(err) = cli {
             match err.downcast_ref::<pest::error::Error<Rule>>() {
                 Some(err) => match &err.variant {
-                    pest::error::ErrorVariant::ParsingError {
-                        positives: _,
-                        negatives: _,
-                    } => {
+                    pest::error::ErrorVariant::ParsingError { .. } => {
                         return Err(IQEngineError::MandatoryParameter(
                             "parsing error".to_string(),
                         ));
@@ -94,8 +91,10 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
             let (fg, cvter) = tmp?;
             let fg = futuresdr::runtime::Runtime::new()
                 .run_async(fg)
-                .await.map_err(anyhow::Error::from)?;
-            let result: FunctionPostResponse = cvter.as_result(fg).map_err(IQEngineError::FutureSDRError)?;
+                .await
+                .map_err(anyhow::Error::from)?;
+            let result: FunctionPostResponse =
+                cvter.as_result(fg).map_err(IQEngineError::FutureSDRError)?;
             return Ok(result);
         }
         Err(IQEngineError::NotYetImplemented(
@@ -107,14 +106,8 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
 fn fun_name(
     samples_b64: Vec<iqengine_plugin::server::SamplesB64>,
     grc: crate::grc::Grc,
-) -> Result<
-    (
-        futuresdr::runtime::Flowgraph,
-        IQEngineOutputBlockConverter,
-    ),
-    IQEngineError,
-> {
-    let stream1 = samples_b64.get(0).unwrap();
+) -> Result<(futuresdr::runtime::Flowgraph, IQEngineOutputBlockConverter), IQEngineError> {
+    let stream1 = samples_b64.first().unwrap();
     let sample_rate = stream1.sample_rate.unwrap_or(1_800_000.0);
     debug!("sample_rate is {}", sample_rate);
     let mut converter = crate::grc::converter::Grc2FutureSdr::new();
@@ -125,7 +118,8 @@ fn fun_name(
             let v = stream1.clone().samples_cf32()?;
 
             let src = futuresdr::blocks::VectorSource::<futuresdr::num_complex::Complex32>::new(v);
-            let blk_cvter = PredefinedBlockConverter::new(move |fg: &mut Flowgraph| fg.add_block(src).into());
+            let blk_cvter =
+                PredefinedBlockConverter::new(move |fg: &mut Flowgraph| fg.add_block(src).into());
             converter
                 .with_blocktype_conversion("blocks_file_source".to_string(), Box::new(blk_cvter));
         }

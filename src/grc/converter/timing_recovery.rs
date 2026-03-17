@@ -1,9 +1,9 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::{bail, Result, Context};
+use crate::blocks::synchronizers::{TimingAlgorithm, TimingRecovery};
+use anyhow::{bail, Result};
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
-use crate::blocks::synchronizers::{TimingAlgorithm, TimingRecovery};
 
 pub struct TimingRecoveryConverter {}
 
@@ -15,10 +15,10 @@ impl BlockConverter for TimingRecoveryConverter {
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let algo = blk.parameter_or("algorithm", "GARDNER");
         let decim = Grc2FutureSdr::parameter_as_f32(blk, "decimation", "8")? as usize;
-        if decim <= 4 || decim % 4 != 0 {
+        if decim <= 4 || !decim.is_multiple_of(4) {
             bail!("decimation factor for timing recovery must be divisible by 4, and strictly greater than 4.")
         }
-        let mu = Grc2FutureSdr::parameter_as_f32(blk, "mu", "0.5")? as f32;
+        let mu = Grc2FutureSdr::parameter_as_f32(blk, "mu", "0.5")?;
         let max_error = Grc2FutureSdr::parameter_as_f32(blk, "max_error", "2")?;
         let algo = match algo {
             "GARDNER" => TimingAlgorithm::GARDNER,

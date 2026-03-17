@@ -1,4 +1,4 @@
-use anyhow::{Result, Context};
+use anyhow::Result;
 use futuresdr::prelude::*;
 
 #[derive(Block)]

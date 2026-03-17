@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::{bail, Result, Context};
+use anyhow::{bail, Context, Result};
 use futuresdr::blocks::FirBuilder;
 use futuresdr::futuredsp::{firdes, windows};
 use futuresdr::num_complex::Complex32;

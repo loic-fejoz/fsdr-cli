@@ -1,9 +1,4 @@
-use futuresdr::num_complex::Complex32;
 
-pub struct SymbolSync {
+pub struct SymbolSync {}
 
-}
-
-impl SymbolSync {
-    
-}
+impl SymbolSync {}
