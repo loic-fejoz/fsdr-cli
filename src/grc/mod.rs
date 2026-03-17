@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 pub mod builder;
 pub mod converter_helper;
 
+/// Representation of a GNU Radio Companion (GRC) flowgraph.
+/// This structure is designed to be 100% compatible with the .grc file format (YAML/JSON representation).
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Grc {
     pub options: Options,
@@ -65,11 +67,13 @@ pub struct Metadata {
     pub grc_version: String,
 }
 
+/// An instance of a GNU Radio block within a flowgraph.
+/// `id` and `parameters` keys must match those defined in GRC block YAML files.
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct BlockInstance {
     pub name: String,
-    pub id: String,
-    pub parameters: BTreeMap<String, String>,
+    pub id: String, // The GRC block ID (e.g., "blocks_file_sink")
+    pub parameters: BTreeMap<String, String>, // Parameter names and values from GRC
     pub states: States,
 }
 

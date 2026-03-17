@@ -1,7 +1,8 @@
+use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
+
 use super::BlockInstance;
-use anyhow::{bail, Result};
-use futuresdr::runtime::BlockId;
-use futuresdr::runtime::Flowgraph;
+use anyhow::{anyhow, bail, Result};
+use futuresdr::runtime::{BlockId, Flowgraph};
 
 /// Do the actual conversion from GNU Radio block description into
 /// one or several FutureSDR block.
@@ -9,6 +10,19 @@ use futuresdr::runtime::Flowgraph;
 pub trait BlockConverter {
     fn convert(&self, blk: &BlockInstance, fg: &mut Flowgraph)
         -> Result<Box<dyn ConnectorAdapter>>;
+}
+
+pub trait MutBlockConverter {
+    fn convert(
+        &mut self,
+        blk: &BlockInstance,
+        fg: &mut Flowgraph,
+    ) -> Result<Box<dyn ConnectorAdapter>>;
+
+    #[allow(dead_code)]
+    fn downcast_iqengine(&self) -> Option<&IQEngineOutputBlockConverter> {
+        None
+    }
 }
 
 /// Convert GNU Radio port's name into actual FutureSDR block id and port name.
@@ -46,5 +60,40 @@ impl ConnectorAdapter for DefaultPortAdapter {
             "out" | "output" => Ok((self.blk, "output")),
             _ => bail!("Unknown output port name {port_name}"),
         }
+    }
+}
+
+pub type BlockFactory = Box<dyn FnOnce(&mut Flowgraph) -> BlockId>;
+
+pub struct PredefinedBlockConverter {
+    value: Option<BlockFactory>,
+}
+
+impl PredefinedBlockConverter {
+    #[allow(dead_code)]
+    pub fn new<F>(f: F) -> PredefinedBlockConverter
+    where
+        F: FnOnce(&mut Flowgraph) -> BlockId + 'static,
+    {
+        PredefinedBlockConverter {
+            value: Some(Box::new(f)),
+        }
+    }
+}
+
+impl MutBlockConverter for PredefinedBlockConverter {
+    fn convert(
+        &mut self,
+        _blk: &BlockInstance,
+        fg: &mut Flowgraph,
+    ) -> Result<Box<dyn ConnectorAdapter>> {
+        if let Some(res) = self.value.take() {
+            let blk = res(fg);
+            let s: Box<dyn ConnectorAdapter> = Box::new(DefaultPortAdapter::new(blk));
+            return Ok(s);
+        }
+        Err(anyhow!(
+            "Value already picked: probably too many time the same block type."
+        ))
     }
 }

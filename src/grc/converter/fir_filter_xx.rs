@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::Result;
+use anyhow::{bail, Context, Result};
 use futuresdr::blocks::FirBuilder;
 use futuresdr::futuredsp::{firdes, windows};
 use futuresdr::num_complex::Complex32;
@@ -17,8 +17,11 @@ impl BlockConverter for FirFilterXxConverter {
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
-        let taps = blk.parameters.get("taps").expect("taps must be defined");
+            .context("fir_filter_xxx: item type must be defined")?;
+        let taps = blk
+            .parameters
+            .get("taps")
+            .context("fir_filter_xxx: taps must be defined")?;
         let decimation = Grc2FutureSdr::parameter_as_f64(blk, "decim", "1")? as usize;
         let taps: Vec<f32> = if taps.is_empty() {
             // This block definition was from csdr
@@ -27,7 +30,7 @@ impl BlockConverter for FirFilterXxConverter {
             let window = blk
                 .parameters
                 .get("window")
-                .expect("window must be defined");
+                .context("fir_filter_xxx: window must be defined")?;
             let taps_length: usize = (4.0 / transition_bw) as usize;
             let taps_length = taps_length + if taps_length.is_multiple_of(2) { 1 } else { 0 };
             assert!(taps_length % 2 == 1); //number of symmetric FIR filter taps should be odd
@@ -39,18 +42,18 @@ impl BlockConverter for FirFilterXxConverter {
                 //"KAISER" => windows::kaiser(taps_length, beta),
                 "HANN" => windows::hann(taps_length, false),
                 //"GAUSSIAN" => windows::gaussian(taps_length, alpha),
-                _ => todo!("Unknown fir_filter_xx window: {window}"),
+                _ => bail!("fir_filter_xxx: Unknown window: {window}"),
             };
             let taps = firdes::lowpass::<f32>(transition_bw, rect_win.as_slice());
             taps
         } else {
-            todo!("Unhandled fir_filter_xx taps definition")
+            bail!("fir_filter_xxx: Unhandled taps definition")
         };
         let blk = match &(item_type[..]) {
             "ccc" => FirBuilder::resampling_with_taps::<Complex32, Complex32, Vec<f32>>(
                 1, decimation, taps,
             ),
-            _ => todo!("Unhandled fir_filter_xx Type {item_type}"),
+            _ => bail!("fir_filter_xxx: Unhandled type {item_type}"),
         };
         let blk = fg.add_block(blk);
         let blk = DefaultPortAdapter::new(blk.into());

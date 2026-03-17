@@ -1,7 +1,7 @@
 {
-    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
-    // Pointez pour afficher la description des attributs existants.
-    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -38,7 +38,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["csdr --output /tmp/test.grc limit_ff 2.0"],
+            "args": ["iqengine"],
             "cwd": "${workspaceFolder}"
         },
         {
@@ -63,25 +63,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug integration test 'csdr'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--test=csdr",
-                    "--package=fsdr-cli"
-                ],
-                "filter": {
-                    "name": "csdr",
-                    "kind": "test"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "Debug integration test 'grc_parse'",
             "cargo": {
                 "args": [
@@ -92,6 +73,47 @@
                 ],
                 "filter": {
                     "name": "grc_parse",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'pattern_search'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=pattern_search",
+                    "--package=fsdr-cli",
+                    "three_bytes",
+                    "--",
+                    "--nocapture"
+                ],
+                "filter": {
+                    "name": "pattern_search",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'csdr'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=csdr",
+                    "--package=fsdr-cli"
+                ],
+                "filter": {
+                    "name": "csdr",
                     "kind": "test"
                 }
             },

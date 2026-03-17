@@ -51,6 +51,50 @@ pub fn parse_dump_u8() {
     assert_eq!(1, grc.connections.len());
 }
 
+/// Regression test for the bug where the "float" and "u8" match arms in
+/// `src/grc/converter/dump.rs` were swapped, causing a
+/// "Validation error dyn BufferReader has wrong type" error when connecting
+/// the dump_u8 block downstream of any block producing u8 output.
+#[test]
+pub fn convert_dump_u8_connects_to_u8_source() -> Result<()> {
+    let cmds = "dump_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<u8> = vec![0x00, 0x01, 0x02, 0x03, 0xFF];
+    let src = fg.add_block(VectorSource::<u8>::new(orig));
+
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+
+    // Before the fix this line failed with:
+    // "Validation error dyn BufferReader has wrong type"
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+
+    Runtime::new().run(fg)?;
+    Ok(())
+}
+
+#[test]
+pub fn convert_dump_f_connects_to_f32_source() -> Result<()> {
+    let cmds = "dump_f";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+
+    let mut fg = Flowgraph::new();
+    let orig: Vec<f32> = vec![0.0, 1.0, -1.0, 0.5];
+    let src = fg.add_block(VectorSource::<f32>::new(orig));
+
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
+
+    fg.connect_dyn(&src, "output", but_in, in_name)?;
+
+    Runtime::new().run(fg)?;
+    Ok(())
+}
+
 #[test]
 pub fn parse_realpart_cf() {
     let cmds = "realpart_cf";
@@ -163,7 +207,7 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -214,7 +258,7 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -305,7 +349,7 @@ pub fn parse_fastdc_block() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -341,7 +385,7 @@ pub fn parse_amdemod_cf() -> Result<()> {
     let src = fg.add_block(VectorSource::<Complex32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -396,7 +440,7 @@ pub fn parse_agc_ff() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -543,7 +587,7 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
     let src = fg.add_block(VectorSource::<Complex32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<Complex32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -642,7 +686,7 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::convert_block(&mut fg, &grc.blocks[1])?;
+    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 

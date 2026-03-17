@@ -10,13 +10,13 @@ pub trait AudioCmd<'i> {
     fn build_audio_sink(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
         let mut grc = grc;
         let audio_rate = self.audio_rate()?;
-        let num_inputs = self.num_inputs()?.or(Some("1")).expect("");
+        let num_inputs = self.num_inputs()?.unwrap_or("1");
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("audio_sink")
             .with_parameter("samp_rate", audio_rate)
             .with_parameter("num_inputs", num_inputs)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

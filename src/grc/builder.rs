@@ -1,6 +1,7 @@
 use crate::grc::{BlockInstance, Grc, Metadata, Options, States};
-use anyhow::Result;
+use anyhow::{bail, Context, Result};
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 
 #[derive(Clone)]
 pub struct GraphLevel {}
@@ -14,6 +15,8 @@ pub trait GrcBuilderState {}
 impl GrcBuilderState for GraphLevel {}
 impl GrcBuilderState for BlockLevel {}
 
+/// Item types supported by GNU Radio.
+/// These mirror the types used in GRC block configurations.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum GrcItemType {
     U8,
@@ -45,9 +48,11 @@ impl GrcItemType {
         }
     }
 
+    /// Returns the string representation of the type as expected by GRC.
+    /// These names (e.g., "byte", "complex") are the standard GRC type enumerations.
     pub fn as_grc(self) -> &'static str {
         match self {
-            Self::U8 => "uchar",
+            Self::U8 => "byte",
             Self::S8 => "char",
             Self::U16 => "short",
             Self::S16 => "short",
@@ -59,28 +64,39 @@ impl GrcItemType {
     }
 }
 
-impl From<&str> for GrcItemType {
-    fn from(value: &str) -> Self {
+impl TryFrom<&str> for GrcItemType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
         match value {
-            "u8" => Self::U8,
-            "s8" => Self::S8,
-            "u16" => Self::U16,
-            "s16" => Self::S16,
-            "f" => Self::F32,
-            "ff" => Self::InterleavedF32,
-            "f32" => Self::F32,
-            "c" => Self::C32,
-            "c32" => Self::C32,
-            "uchar" => Self::U8,
-            "byte" => Self::U8,
-            "char" => Self::S8,
-            "short" => Self::U16,
-            "ishort" => Self::S16,
-            "float" => Self::F32,
-            "float64" => Self::F64,
-            "f64" => Self::F64,
-            _ => todo!("Unknown GNU Radio type: {value}"),
+            "u8" => Ok(Self::U8),
+            "s8" => Ok(Self::S8),
+            "u16" => Ok(Self::U16),
+            "s16" => Ok(Self::S16),
+            "f" => Ok(Self::F32),
+            "ff" => Ok(Self::InterleavedF32),
+            "f32" => Ok(Self::F32),
+            "c" => Ok(Self::C32),
+            "c32" => Ok(Self::C32),
+            "complex" => Ok(Self::C32),
+            "uchar" => Ok(Self::U8),
+            "byte" => Ok(Self::U8),
+            "char" => Ok(Self::S8),
+            "short" => Ok(Self::U16),
+            "ishort" => Ok(Self::S16),
+            "float" => Ok(Self::F32),
+            "float64" => Ok(Self::F64),
+            "f64" => Ok(Self::F64),
+            _ => bail!("Unknown GNU Radio type: {value}"),
         }
+    }
+}
+
+impl TryFrom<&String> for GrcItemType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &String) -> std::result::Result<Self, Self::Error> {
+        GrcItemType::try_from(&value[..])
     }
 }
 
@@ -122,25 +138,37 @@ impl GrcBuilder<GraphLevel> {
         }
     }
 
-    fn push_block(&mut self, block: &mut GrcBlockInstanceBuilder) {
-        let block_type = block.kind.clone().expect("block kind");
+    fn push_block(&mut self, block: &mut GrcBlockInstanceBuilder) -> Result<()> {
+        let block_type = block.kind.as_ref().context("block kind must be defined")?;
         let block_name = format!("{}_{}", block_type, self.state.block_count);
         block.with_name(block_name.clone());
         self.state.last_output_type = block.output_type;
         self.state.last_block_name = Some(block_name);
         self.state.block_count += 1;
-        self.state.blocks.push(block.build());
+        self.state.blocks.push(block.build()?);
         assert_eq!(self.state.block_count, self.state.blocks.len());
+        Ok(())
     }
 
-    fn push_and_link_block(&mut self, block: &mut GrcBlockInstanceBuilder) {
-        let previous_block_name = self.state.last_block_name.clone().expect("");
-        self.push_block(block);
-        let this_block_name = self.state.last_block_name.clone().expect("");
+    fn push_and_link_block(&mut self, block: &mut GrcBlockInstanceBuilder) -> Result<()> {
+        let previous_block_name = self
+            .state
+            .last_block_name
+            .as_ref()
+            .context("No previous block to link to")?
+            .clone();
+        self.push_block(block)?;
+        let this_block_name = self
+            .state
+            .last_block_name
+            .as_ref()
+            .context("Current block name not set")?
+            .clone();
         self.connect(previous_block_name, "0", this_block_name, "0");
+        Ok(())
     }
 
-    pub fn ensure_source(&mut self, expected_last_output_type: GrcItemType) -> Self {
+    pub fn ensure_source(&mut self, expected_last_output_type: GrcItemType) -> Result<Self> {
         if let Some(last_output_type) = self.state.last_output_type {
             // Ensure proper connectivity
             match (last_output_type, expected_last_output_type) {
@@ -149,11 +177,17 @@ impl GrcBuilder<GraphLevel> {
                     convert_ff_c_block
                         .with_block_type("convert_ff_c")
                         .assert_output(GrcItemType::C32);
-                    self.push_and_link_block(&mut convert_ff_c_block);
+                    self.push_and_link_block(&mut convert_ff_c_block)?;
                 }
                 (GrcItemType::F32, GrcItemType::InterleavedF32) => {}
                 _ => {
-                    assert_eq!(last_output_type, expected_last_output_type);
+                    if last_output_type != expected_last_output_type {
+                        bail!(
+                            "Incompatible types: {:?} and {:?}",
+                            last_output_type,
+                            expected_last_output_type
+                        );
+                    }
                 }
             }
         } else {
@@ -164,22 +198,22 @@ impl GrcBuilder<GraphLevel> {
                 .with_parameter("type", expected_last_output_type.as_grc())
                 .with_parameter("repeat", "false")
                 .assert_output(expected_last_output_type);
-            self.push_block(&mut src_block);
+            self.push_block(&mut src_block)?;
         }
-        (*self).clone()
+        Ok((*self).clone())
     }
 
-    pub fn ensure_sink(&mut self) -> &mut Self {
+    pub fn ensure_sink(&mut self) -> Result<&mut Self> {
         if let Some(last_output_type) = self.state.last_output_type {
             let mut snk_block = GrcBlockInstanceBuilder::new();
             snk_block
                 .with_block_type("blocks_file_sink")
                 .with_parameter("file", "-")
                 .with_parameter("type", last_output_type.as_grc());
-            self.push_and_link_block(&mut snk_block);
+            self.push_and_link_block(&mut snk_block)?;
             self.state.last_output_type = None;
         }
-        self
+        Ok(self)
     }
 
     pub fn create_block_instance(&self, block_type: impl Into<String>) -> GrcBuilder<BlockLevel> {
@@ -239,26 +273,26 @@ impl GrcBuilder<BlockLevel> {
         self
     }
 
-    pub fn push(&self) -> GrcBuilder<GraphLevel> {
+    pub fn push(&self) -> Result<GrcBuilder<GraphLevel>> {
         let mut blk_builder = self.extra.block_builder.clone();
         let gl = GraphLevel {};
         let mut grc_builder = GrcBuilder {
             state: self.state.clone(),
             extra: gl,
         };
-        grc_builder.push_block(&mut blk_builder);
-        grc_builder
+        grc_builder.push_block(&mut blk_builder)?;
+        Ok(grc_builder)
     }
 
-    pub fn push_and_link(&self) -> GrcBuilder<GraphLevel> {
+    pub fn push_and_link(&self) -> Result<GrcBuilder<GraphLevel>> {
         let mut blk_builder = self.extra.block_builder.clone();
         let gl = GraphLevel {};
         let mut grc_builder = GrcBuilder {
             state: self.state.clone(),
             extra: gl,
         };
-        grc_builder.push_and_link_block(&mut blk_builder);
-        grc_builder
+        grc_builder.push_and_link_block(&mut blk_builder)?;
+        Ok(grc_builder)
     }
 }
 
@@ -291,6 +325,8 @@ impl GrcBlockInstanceBuilder {
         self
     }
 
+    /// Sets a parameter for the block.
+    /// `param_name` and `param_value` must match GRC definitions for this block type.
     pub fn with_parameter(
         &mut self,
         param_name: impl Into<String>,
@@ -306,13 +342,13 @@ impl GrcBlockInstanceBuilder {
         self
     }
 
-    pub fn build(&self) -> BlockInstance {
-        BlockInstance {
-            name: self.name.clone().expect("block name"),
-            id: self.kind.clone().expect("block type"),
+    pub fn build(&self) -> Result<BlockInstance> {
+        Ok(BlockInstance {
+            name: self.name.clone().context("block name must be defined")?,
+            id: self.kind.clone().context("block type must be defined")?,
             parameters: self.parameters.clone(),
             states: States::default(),
-        }
+        })
     }
 }
 

@@ -1,4 +1,9 @@
-mod octave_complex;
+pub mod modulators;
+pub mod octave_complex;
+pub mod pattern_search;
+pub mod synchronizers;
 pub use octave_complex::OctaveComplex;
-mod dcblocker;
+pub mod dcblocker;
 pub use dcblocker::DCBlocker;
+pub mod dsb;
+pub use dsb::dsb_fc;

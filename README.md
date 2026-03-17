@@ -14,12 +14,12 @@ Features:
 * GNU Radio flowgraph execution: ongoing
 * all in one flow graph execution: single process, no more pipes!
 * expression evaluation
-* conversion of csdr commands into GNU Radio companion flowgraph wherever possible
+* conversion of csdr commands into a strictly compatible **GNU Radio Companion (GRC)** intermediate graph
 * additional commands
 
 ## WFM decoding
 
-In the [csdr documentation about WFM demodulation](https://github.com/jketterl/csdr#demodulate-wfm), one can find the following command line:
+In the [csdr documentation about WFM demodulation](https://github.com/ha7ilm/csdr#demodulate-wfm) (also [jketterl](https://github.com/jketterl/csdr#demodulate-wfm)), one can find the following command line:
 
 ```bash
 rtl_sdr -s 240000 -f 89500000 -g 20 - | csdr convert_u8_f | csdr fmdemod_quadri_cf | csdr fractional_decimator_ff 5 | csdr deemphasis_wfm_ff 48000 50e-6 | csdr convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
@@ -115,6 +115,42 @@ Yet, thanks to newly added `weaver_lsb_cf` and `weaver_usb_cf` we may have bette
 fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! audio 48_000 1
 ```
 
+## IQEngine plugins
+
+```bash
+fsdr-cli csdr \
+shift_addition_cc (-22850/100000) ! \
+fmdemod_quadri_cf ! \
+rational_resampler_ff 12 25 ! \
+dsc_fc ! \
+timing_recovery_cc GARDNER 20 0.5 2 ! \
+realpart_cf ! \
+binary_slicer_f_u8 ! \
+pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+pack_bits_8to1_u8_u8 ! \
+dump_u8
+```
+
+```
+csdr shift_addition_cc (-22850/100000)
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! dsb_fc
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2 ! realpart_cf ! binary_slicer_f_u8 ! pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! pack_bits_8to1_u8_u8
+```
+
 ## TODO
 
 So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
@@ -155,7 +191,7 @@ Syntax:
 rational_resampler_cc interp decim
 ```
 
-Resample stream based on rational ratio: `interp/decim`, just like [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff) but on complex stream.
+Resample stream based on rational ratio: `interp/decim`, just like [rational_resampler_ff](https://github.com/ha7ilm/csdr#rational_resampler_ff) but on complex stream.
 
 ### [weaver_XXX_cf](#weaver_xxx_cf)
 
@@ -174,100 +210,100 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 
 ### [csdr retrocompatibility commands](#csdr-retrocompatibility-commands)
 
-- [x] [realpart_cf](https://github.com/jketterl/csdr#realpart_cf)[^4]
-- [x] [clipdetect_ff](https://github.com/jketterl/csdr#clipdetect_ff)
-- [x] [limit_ff](https://github.com/jketterl/csdr#limit_ff)[^2][^3][^4]
-- [x] [gain_ff](https://github.com/jketterl/csdr#gain_ff)
-- [ ] [clone](https://github.com/jketterl/csdr#clone)
-- [ ] [through](https://github.com/jketterl/csdr#through)
-- [ ] [none](https://github.com/jketterl/csdr#none)
-- [ ] [yes_f](https://github.com/jketterl/csdr#yes_f)
-- [ ] [detect_nan_ff](https://github.com/jketterl/csdr#detect_nan_ff)
-- [x] [dump_f](https://github.com/jketterl/csdr#dump_f)
-- [x] [dump_u8](https://github.com/jketterl/csdr#dump_u8)
-- [ ] [flowcontrol](https://github.com/jketterl/csdr#flowcontrol)
-- [ ] [shift_math_cc](https://github.com/jketterl/csdr#shift_math_cc)
-- [x] [shift_addition_cc](https://github.com/jketterl/csdr#shift_addition_cc)[^2][^3][^4]
-- [ ] [shift_addition_cc_test](https://github.com/jketterl/csdr#shift_addition_cc_test)
-- [ ] [shift_table_cc](https://github.com/jketterl/csdr#shift_table_cc)
-- [ ] [shift_addfast_cc](https://github.com/jketterl/csdr#shift_addfast_cc)
-- [ ] [shift_unroll_cc](https://github.com/jketterl/csdr#shift_unroll_cc)
-- [ ] [decimating_shift_addition_cc](https://github.com/jketterl/csdr#decimating_shift_addition_cc)
-- [ ] [shift_addition_fc](https://github.com/jketterl/csdr#shift_addition_fc)
-- [ ] [dcblock_ff](https://github.com/jketterl/csdr#dcblock_ff)
-- [x] [fastdcblock_ff](https://github.com/jketterl/csdr#fastdcblock_ff)[^3]
-- [ ] [fmdemod_atan_cf](https://github.com/jketterl/csdr#fmdemod_atan_cf)
-- [x] [fmdemod_quadri_cf](https://github.com/jketterl/csdr#fmdemod_quadri_cf)[^1]
-- [ ] [fmdemod_quadri_novect_cf](https://github.com/jketterl/csdr#fmdemod_quadri_novect_cf)
-- [x] [deemphasis_wfm_ff](https://github.com/jketterl/csdr#deemphasis_wfm_ff)[^1]
-- [x] [deemphasis_nfm_ff](https://github.com/jketterl/csdr#deemphasis_nfm_ff)[^2]
-- [x] [amdemod_cf](https://github.com/jketterl/csdr#amdemod_cf)[^3]
-- [ ] [amdemod_estimator_cf](https://github.com/jketterl/csdr#amdemod_estimator_cf)
-- [ ] [firdes_lowpass_f](https://github.com/jketterl/csdr#firdes_lowpass_f)
-- [ ] [firdes_bandpass_c](https://github.com/jketterl/csdr#firdes_bandpass_c)
-- [x] [fir_decimate_cc](https://github.com/jketterl/csdr#fir_decimate_cc)[^2][^3][^4]
-- [ ] [fir_interpolate_cc](https://github.com/jketterl/csdr#fir_interpolate_cc)
-- [x] [rational_resampler_ff](https://github.com/jketterl/csdr#rational_resampler_ff)
-- [x] [fractional_decimator_ff](https://github.com/jketterl/csdr#fractional_decimator_ff)[^1]
-- [ ] [old_fractional_decimator_ff](https://github.com/jketterl/csdr#old_fractional_decimator_ff)
-- [x] [bandpass_fir_fft_cc](https://github.com/jketterl/csdr#bandpass_fir_fft_cc)[^4]
-- [x] [agc_ff](https://github.com/jketterl/csdr#agc_ff)[^3][^4]
-- [ ] [fastagc_ff](https://github.com/jketterl/csdr#fastagc_ff)[^2]
-- [ ] [fft_cc](https://github.com/jketterl/csdr#fft_cc)
-- [ ] [fft_fc](https://github.com/jketterl/csdr#fft_fc)
-- [ ] [fft_benchmark](https://github.com/jketterl/csdr#fft_benchmark)
-- [ ] [logpower_cf](https://github.com/jketterl/csdr#logpower_cf)
-- [ ] [encode_ima_adpcm_i16_u8](https://github.com/jketterl/csdr#encode_ima_adpcm_i16_u8)
-- [ ] [decode_ima_adpcm_u8_i16](https://github.com/jketterl/csdr#decode_ima_adpcm_u8_i16)
-- [ ] [compress_fft_adpcm_f_u8](https://github.com/jketterl/csdr#compress_fft_adpcm_f_u8)
-- [ ] [fft_exchange_sides_ff](https://github.com/jketterl/csdr#fft_exchange_sides_ff)
-- [ ] [dsb_fc](https://github.com/jketterl/csdr#dsb_fc)
-- [ ] [add_dcoffset_cc](https://github.com/jketterl/csdr#add_dcoffset_cc)
-- [ ] [convert_f_samplerf](https://github.com/jketterl/csdr#convert_f_samplerf)
-- [ ] [fmmod_fc](https://github.com/jketterl/csdr#fmmod_fc)
-- [ ] [fixed_amplitude_cc](https://github.com/jketterl/csdr#fixed_amplitude_cc)
-- [ ] [mono2stereo_s16](https://github.com/jketterl/csdr#mono2stereo_s16)
-- [ ] [setbuf](https://github.com/jketterl/csdr#setbuf)
-- [ ] [fifo](https://github.com/jketterl/csdr#fifo)
-- [ ] [psk31_varicode_encoder_u8_u8](https://github.com/jketterl/csdr#psk31_varicode_encoder_u8_u8)
-- [ ] [repeat_u8](https://github.com/jketterl/csdr#repeat_u8)
-- [ ] [uniform_noise_f](https://github.com/jketterl/csdr#uniform_noise_f)
-- [ ] [gaussian_noise_c](https://github.com/jketterl/csdr#gaussian_noise_c)
-- [ ] [pack_bits_8to1_u8_u8](https://github.com/jketterl/csdr#pack_bits_8to1_u8_u8)
-- [ ] [pack_bits_1to8_u8_u8](https://github.com/jketterl/csdr#pack_bits_1to8_u8_u8)
-- [ ] [awgn_cc](https://github.com/jketterl/csdr#awgn_cc)
-- [ ] [add_n_zero_samples_at_beginning_f](https://github.com/jketterl/csdr#add_n_zero_samples_at_beginning_f)
-- [ ] [fft_one_side_ff](https://github.com/jketterl/csdr#fft_one_side_ff)
-- [ ] [logaveragepower_cf](https://github.com/jketterl/csdr#logaveragepower_cf)
-- [ ] [mono2stereo_s16](https://github.com/jketterl/csdr#mono2stereo_s16)
-- [ ] [psk31_varicode_decoder_u8_u8](https://github.com/jketterl/csdr#psk31_varicode_decoder_u8_u8)
-- [ ] [_fft2octave](https://github.com/jketterl/csdr#_fft2octave)
-- [ ] [invert_u8_u8](https://github.com/jketterl/csdr#invert_u8_u8)
-- [ ] [rtty_baudot2ascii_u8_u8](https://github.com/jketterl/csdr#rtty_baudot2ascii_u8_u8)
-- [ ] [binary_slicer_f_u8](https://github.com/jketterl/csdr#binary_slicer_f_u8)
-- [ ] [serial_line_decoder_f_u8](https://github.com/jketterl/csdr#serial_line_decoder_f_u8)
-- [ ] [pll_cc](https://github.com/jketterl/csdr#pll_cc)
-- [ ] [timing_recovery_cc](https://github.com/jketterl/csdr#timing_recovery_cc)
-- [x] [octave_complex_c](https://github.com/jketterl/csdr#octave_complex_c)
-- [ ] [psk_modulator_u8_c](https://github.com/jketterl/csdr#psk_modulator_u8_c)
-- [ ] [duplicate_samples_ntimes_u8_u8](https://github.com/jketterl/csdr#duplicate_samples_ntimes_u8_u8)
-- [ ] [psk31_interpolate_sine_cc](https://github.com/jketterl/csdr#psk31_interpolate_sine_cc)
-- [ ] [differential_encoder_u8_u8](https://github.com/jketterl/csdr#differential_encoder_u8_u8)
-- [ ] [differential_decoder_u8_u8](https://github.com/jketterl/csdr#differential_decoder_u8_u8)
-- [ ] [bpsk_costas_loop_cc](https://github.com/jketterl/csdr#bpsk_costas_loop_cc)
-- [ ] [simple_agc_cc](https://github.com/jketterl/csdr#simple_agc_cc)
-- [ ] [peaks_fir_cc](https://github.com/jketterl/csdr#peaks_fir_cc)
-- [ ] [firdes_peak_c](https://github.com/jketterl/csdr#firdes_peak_c)
-- [ ] [normalized_timing_variance_u32_f](https://github.com/jketterl/csdr#normalized_timing_variance_u32_f)
-- [ ] [pulse_shaping_filter_cc](https://github.com/jketterl/csdr#pulse_shaping_filter_cc)
-- [ ] [firdes_pulse_shaping_filter_f](https://github.com/jketterl/csdr#firdes_pulse_shaping_filter_f)
-- [ ] [generic_slicer_f_u8](https://github.com/jketterl/csdr#generic_slicer_f_u8)
-- [ ] [plain_interpolate_cc](https://github.com/jketterl/csdr#plain_interpolate_cc)
-- [ ] [dbpsk_decoder_c_u8](https://github.com/jketterl/csdr#dbpsk_decoder_c_u8)
-- [ ] [bfsk_demod_cf](https://github.com/jketterl/csdr#bfsk_demod_cf)
-- [ ] [add_const_cc](https://github.com/jketterl/csdr#add_const_cc)
-- [ ] [pattern_search_u8_u8](https://github.com/jketterl/csdr#pattern_search_u8_u8)
-- [ ] [tee](https://github.com/jketterl/csdr#tee)
+- [x] [realpart_cf](https://github.com/ha7ilm/csdr#realpart_cf) ([jketterl](https://github.com/jketterl/csdr#realpart))[^4]
+- [x] [clipdetect_ff](https://github.com/ha7ilm/csdr#clipdetect_ff)
+- [x] [limit_ff](https://github.com/ha7ilm/csdr#limit_ff) ([jketterl](https://github.com/jketterl/csdr#limit))[^2][^3][^4]
+- [x] [gain_ff](https://github.com/ha7ilm/csdr#gain_ff) ([jketterl](https://github.com/jketterl/csdr#gain))
+- [ ] [clone](https://github.com/ha7ilm/csdr#clone)
+- [ ] [through](https://github.com/ha7ilm/csdr#through)
+- [ ] [none](https://github.com/ha7ilm/csdr#none)
+- [ ] [yes_f](https://github.com/ha7ilm/csdr#yes_f)
+- [ ] [detect_nan_ff](https://github.com/ha7ilm/csdr#detect_nan_ff)
+- [x] [dump_f](https://github.com/ha7ilm/csdr#dump_f)
+- [x] [dump_u8](https://github.com/ha7ilm/csdr#dump_u8)
+- [ ] [flowcontrol](https://github.com/ha7ilm/csdr#flowcontrol)
+- [ ] [shift_math_cc](https://github.com/ha7ilm/csdr#shift_math_cc) ([jketterl](https://github.com/jketterl/csdr#shift))
+- [x] [shift_addition_cc](https://github.com/ha7ilm/csdr#shift_addition_cc) ([jketterl](https://github.com/jketterl/csdr#shift))[^2][^3][^4]
+- [ ] [shift_addition_cc_test](https://github.com/ha7ilm/csdr#shift_addition_cc_test)
+- [ ] [shift_table_cc](https://github.com/ha7ilm/csdr#shift_table_cc)
+- [ ] [shift_addfast_cc](https://github.com/ha7ilm/csdr#shift_addfast_cc)
+- [ ] [shift_unroll_cc](https://github.com/ha7ilm/csdr#shift_unroll_cc)
+- [ ] [decimating_shift_addition_cc](https://github.com/ha7ilm/csdr#decimating_shift_addition_cc)
+- [ ] [shift_addition_fc](https://github.com/ha7ilm/csdr#shift_addition_fc)
+- [ ] [dcblock_ff](https://github.com/ha7ilm/csdr#dcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))
+- [x] [fastdcblock_ff](https://github.com/ha7ilm/csdr#fastdcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))[^3]
+- [x] [fmdemod_atan_cf](https://github.com/ha7ilm/csdr#fmdemod_atan_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))
+- [x] [fmdemod_quadri_cf](https://github.com/ha7ilm/csdr#fmdemod_quadri_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))[^1]
+- [ ] [fmdemod_quadri_novect_cf](https://github.com/ha7ilm/csdr#fmdemod_quadri_novect_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))
+- [x] [deemphasis_wfm_ff](https://github.com/ha7ilm/csdr#deemphasis_wfm_ff) ([jketterl](https://github.com/jketterl/csdr#deemphasis))[^1]
+- [x] [deemphasis_nfm_ff](https://github.com/ha7ilm/csdr#deemphasis_nfm_ff) ([jketterl](https://github.com/jketterl/csdr#deemphasis))[^2]
+- [x] [amdemod_cf](https://github.com/ha7ilm/csdr#amdemod_cf) ([jketterl](https://github.com/jketterl/csdr#amdemod_cf))[^3]
+- [ ] [amdemod_estimator_cf](https://github.com/ha7ilm/csdr#amdemod_estimator_cf) ([jketterl](https://github.com/jketterl/csdr#amdemod_cf))
+- [ ] [firdes_lowpass_f](https://github.com/ha7ilm/csdr#firdes_lowpass_f)
+- [ ] [firdes_bandpass_c](https://github.com/ha7ilm/csdr#firdes_bandpass_c)
+- [x] [fir_decimate_cc](https://github.com/ha7ilm/csdr#fir_decimate_cc) ([jketterl](https://github.com/jketterl/csdr#firdecimate))[^2][^3][^4]
+- [ ] [fir_interpolate_cc](https://github.com/ha7ilm/csdr#fir_interpolate_cc)
+- [x] [rational_resampler_ff](https://github.com/ha7ilm/csdr#rational_resampler_ff)
+- [x] [fractional_decimator_ff](https://github.com/ha7ilm/csdr#fractional_decimator_ff) ([jketterl](https://github.com/jketterl/csdr#fractionaldecimator))[^1]
+- [ ] [old_fractional_decimator_ff](https://github.com/ha7ilm/csdr#old_fractional_decimator_ff)
+- [x] [bandpass_fir_fft_cc](https://github.com/ha7ilm/csdr#bandpass_fir_fft_cc) ([jketterl](https://github.com/jketterl/csdr#bandpass))[^4]
+- [x] [agc_ff](https://github.com/ha7ilm/csdr#agc_ff) ([jketterl](https://github.com/jketterl/csdr#agc))[^3][^4]
+- [ ] [fastagc_ff](https://github.com/ha7ilm/csdr#fastagc_ff) ([jketterl](https://github.com/jketterl/csdr#agc))[^2]
+- [ ] [fft_cc](https://github.com/ha7ilm/csdr#fft_cc) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [ ] [fft_fc](https://github.com/ha7ilm/csdr#fft_fc) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [ ] [fft_benchmark](https://github.com/ha7ilm/csdr#fft_benchmark) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [ ] [logpower_cf](https://github.com/ha7ilm/csdr#logpower_cf) ([jketterl](https://github.com/jketterl/csdr#logpower))
+- [ ] [encode_ima_adpcm_i16_u8](https://github.com/ha7ilm/csdr#encode_ima_adpcm_i16_u8) ([jketterl](https://github.com/jketterl/csdr#adpcm))
+- [ ] [decode_ima_adpcm_u8_i16](https://github.com/ha7ilm/csdr#decode_ima_adpcm_u8_i16) ([jketterl](https://github.com/jketterl/csdr#adpcm))
+- [ ] [compress_fft_adpcm_f_u8](https://github.com/ha7ilm/csdr#compress_fft_adpcm_f_u8) ([jketterl](https://github.com/jketterl/csdr#fftadpcm))
+- [ ] [fft_exchange_sides_ff](https://github.com/ha7ilm/csdr#fft_exchange_sides_ff) ([jketterl](https://github.com/jketterl/csdr#fftswap))
+- [x] [dsb_fc](https://github.com/ha7ilm/csdr#dsb_fc)
+- [ ] [add_dcoffset_cc](https://github.com/ha7ilm/csdr#add_dcoffset_cc)
+- [ ] [convert_f_samplerf](https://github.com/ha7ilm/csdr#convert_f_samplerf)
+- [ ] [fmmod_fc](https://github.com/ha7ilm/csdr#fmmod_fc)
+- [ ] [fixed_amplitude_cc](https://github.com/ha7ilm/csdr#fixed_amplitude_cc)
+- [ ] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
+- [ ] [setbuf](https://github.com/ha7ilm/csdr#setbuf)
+- [ ] [fifo](https://github.com/ha7ilm/csdr#fifo)
+- [ ] [psk31_varicode_encoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_encoder_u8_u8)
+- [ ] [repeat_u8](https://github.com/ha7ilm/csdr#repeat_u8)
+- [ ] [uniform_noise_f](https://github.com/ha7ilm/csdr#uniform_noise_f)
+- [ ] [gaussian_noise_c](https://github.com/ha7ilm/csdr#gaussian_noise_c)
+- [x] [pack_bits_8to1_u8_u8](https://github.com/ha7ilm/csdr#pack_bits_8to1_u8_u8)
+- [ ] [pack_bits_1to8_u8_u8](https://github.com/ha7ilm/csdr#pack_bits_1to8_u8_u8)
+- [ ] [awgn_cc](https://github.com/ha7ilm/csdr#awgn_cc)
+- [ ] [add_n_zero_samples_at_beginning_f](https://github.com/ha7ilm/csdr#add_n_zero_samples_at_beginning_f)
+- [ ] [fft_one_side_ff](https://github.com/ha7ilm/csdr#fft_one_side_ff)
+- [ ] [logaveragepower_cf](https://github.com/ha7ilm/csdr#logaveragepower_cf) ([jketterl](https://github.com/jketterl/csdr#logaveragepower))
+- [ ] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
+- [ ] [psk31_varicode_decoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_decoder_u8_u8) ([jketterl](https://github.com/jketterl/csdr#varicodedecode))
+- [ ] [_fft2octave](https://github.com/ha7ilm/csdr#_fft2octave)
+- [ ] [invert_u8_u8](https://github.com/ha7ilm/csdr#invert_u8_u8)
+- [ ] [rtty_baudot2ascii_u8_u8](https://github.com/ha7ilm/csdr#rtty_baudot2ascii_u8_u8)
+- [x] [binary_slicer_f_u8](https://github.com/ha7ilm/csdr#binary_slicer_f_u8)
+- [ ] [serial_line_decoder_f_u8](https://github.com/ha7ilm/csdr#serial_line_decoder_f_u8)
+- [ ] [pll_cc](https://github.com/ha7ilm/csdr#pll_cc)
+- [x] [timing_recovery_cc](https://github.com/ha7ilm/csdr#timing_recovery_cc) ([jketterl](https://github.com/jketterl/csdr#timingrecovery))
+- [x] [octave_complex_c](https://github.com/ha7ilm/csdr#octave_complex_c)
+- [ ] [psk_modulator_u8_c](https://github.com/ha7ilm/csdr#psk_modulator_u8_c)
+- [ ] [duplicate_samples_ntimes_u8_u8](https://github.com/ha7ilm/csdr#duplicate_samples_ntimes_u8_u8)
+- [ ] [psk31_interpolate_sine_cc](https://github.com/ha7ilm/csdr#psk31_interpolate_sine_cc)
+- [ ] [differential_encoder_u8_u8](https://github.com/ha7ilm/csdr#differential_encoder_u8_u8)
+- [ ] [differential_decoder_u8_u8](https://github.com/ha7ilm/csdr#differential_decoder_u8_u8)
+- [ ] [bpsk_costas_loop_cc](https://github.com/ha7ilm/csdr#bpsk_costas_loop_cc)
+- [ ] [simple_agc_cc](https://github.com/ha7ilm/csdr#simple_agc_cc) ([jketterl](https://github.com/jketterl/csdr#agc))
+- [ ] [peaks_fir_cc](https://github.com/ha7ilm/csdr#peaks_fir_cc)
+- [ ] [firdes_peak_c](https://github.com/ha7ilm/csdr#firdes_peak_c)
+- [ ] [normalized_timing_variance_u32_f](https://github.com/ha7ilm/csdr#normalized_timing_variance_u32_f)
+- [ ] [pulse_shaping_filter_cc](https://github.com/ha7ilm/csdr#pulse_shaping_filter_cc)
+- [ ] [firdes_pulse_shaping_filter_f](https://github.com/ha7ilm/csdr#firdes_pulse_shaping_filter_f)
+- [ ] [generic_slicer_f_u8](https://github.com/ha7ilm/csdr#generic_slicer_f_u8)
+- [ ] [plain_interpolate_cc](https://github.com/ha7ilm/csdr#plain_interpolate_cc)
+- [ ] [dbpsk_decoder_c_u8](https://github.com/ha7ilm/csdr#dbpsk_decoder_c_u8) ([jketterl](https://github.com/jketterl/csdr#dbpskdecoder))
+- [ ] [bfsk_demod_cf](https://github.com/ha7ilm/csdr#bfsk_demod_cf)
+- [ ] [add_const_cc](https://github.com/ha7ilm/csdr#add_const_cc)
+- [x] [pattern_search_u8_u8](https://github.com/ha7ilm/csdr#pattern_search_u8_u8)
+- [ ] [tee](https://github.com/ha7ilm/csdr#tee)
 - [ ] [?](https://github.com/jketterl/csdr#search_the_function_list)
 
 [^1]: Used in simple WFM demodulation
