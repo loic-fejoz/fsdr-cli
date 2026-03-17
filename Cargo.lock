@@ -1551,6 +1551,7 @@ checksum = "d98f6fed1fde3f8c21bc40a1abb88dd75e67924f9cffc3ef95607bad8017f8e2"
 [[package]]
 name = "iqengine-plugin"
 version = "0.0.1"
+source = "git+https://github.com/loic-fejoz/iqengine-plugin-rs/?branch=main#7147a5a58ab54fece006c9e08965ea24feaa1029"
 dependencies = [
  "anyhow",
  "base64",
