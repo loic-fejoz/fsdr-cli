@@ -7,7 +7,7 @@
 
 ## Logic Patterns
 - **Types:** Rely heavily on `num_complex::Complex32` representing IQ streams instead of custom structures where possible, as FutureSDR standardizes on this.
-- **Parsing:** Use standard `pest_derive` structures. Do not manually write string tokenizers; extend `cmd_grammar.pest`.
+- **Parsing:** Use standard `pest_derive` structures. Do not manually write string tokenizers; extend `cmd_line.pest`.
 - **No Manual Formatting:** Do not configure or argue over spaces/tabs/braces. We use what `cargo fmt` defines.
 - **Linting:** We enforce `cargo clippy`. Fix all warnings before submitting changes.
 

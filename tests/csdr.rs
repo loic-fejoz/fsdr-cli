@@ -207,7 +207,7 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -258,7 +258,7 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -349,7 +349,7 @@ pub fn parse_fastdc_block() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -385,7 +385,7 @@ pub fn parse_amdemod_cf() -> Result<()> {
     let src = fg.add_block(VectorSource::<Complex32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -440,7 +440,7 @@ pub fn parse_agc_ff() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -587,7 +587,7 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
     let src = fg.add_block(VectorSource::<Complex32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<Complex32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -686,7 +686,7 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+$1
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
