@@ -2,15 +2,16 @@ use anyhow::Result;
 use futuresdr::prelude::*;
 use std::collections::VecDeque;
 
+#[derive(Debug)]
 enum State {
-    Dumping(usize),            // Reminder
-    Searching(VecDeque<bool>), // Current active states of the underlying search non-deterministic automata
+    Dumping(usize),            // Number of items to dump after a match
+    Searching(VecDeque<bool>), // Current active states of the underlying search NFA
 }
 
 #[derive(Block)]
 pub struct PatternSearch<A>
 where
-    A: Copy + Send + Sync + 'static + Default + std::fmt::Debug,
+    A: Copy + Send + Sync + 'static + Default + std::fmt::Debug + PartialEq,
 {
     _item_type: std::marker::PhantomData<A>,
 
@@ -27,19 +28,18 @@ where
 
 impl<A> PatternSearch<A>
 where
-    A: Copy + Send + Sync + 'static + Default + std::fmt::Debug,
+    A: Copy + Send + Sync + 'static + Default + std::fmt::Debug + PartialEq,
 {
     fn empty_active_states(capacity: usize) -> VecDeque<bool> {
         let mut active_states = VecDeque::with_capacity(capacity);
         for _ in 0..capacity {
             active_states.push_back(false);
         }
-        active_states.make_contiguous();
         active_states
     }
 
     pub fn new(values_after: usize, pattern_values: Vec<A>) -> Self {
-        let active_states = PatternSearch::<A>::empty_active_states(pattern_values.len());
+        let active_states = Self::empty_active_states(pattern_values.len());
         Self {
             _item_type: std::marker::PhantomData,
             values_after,
@@ -52,78 +52,83 @@ where
 }
 
 #[doc(hidden)]
-impl Kernel for PatternSearch<u8> {
+impl<A> Kernel for PatternSearch<A>
+where
+    A: Copy + Send + Sync + 'static + Default + std::fmt::Debug + PartialEq,
+{
     async fn work(
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
         _meta: &mut BlockMeta,
     ) -> Result<()> {
-        let i_len: usize;
-        let mut m = 0;
-        let mut out_len = 0;
+        let mut consumed = 0;
+        let mut produced = 0;
+        let i_len;
+        let mut next_state = None;
+
+        let values_after = self.values_after;
+        let pattern_len = self.pattern_values.len();
 
         {
             let i = self.input.slice();
             let o = self.output.slice();
-
             i_len = i.len();
-            self.current_state = match &mut self.current_state {
+
+            match &mut self.current_state {
                 State::Dumping(nb) => {
-                    let nb = *nb;
-                    let mut counter = 0usize;
-                    for (x, y) in i.iter().zip(o).take(nb) {
-                        *y = *x;
-                        counter += 1;
+                    let n = (*nb).min(i.len()).min(o.len());
+                    if n > 0 {
+                        o[..n].copy_from_slice(&i[..n]);
+                        consumed = n;
+                        produced = n;
+                        *nb -= n;
                     }
-                    m = counter;
-                    out_len = counter;
-                    if counter == nb {
-                        State::Searching(PatternSearch::<u8>::empty_active_states(
-                            self.pattern_values.len(),
-                        ))
-                    } else {
-                        State::Dumping(nb - counter)
+                    if *nb == 0 {
+                        next_state = Some(State::Searching(Self::empty_active_states(pattern_len)));
                     }
                 }
-                State::Searching(potential_idx) => {
-                    let mut potential_idx: VecDeque<bool> = potential_idx.clone();
-                    let mut next_state = State::Searching(potential_idx.clone());
-                    for input in i.iter() {
-                        m += 1;
-                        potential_idx.push_front(true);
+                State::Searching(active_states) => {
+                    let mut found_at = None;
+                    for (idx, &input) in i.iter().enumerate() {
+                        let mut prev = true;
+                        for (state, &expected) in
+                            active_states.iter_mut().zip(self.pattern_values.iter())
+                        {
+                            let current = *state;
+                            *state = prev && (input == expected);
+                            prev = current;
+                        }
 
-                        potential_idx = potential_idx
-                            .make_contiguous()
-                            .iter()
-                            .zip(self.pattern_values.iter())
-                            .map(|(previous, expected_value)| {
-                                (*expected_value == *input) & previous
-                            })
-                            .collect();
-
-                        assert!(!potential_idx.is_empty());
-                        let is_last_state_active = *potential_idx.iter().last().expect("");
-                        if is_last_state_active {
-                            next_state = State::Dumping(self.values_after);
+                        if *active_states.back().unwrap_or(&false) {
+                            found_at = Some(idx);
                             break;
-                        } else {
-                            next_state = State::Searching(potential_idx.clone())
                         }
                     }
-                    next_state
+
+                    if let Some(idx) = found_at {
+                        consumed = idx + 1;
+                        next_state = Some(State::Dumping(values_after));
+                    } else {
+                        consumed = i.len();
+                    }
                 }
-            };
+            }
         }
 
-        if m > 0 {
-            self.input.consume(m);
-        }
-        if out_len > 0 {
-            self.output.produce(out_len);
+        if let Some(s) = next_state {
+            self.current_state = s;
+            io.call_again = true;
         }
 
-        if self.input.finished() && m == i_len {
+        if consumed > 0 {
+            self.input.consume(consumed);
+        }
+        if produced > 0 {
+            self.output.produce(produced);
+        }
+
+        if self.input.finished() && consumed == i_len {
             io.finished = true;
         }
 
