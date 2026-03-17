@@ -89,8 +89,6 @@ where
     // _phantom_c: PhantomData<C>,
 }
 
-
-
 impl<'a, A, C, L, D> TimingErrorDetector<'a, A, C, L, D>
 where
     D: DerivativeType,
@@ -150,10 +148,12 @@ where
 
         self.d_input = std::iter::repeat_n(Complex32::default(), self.d_error_depth).collect();
 
-        self.d_input_derivative = std::iter::repeat_n(Complex32::default(), self.d_error_depth).collect();
+        self.d_input_derivative =
+            std::iter::repeat_n(Complex32::default(), self.d_error_depth).collect();
 
         if self.d_constellation.is_some() {
-            self.d_decision = std::iter::repeat_n(Complex32::default(), self.d_input.len()).collect();
+            self.d_decision =
+                std::iter::repeat_n(Complex32::default(), self.d_input.len()).collect();
         }
 
         self.sync_reset_input_clock();

@@ -95,10 +95,7 @@ impl Grc2FutureSdr {
     }
 
     #[allow(dead_code)]
-    pub fn take(
-        &mut self,
-        k: &str,
-    ) -> std::option::Option<Box<dyn MutBlockConverter + 'static>> {
+    pub fn take(&mut self, k: &str) -> std::option::Option<Box<dyn MutBlockConverter + 'static>> {
         self.specific_converter.remove(k)
     }
 
