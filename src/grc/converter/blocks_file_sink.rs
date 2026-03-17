@@ -1,6 +1,7 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::BlockInstance;
-use anyhow::Result;
+use super::{BlockInstance, Grc2FutureSdr};
+use crate::grc::builder::GrcItemType;
+use anyhow::{Result, Context};
 use fsdr_blocks::stdinout::StdInOutBuilder;
 use futuresdr::blocks::FileSink;
 use futuresdr::num_complex::Complex32;
@@ -14,14 +15,15 @@ impl BlockConverter for FileSinkConverter {
         blk: &BlockInstance,
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
+        // Parameters "file" and "type" match the keys defined in GNU Radio's File Sink block.
         let filename = blk
             .parameters
             .get("file")
-            .expect("filename must be defined");
+            .context("blocks_file_sink: filename must be defined")?;
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .context("blocks_file_sink: item type must be defined")?;
         let blk = if "-" == filename {
             match &(item_type[..]) {
                 "u8" => {

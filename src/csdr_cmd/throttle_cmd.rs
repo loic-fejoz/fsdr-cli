@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use pest::iterators::Pair;
 
 pub trait ThrottleCmd<'i> {
@@ -10,12 +10,12 @@ pub trait ThrottleCmd<'i> {
         let mut grc = grc;
         let rate = self.rate()?;
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("blocks_throttle")
             .with_parameter("samples_per_second", rate)
             .with_parameter("type", GrcItemType::F32.as_grc())
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

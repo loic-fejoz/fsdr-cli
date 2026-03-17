@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use anyhow::Result;
+use anyhow::{Result, Context};
 use futuresdr::blocks::Apply;
 use futuresdr::runtime::Flowgraph;
 

@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use pest::iterators::Pair;
 
 pub trait DeemphasisNfnCmd<'i> {
@@ -10,11 +10,11 @@ pub trait DeemphasisNfnCmd<'i> {
         let mut grc = grc;
         let rate = self.rate()?;
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("analog_nfm_deemph")
             .with_parameter("samp_rate", rate)
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

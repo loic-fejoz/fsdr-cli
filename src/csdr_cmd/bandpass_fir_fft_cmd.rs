@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 
 pub trait BandpassFirFftcmd<'i> {
@@ -19,7 +19,7 @@ pub trait BandpassFirFftcmd<'i> {
         let transition_bw = self.bandwidth()?.unwrap_or("0.05");
         let window = self.window()?.unwrap_or("HAMMING");
         grc = grc
-            .ensure_source(GrcItemType::C32)
+            .ensure_source(GrcItemType::C32)?
             .create_block_instance("band_pass_filter")
             .with_parameter("beta", "6.76") // only for Kaiser window
             .with_parameter("decim", "1")
@@ -32,7 +32,7 @@ pub trait BandpassFirFftcmd<'i> {
             .with_parameter("width", transition_bw)
             .with_parameter("win", format!("window.WIN_{window}"))
             .assert_output(GrcItemType::C32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

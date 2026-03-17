@@ -1,13 +1,19 @@
 pub extern crate async_trait;
+
 #[macro_use]
 extern crate pest_derive;
+
+extern crate serde;
+
+extern crate axum;
 
 use cmd_grammar::Rule;
 use pest::error::ErrorVariant;
 use std::{eprintln, println};
 
 use self::grc::GrcParser;
-use anyhow::{bail, Ok, Result};
+use anyhow::{bail, Result, Context};
+use itertools::join;
 use cmd_line::HighLevelCmdLine;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
@@ -16,17 +22,23 @@ use grc::Grc;
 // mod csdr;
 // use csdr::CsdrParser;
 use grc::converter::Grc2FutureSdr;
-pub mod blocks;
+
 pub mod cmd_line;
 pub mod csdr_cmd;
 use crate::csdr_cmd::CsdrCmd;
 pub mod cmd_grammar;
 pub mod grc_cmd;
 use grc_cmd::GrcCmd;
+pub mod iqengine_cmd;
+use iqengine_cmd::IQEngineCmd;
+pub mod iqengine_blockconverter;
+mod iqengine_plugin;
+pub mod blocks;
 
 fn usage() -> Result<Grc> {
     let msg = "Usage:\n\
-    \tfsdr-cli grc file.grc
+    \tfsdr-cli grc file.grc\n\
+    \tfsdr-cli iqengine [conf.yml]\n\
     \tfsdr-cli  function_name <function_param1> <function_param2> [optional_param] ....\n\
     \tfsdr-cli \"csdr ... \\| [csdr] ....\" \n\
     \tfsdr-cli \"csdr ... ! [csdr] ....\" \n\
@@ -34,21 +46,12 @@ fn usage() -> Result<Grc> {
     bail!(msg);
 }
 
-fn join(iter: impl Iterator<Item = String>) -> String {
-    iter.fold(String::new(), |mut a, b| {
-        a.reserve(b.len() + 1);
-        a.push(' ');
-        a.push_str(&b);
-        a
-    })
-}
-
 fn main() -> Result<()> {
     let mut input = std::env::args();
     input.next(); // skip binary name
 
     // Get back all the arguments as a big one command line ready to be parsed
-    let one_liner = join(input);
+    let one_liner = join(input, " ");
     // let one_liner = input.fold(String::new(), |mut a, b| {
     //     a.reserve(b.len() + 1);
     //     a.push(' ');
@@ -70,7 +73,7 @@ fn main() -> Result<()> {
                     eprintln!("{one_liner}");
                     match err.location {
                         pest::error::InputLocation::Pos(x) => {
-                            let marker = "-".repeat(x - 1) + "^";
+                            let marker = "-".repeat(x.max(1) - 1) + "^";
                             eprintln!("\x1b[93m{marker}\x1b[0m");
                         }
                         pest::error::InputLocation::Span(range) => {
@@ -78,7 +81,7 @@ fn main() -> Result<()> {
                             eprintln!("\x1b[93m{marker}\x1b[0m");
                         }
                     }
-                    let positives = join(positives.iter().map(|r| format!("{r:?}")));
+                    let positives = join(positives.iter().map(|r| format!("{r:?}")), " ");
                     eprintln!("help: Expecting one of{positives}");
                 }
                 ErrorVariant::CustomError { message: _ } => {
@@ -98,7 +101,17 @@ fn main() -> Result<()> {
         return Ok(());
     }
     let mut fg: Option<Grc> = None;
-    if let Some(grc_cmd) = input.as_grc_cmd() {
+    if let Some(iqengine_cmd) = input.as_iqengine_cmd() {
+        #[cfg(not(feature = "iqengine"))]
+        {
+            bail!("iqengine feature not available. Please download another version.");
+        }
+        //#[cfg(feature = "iqengine")]
+        {
+            let filename = iqengine_cmd.iqengine_configuration();
+            return iqengine_plugin::start_iqengine_daemon(filename);
+        }
+    } else if let Some(grc_cmd) = input.as_grc_cmd() {
         let filename = grc_cmd.filename();
         // println!("Loading {filename}...");
         fg = Some(grc::GrcParser::load(filename)?);
@@ -109,16 +122,16 @@ fn main() -> Result<()> {
             return Ok(());
         }
 
-        if let Some(output) = csdr_cmd.output() {
-            let fg = fg.expect("");
-            GrcParser::save(output, &fg);
+        if let Some(output) = csdr_cmd.output()? {
+            let fg = fg.context("Failed to get flowgraph for saving")?;
+            GrcParser::save(output, &fg).context("failed to save GRC file")?;
             println!("Flowgraph saved into {output:?}");
             return Ok(());
         }
     }
 
-    let fg = fg.expect("undefined flowgraph");
-    let fg: Flowgraph = Grc2FutureSdr::convert_grc(fg)?;
+    let fg = fg.context("No flowgraph was defined. Please check your command line arguments.")?;
+    let fg: Flowgraph = Grc2FutureSdr::new().convert_grc(fg)?;
     Runtime::new().run(fg)?;
     Ok(())
 }

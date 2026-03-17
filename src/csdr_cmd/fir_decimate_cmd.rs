@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 
 pub trait FirDecimateCmd<'i> {
@@ -14,7 +14,7 @@ pub trait FirDecimateCmd<'i> {
         let bandwidth = self.bandwidth()?.unwrap_or("0.05");
         let window = self.window()?.unwrap_or("HAMMING");
         grc = grc
-            .ensure_source(GrcItemType::C32)
+            .ensure_source(GrcItemType::C32)?
             .create_block_instance("fir_filter_xxx")
             .with_parameter("decim", decimation)
             .with_parameter("transition_bw", bandwidth)
@@ -23,7 +23,7 @@ pub trait FirDecimateCmd<'i> {
             .with_parameter("samp_delay", "0")
             .with_parameter("type", "ccc")
             .assert_output(GrcItemType::C32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

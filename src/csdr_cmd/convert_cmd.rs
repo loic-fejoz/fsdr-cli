@@ -21,12 +21,12 @@ pub trait ConvertCmd<'i> {
             _ => "convert",
         };
         grc = grc
-            .ensure_source(src_type)
+            .ensure_source(src_type)?
             .create_block_instance(blk_name)
             .with_parameter("source_type", src_type.as_grc())
             .with_parameter("target_type", tgt_type.as_grc())
             .assert_output(tgt_type)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }
@@ -35,10 +35,10 @@ impl<'i> ConvertCmd<'i> for Pair<'i, Rule> {
     fn types(&self) -> Result<(GrcItemType, GrcItemType)> {
         if let Some(types) = self.clone().into_inner().next() {
             let types = types.as_str();
-            let mut types_iter = types.split('_').map(GrcItemType::from);
+            let mut types_iter = types.split('_').map(GrcItemType::try_from);
             Ok((
-                types_iter.next().context("source converion type")?,
-                types_iter.next().context("conversion target type")?,
+                types_iter.next().context("source converion type")??,
+                types_iter.next().context("conversion target type")??,
             ))
         } else {
             Ok((GrcItemType::U8, GrcItemType::F32))

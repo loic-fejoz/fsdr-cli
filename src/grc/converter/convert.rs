@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use fsdr_blocks::type_converters::TypeConvertersBuilder;
 use futuresdr::blocks::ApplyNM;
 use futuresdr::num_complex::Complex32;

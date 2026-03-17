@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 
 pub trait DumpCmd<'i> {
@@ -11,10 +11,10 @@ pub trait DumpCmd<'i> {
         let mut grc = grc;
         let input_type = self.input_type()?;
         grc = grc
-            .ensure_source(input_type)
+            .ensure_source(input_type)?
             .create_block_instance(self.block_name()?)
             .with_parameter("type", input_type.as_csdr())
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }
@@ -29,6 +29,7 @@ impl<'i> DumpCmd<'i> for Pair<'i, Rule> {
         match input {
             "dump_u8" => Ok(GrcItemType::U8),
             "dump_f" => Ok(GrcItemType::F32),
+            "dump_c" => Ok(GrcItemType::C32),
             _ => bail!("Unkown dump type: {input}"),
         }
     }

@@ -14,7 +14,7 @@ Features:
 * GNU Radio flowgraph execution: ongoing
 * all in one flow graph execution: single process, no more pipes!
 * expression evaluation
-* conversion of csdr commands into GNU Radio companion flowgraph wherever possible
+* conversion of csdr commands into a strictly compatible **GNU Radio Companion (GRC)** intermediate graph
 * additional commands
 
 ## WFM decoding
@@ -115,6 +115,42 @@ Yet, thanks to newly added `weaver_lsb_cf` and `weaver_usb_cf` we may have bette
 fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! audio 48_000 1
 ```
 
+## IQEngine plugins
+
+```bash
+fsdr-cli csdr \
+shift_addition_cc (-22850/100000) ! \
+fmdemod_quadri_cf ! \
+rational_resampler_ff 12 25 ! \
+dsc_fc ! \
+timing_recovery_cc GARDNER 20 0.5 2 ! \
+realpart_cf ! \
+binary_slicer_f_u8 ! \
+pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! \
+pack_bits_8to1_u8_u8 ! \
+dump_u8
+```
+
+```
+csdr shift_addition_cc (-22850/100000)
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! dsb_fc
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2
+```
+
+```
+csdr shift_addition_cc (-22850/100000) ! fmdemod_quadri_cf ! rational_resampler_ff 12 25 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2 ! realpart_cf ! binary_slicer_f_u8 ! pattern_search_u8_u8 1920 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! pack_bits_8to1_u8_u8
+```
+
 ## TODO
 
 So much more to experiment with! [Just come to help](CONTRIBUTING.md). ;-
@@ -196,7 +232,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [shift_addition_fc](https://github.com/jketterl/csdr#shift_addition_fc)
 - [ ] [dcblock_ff](https://github.com/jketterl/csdr#dcblock_ff)
 - [x] [fastdcblock_ff](https://github.com/jketterl/csdr#fastdcblock_ff)[^3]
-- [ ] [fmdemod_atan_cf](https://github.com/jketterl/csdr#fmdemod_atan_cf)
+- [x] [fmdemod_atan_cf](https://github.com/jketterl/csdr#fmdemod_atan_cf)
 - [x] [fmdemod_quadri_cf](https://github.com/jketterl/csdr#fmdemod_quadri_cf)[^1]
 - [ ] [fmdemod_quadri_novect_cf](https://github.com/jketterl/csdr#fmdemod_quadri_novect_cf)
 - [x] [deemphasis_wfm_ff](https://github.com/jketterl/csdr#deemphasis_wfm_ff)[^1]
@@ -221,7 +257,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [decode_ima_adpcm_u8_i16](https://github.com/jketterl/csdr#decode_ima_adpcm_u8_i16)
 - [ ] [compress_fft_adpcm_f_u8](https://github.com/jketterl/csdr#compress_fft_adpcm_f_u8)
 - [ ] [fft_exchange_sides_ff](https://github.com/jketterl/csdr#fft_exchange_sides_ff)
-- [ ] [dsb_fc](https://github.com/jketterl/csdr#dsb_fc)
+- [x] [dsb_fc](https://github.com/jketterl/csdr#dsb_fc)
 - [ ] [add_dcoffset_cc](https://github.com/jketterl/csdr#add_dcoffset_cc)
 - [ ] [convert_f_samplerf](https://github.com/jketterl/csdr#convert_f_samplerf)
 - [ ] [fmmod_fc](https://github.com/jketterl/csdr#fmmod_fc)
@@ -233,7 +269,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [repeat_u8](https://github.com/jketterl/csdr#repeat_u8)
 - [ ] [uniform_noise_f](https://github.com/jketterl/csdr#uniform_noise_f)
 - [ ] [gaussian_noise_c](https://github.com/jketterl/csdr#gaussian_noise_c)
-- [ ] [pack_bits_8to1_u8_u8](https://github.com/jketterl/csdr#pack_bits_8to1_u8_u8)
+- [x] [pack_bits_8to1_u8_u8](https://github.com/jketterl/csdr#pack_bits_8to1_u8_u8)
 - [ ] [pack_bits_1to8_u8_u8](https://github.com/jketterl/csdr#pack_bits_1to8_u8_u8)
 - [ ] [awgn_cc](https://github.com/jketterl/csdr#awgn_cc)
 - [ ] [add_n_zero_samples_at_beginning_f](https://github.com/jketterl/csdr#add_n_zero_samples_at_beginning_f)
@@ -244,10 +280,10 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [_fft2octave](https://github.com/jketterl/csdr#_fft2octave)
 - [ ] [invert_u8_u8](https://github.com/jketterl/csdr#invert_u8_u8)
 - [ ] [rtty_baudot2ascii_u8_u8](https://github.com/jketterl/csdr#rtty_baudot2ascii_u8_u8)
-- [ ] [binary_slicer_f_u8](https://github.com/jketterl/csdr#binary_slicer_f_u8)
+- [x] [binary_slicer_f_u8](https://github.com/jketterl/csdr#binary_slicer_f_u8)
 - [ ] [serial_line_decoder_f_u8](https://github.com/jketterl/csdr#serial_line_decoder_f_u8)
 - [ ] [pll_cc](https://github.com/jketterl/csdr#pll_cc)
-- [ ] [timing_recovery_cc](https://github.com/jketterl/csdr#timing_recovery_cc)
+- [x] [timing_recovery_cc](https://github.com/jketterl/csdr#timing_recovery_cc)
 - [x] [octave_complex_c](https://github.com/jketterl/csdr#octave_complex_c)
 - [ ] [psk_modulator_u8_c](https://github.com/jketterl/csdr#psk_modulator_u8_c)
 - [ ] [duplicate_samples_ntimes_u8_u8](https://github.com/jketterl/csdr#duplicate_samples_ntimes_u8_u8)
@@ -266,7 +302,7 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 - [ ] [dbpsk_decoder_c_u8](https://github.com/jketterl/csdr#dbpsk_decoder_c_u8)
 - [ ] [bfsk_demod_cf](https://github.com/jketterl/csdr#bfsk_demod_cf)
 - [ ] [add_const_cc](https://github.com/jketterl/csdr#add_const_cc)
-- [ ] [pattern_search_u8_u8](https://github.com/jketterl/csdr#pattern_search_u8_u8)
+- [x] [pattern_search_u8_u8](https://github.com/jketterl/csdr#pattern_search_u8_u8)
 - [ ] [tee](https://github.com/jketterl/csdr#tee)
 - [ ] [?](https://github.com/jketterl/csdr#search_the_function_list)
 

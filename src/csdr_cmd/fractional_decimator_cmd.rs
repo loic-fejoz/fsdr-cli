@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 
 pub trait FractionalDecimatorCmd<'i> {
@@ -13,12 +13,12 @@ pub trait FractionalDecimatorCmd<'i> {
         let mut grc = grc;
         let resampling_rate = self.resampling_rate()?;
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("rational_resampler_xxx")
             .with_parameter("decim", resampling_rate)
             .with_parameter("interp", "1")
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

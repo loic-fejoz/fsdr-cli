@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use pest::iterators::Pair;
 
 pub trait LimitCmd<'i> {
@@ -10,12 +10,12 @@ pub trait LimitCmd<'i> {
         let mut grc = grc;
         let max_amplitude = self.max_amplitude()?;
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("analog_rail_ff")
             .with_parameter("lo", format!("-1.0*({max_amplitude})"))
             .with_parameter("hi", max_amplitude.to_string())
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

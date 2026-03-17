@@ -2,7 +2,7 @@ use crate::blocks::DCBlocker;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use futuresdr::runtime::Flowgraph;
 
 pub struct DcBlockerXx {}

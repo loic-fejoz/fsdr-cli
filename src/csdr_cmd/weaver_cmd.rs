@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 
 pub trait WeaverCmd<'i> {
@@ -12,11 +12,11 @@ pub trait WeaverCmd<'i> {
         let mut grc = grc;
         let audio_rate = self.audio_rate()?;
         grc = grc
-            .ensure_source(GrcItemType::C32)
+            .ensure_source(GrcItemType::C32)?
             .create_block_instance(blk_name)
             .with_parameter("audio_rate", audio_rate)
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

@@ -10,18 +10,18 @@ pub trait AgcCmd<'i> {
 
     fn build_agc(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
         let mut grc = grc;
-        let reference = self.reference()?.or(Some("0.8")).expect("");
-        let max_gain = self.max_gain()?.or(Some("65536.0")).expect("");
-        let rate = self.rate()?.or(Some("0.0001")).expect("");
+        let reference = self.reference()?.unwrap_or("0.8");
+        let max_gain = self.max_gain()?.unwrap_or("65536.0");
+        let rate = self.rate()?.unwrap_or("0.0001");
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("analog_agc_xx")
             .with_parameter("reference", reference)
             .with_parameter("max_gain", max_gain)
             .with_parameter("rate", rate)
             .with_parameter("type", GrcItemType::F32.as_grc())
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

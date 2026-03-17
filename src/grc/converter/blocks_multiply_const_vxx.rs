@@ -1,6 +1,6 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use futuresdr::blocks::Apply;
 use futuresdr::runtime::Flowgraph;
 
@@ -16,7 +16,7 @@ impl BlockConverter for MulConstVxConverter {
         let item_type = blk
             .parameters
             .get("type")
-            .expect("item type must be defined");
+            .context("blocks_multiply_const_vxx: item type must be defined")?;
 
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
             "u8" => {

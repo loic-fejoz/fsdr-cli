@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use pest::iterators::Pair;
 
 pub trait DeemphasisWfmCmd<'i> {
@@ -12,12 +12,12 @@ pub trait DeemphasisWfmCmd<'i> {
         let rate = self.sample_rate()?;
         let tau = self.tau()?;
         grc = grc
-            .ensure_source(GrcItemType::F32)
+            .ensure_source(GrcItemType::F32)?
             .create_block_instance("analog_fm_deemph")
             .with_parameter("samp_rate", rate)
             .with_parameter("tau", tau)
             .assert_output(GrcItemType::F32)
-            .push_and_link();
+            .push_and_link()?;
         Ok(grc)
     }
 }

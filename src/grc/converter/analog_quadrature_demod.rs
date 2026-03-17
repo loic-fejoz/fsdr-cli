@@ -1,11 +1,13 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::Result;
+use anyhow::{Result, Context};
 use futuresdr::blocks::Apply;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogQuadratureDemoConverter {}
+
+const fmdemod_quadri_K: f32 = 0.340447550238101026565118445432744920253753662109375f32;
 
 impl BlockConverter for AnalogQuadratureDemoConverter {
     fn convert(
@@ -14,6 +16,7 @@ impl BlockConverter for AnalogQuadratureDemoConverter {
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let gain = Grc2FutureSdr::parameter_as_f64(blk, "gain", "1.0")? as f32;
+        let algo = blk.parameter_or("algorithm", "quadri");
         let mut last = Complex32::new(0.0, 0.0); // store sample x[n-1]
         let blk: Apply<_, Complex32, f32> = Apply::new(move |v: &Complex32| -> f32 {
             let arg = (v * last.conj()).arg(); // Obtain phase of x[n] * conj(x[n-1])
