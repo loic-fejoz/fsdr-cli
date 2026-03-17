@@ -24,15 +24,15 @@ iqengine = [ 'dep:axum', 'dep:http', 'dep:tokio', 'dep:tower', 'dep:tower-http',
 
 [dependencies]
 # futuresdr = { version = "0.0", features=['audio']}
-futuresdr = { path="../FutureSDR", features=['audio']}
+# futuresdr = { path="../FutureSDR", features=['audio']}
 # futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
-# futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
 
 async-trait = "0.1"
 cpal = { version = "0.15.2"}
 # fsdr-blocks = {  version="0.1"}
-fsdr-blocks = { path="../fsdr-blocks" }
-# fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
+# fsdr-blocks = { path="../fsdr-blocks" }
+fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
 # futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}

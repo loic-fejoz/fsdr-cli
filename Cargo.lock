@@ -878,6 +878,7 @@ dependencies = [
 [[package]]
 name = "fsdr-blocks"
 version = "0.2.0"
+source = "git+https://github.com/FutureSDR/fsdr-blocks?branch=main#50f246d3bfc48f5d45b716b24ef0a162f279912e"
 dependencies = [
  "async-fs",
  "futuresdr",
@@ -912,6 +913,7 @@ dependencies = [
 [[package]]
 name = "futuredsp"
 version = "0.0.9-dev"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "num-complex",
  "num-traits",
@@ -1023,6 +1025,7 @@ dependencies = [
 [[package]]
 name = "futuresdr"
 version = "0.0.40-dev"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "anyhow",
  "async-executor",
@@ -1078,6 +1081,7 @@ dependencies = [
 [[package]]
 name = "futuresdr-macros"
 version = "0.0.9-dev"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "indexmap",
  "prettyplease",
@@ -1089,6 +1093,7 @@ dependencies = [
 [[package]]
 name = "futuresdr-types"
 version = "0.0.15-dev"
+source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "dyn-clone",
  "num-complex",
@@ -1936,9 +1941,9 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1207a7e20ad57b847bbddc6776b968420d38292bbfe2089accff5e19e82454c"
+checksum = "5d0bca838442ec211fa11de3a8b0e0e8f3a4522575b5c4c06ed722e005036f26"
 dependencies = [
  "num_enum_derive",
  "rustversion",
@@ -1946,9 +1951,9 @@ dependencies = [
 
 [[package]]
 name = "num_enum_derive"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff32365de1b6743cb203b710788263c44a03de03802daf96092f2da4fe6ba4d7"
+checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -2803,6 +2808,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sigmf"
 version = "0.1.0"
+source = "git+https://github.com/FutureSDR/fsdr-blocks?branch=main#50f246d3bfc48f5d45b716b24ef0a162f279912e"
 dependencies = [
  "hex",
  "quickcheck",
