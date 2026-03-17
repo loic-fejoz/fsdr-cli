@@ -18,13 +18,13 @@ impl BlockConverter for DumpConverter {
             .context("dump: item type must be defined")?;
 
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "float" => {
-                let blk: futuresdr::blocks::Sink<_, u8> = Sink::new(|x: &u8| print!("{:02x} ", *x));
+            "float" | "f" => {
+                let blk: futuresdr::blocks::Sink<_, f32> = Sink::new(|x: &f32| print!("{:e} ", *x));
                 let blk = fg.add_block(blk);
                 Box::new(DefaultPortAdapter::new(blk.into()))
             }
             "u8" => {
-                let blk: futuresdr::blocks::Sink<_, f32> = Sink::new(|x: &f32| print!("{:e} ", *x));
+                let blk: futuresdr::blocks::Sink<_, u8> = Sink::new(|x: &u8| print!("{:02x} ", *x));
                 let blk = fg.add_block(blk);
                 Box::new(DefaultPortAdapter::new(blk.into()))
             }

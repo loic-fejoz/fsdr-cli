@@ -16,7 +16,7 @@ impl BlockConverter for ClipDetectFfConverter {
             if *i < 1.0 {
                 eprintln!("csdr clipdetect_ff: Signal value below -1.0!")
             } else if *i > 1.0 {
-                eprintln!("csdr clipdetect_ff: Signal value above -1.0!")
+                eprintln!("csdr clipdetect_ff: Signal value above 1.0!")
             };
             *i
         });
