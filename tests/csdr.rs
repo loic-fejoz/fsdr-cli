@@ -25,7 +25,10 @@ pub fn parse_save_kiss() {
     assert_eq!(2, grc.blocks.len());
     assert_eq!("satellites_kiss_file_source", grc.blocks[0].id);
     assert_eq!("satellites_kiss_file_sink", grc.blocks[1].id);
-    assert_eq!("tests/test_loaded_saved.kiss", grc.blocks[1].parameters["file"]);
+    assert_eq!(
+        "tests/test_loaded_saved.kiss",
+        grc.blocks[1].parameters["file"]
+    );
     assert_eq!(1, grc.connections.len());
 }
 

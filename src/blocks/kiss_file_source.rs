@@ -14,7 +14,7 @@ pub struct KissFileSource {
 impl KissFileSource {
     pub fn new(filename: &str) -> Self {
         let mut frames = VecDeque::new();
-        
+
         let mut buffer = Vec::new();
         if let Ok(mut file) = File::open(filename) {
             let _ = file.read_to_end(&mut buffer);
@@ -57,9 +57,7 @@ impl KissFileSource {
             frames.push_back(current_frame);
         }
 
-        Self {
-            frames,
-        }
+        Self { frames }
     }
 }
 

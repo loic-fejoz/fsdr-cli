@@ -1,8 +1,8 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
+use crate::blocks::kiss_file_sink::KissFileSink;
 use anyhow::{bail, Context, Result};
 use futuresdr::runtime::{BlockId, Flowgraph};
-use crate::blocks::kiss_file_sink::KissFileSink;
 
 #[derive(Clone, Copy)]
 pub struct KissFileSinkPortAdapter {
@@ -36,6 +36,8 @@ impl BlockConverter for SatellitesKissFileSinkConverter {
             .context("satellites_kiss_file_sink: file must be defined")?;
 
         let block = KissFileSink::new(filename);
-        Ok(Box::new(KissFileSinkPortAdapter { blk: fg.add_block(block).into() }))
+        Ok(Box::new(KissFileSinkPortAdapter {
+            blk: fg.add_block(block).into(),
+        }))
     }
 }

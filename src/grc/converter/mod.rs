@@ -206,7 +206,10 @@ impl Grc2FutureSdr {
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
-            if fg.connect_dyn(src_blk, src_port, tgt_blk, tgt_port).is_err() {
+            if fg
+                .connect_dyn(src_blk, src_port, tgt_blk, tgt_port)
+                .is_err()
+            {
                 fg.connect_message(src_blk, src_port, tgt_blk, tgt_port)
                     .context("connecting message {connection}")?;
             }
