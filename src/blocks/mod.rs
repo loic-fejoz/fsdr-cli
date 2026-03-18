@@ -11,3 +11,5 @@ pub mod kiss_file_source;
 pub use kiss_file_source::KissFileSource;
 pub mod kiss_file_sink;
 pub use kiss_file_sink::KissFileSink;
+pub mod fixedlen_to_pdu;
+pub use fixedlen_to_pdu::FixedlenToPdu;

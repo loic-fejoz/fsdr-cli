@@ -785,3 +785,32 @@ pub fn parse_rational_resampler_cc() {
     // println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
+
+#[test]
+pub fn parse_fixedlen_to_pdu() {
+    let cmds = "fixedlen_to_pdu 240";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_fixedlen_to_pdu", grc.blocks[1].id);
+    assert_eq!("240", grc.blocks[1].parameter_or("packet_len", "none"));
+    assert_eq!("", grc.blocks[1].parameter_or("syncword_tag", "none"));
+    assert_eq!("False", grc.blocks[1].parameter_or("pack", "none"));
+    assert_eq!(
+        "\"\"",
+        grc.blocks[1].parameter_or("packet_len_tag_key", "none")
+    );
+    assert_eq!("byte", grc.blocks[1].parameter_or("type", "none"));
+    assert_eq!(1, grc.connections.len());
+}
+
+#[test]
+pub fn parse_fixedlen_to_pdu_with_tag() {
+    let cmds = "fixedlen_to_pdu (100+20) sync";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_fixedlen_to_pdu", grc.blocks[1].id);
+    assert_eq!("120", grc.blocks[1].parameter_or("packet_len", "none"));
+    assert_eq!("sync", grc.blocks[1].parameter_or("syncword_tag", "none"));
+}

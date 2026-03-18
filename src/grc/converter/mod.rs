@@ -83,6 +83,8 @@ pub mod weaver_ssb;
 use self::weaver_ssb::WeaverSsbConverter;
 pub mod satellites_kiss_file_source;
 use self::satellites_kiss_file_source::SatellitesKissFileSourceConverter;
+pub mod satellites_fixedlen_to_pdu;
+use self::satellites_fixedlen_to_pdu::SatellitesFixedlenToPduConverter;
 pub mod satellites_kiss_file_sink;
 use self::satellites_kiss_file_sink::SatellitesKissFileSinkConverter;
 
@@ -153,6 +155,7 @@ impl Grc2FutureSdr {
             "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
             "satellites_kiss_file_source" => Box::new(SatellitesKissFileSourceConverter {}),
+            "satellites_fixedlen_to_pdu" => Box::new(SatellitesFixedlenToPduConverter {}),
             "satellites_kiss_file_sink" => Box::new(SatellitesKissFileSinkConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
