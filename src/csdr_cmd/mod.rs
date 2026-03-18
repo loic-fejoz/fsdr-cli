@@ -25,6 +25,7 @@ use self::gain_cmd::GainCmd;
 use self::limit_cmd::LimitCmd;
 use self::load_cmd::LoadCmd;
 use self::load_kiss_cmd::LoadKissCmd;
+use self::save_kiss_cmd::SaveKissCmd;
 use self::octave_complex_cmd::OctaveComplexCmd;
 use self::pack_bits_cmd::PackBitsCmd;
 use self::pattern_search_cmd::PatternSearchCmd;
@@ -55,6 +56,7 @@ mod gain_cmd;
 mod limit_cmd;
 mod load_cmd;
 mod load_kiss_cmd;
+mod save_kiss_cmd;
 mod octave_complex_cmd;
 mod pack_bits_cmd;
 mod pattern_search_cmd;
@@ -96,6 +98,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
             Rule::load_kiss_cmd => self.build_load_kiss(grc),
+            Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::pack_bits_cmd => self.build_pack_bits(grc),
             Rule::pattern_search_cmd => self.build_pattern_search(grc),

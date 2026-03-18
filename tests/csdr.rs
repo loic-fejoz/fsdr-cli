@@ -18,6 +18,18 @@ pub fn parse_load_kiss() {
 }
 
 #[test]
+pub fn parse_save_kiss() {
+    let cmds = "csdr load_kiss tests/test.kiss | save_kiss tests/test_loaded_saved.kiss";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_kiss_file_source", grc.blocks[0].id);
+    assert_eq!("satellites_kiss_file_sink", grc.blocks[1].id);
+    assert_eq!("tests/test_loaded_saved.kiss", grc.blocks[1].parameters["file"]);
+    assert_eq!(1, grc.connections.len());
+}
+
+#[test]
 pub fn parse_convert_u8_f() {
     let cmds = "convert_u8_f";
     let result = CsdrParser::parse_command(cmds);

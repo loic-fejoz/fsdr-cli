@@ -1,8 +1,26 @@
-use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
+use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
-use anyhow::{Context, Result};
-use futuresdr::runtime::Flowgraph;
+use anyhow::{bail, Context, Result};
+use futuresdr::runtime::{BlockId, Flowgraph};
 use crate::blocks::kiss_file_source::KissFileSource;
+
+#[derive(Clone, Copy)]
+pub struct KissFileSourcePortAdapter {
+    blk: BlockId,
+}
+
+impl ConnectorAdapter for KissFileSourcePortAdapter {
+    fn adapt_input_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
+        bail!("KissFileSource has no input port: {port_name}");
+    }
+
+    fn adapt_output_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
+        match port_name {
+            "0" | "out" | "output" => Ok((self.blk, "output")),
+            _ => bail!("Unknown output port name {port_name}"),
+        }
+    }
+}
 
 pub struct SatellitesKissFileSourceConverter {}
 
@@ -24,6 +42,6 @@ impl BlockConverter for SatellitesKissFileSourceConverter {
         };
 
         let block = KissFileSource::new(filename);
-        Ok(Box::new(DefaultPortAdapter::new(fg.add_block(block).into())))
+        Ok(Box::new(KissFileSourcePortAdapter { blk: fg.add_block(block).into() }))
     }
 }
