@@ -1,8 +1,8 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
+use crate::blocks::kiss_file_source::KissFileSource;
 use anyhow::{Context, Result};
 use futuresdr::runtime::Flowgraph;
-use crate::blocks::kiss_file_source::KissFileSource;
 
 pub struct SatellitesKissFileSourceConverter {}
 
@@ -24,6 +24,8 @@ impl BlockConverter for SatellitesKissFileSourceConverter {
         };
 
         let block = KissFileSource::new(filename);
-        Ok(Box::new(DefaultPortAdapter::new(fg.add_block(block).into())))
+        Ok(Box::new(DefaultPortAdapter::new(
+            fg.add_block(block).into(),
+        )))
     }
 }

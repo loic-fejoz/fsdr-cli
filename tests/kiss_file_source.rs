@@ -68,10 +68,10 @@ fn test_kiss_file_source() -> Result<()> {
     // 4. Assert
     let msgs = received_messages.lock().unwrap();
     assert_eq!(msgs.len(), 2);
-    
+
     // Frame 1 decoded: 00 AA BB
     assert_eq!(msgs[0], vec![0x00, 0xAA, 0xBB]);
-    
+
     // Frame 2 decoded: 00 CC C0 DD
     assert_eq!(msgs[1], vec![0x00, 0xCC, 0xC0, 0xDD]);
 
