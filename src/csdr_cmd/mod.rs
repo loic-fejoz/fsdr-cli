@@ -33,6 +33,8 @@ use self::rational_resampler_cmd::RationalResamplerCmd;
 use self::realpart_cmd::RealPartCmd;
 use self::save_kiss_cmd::SaveKissCmd;
 use self::shift_addition_cmd::ShiftAdditionCmd;
+use self::tcp_kiss_client_cmd::TcpKissClientCmd;
+use self::tcp_kiss_server_cmd::TcpKissServerCmd;
 use self::throttle_cmd::ThrottleCmd;
 use self::timing_recovery_cmd::TimingRecoveryCmd;
 use self::weaver_cmd::WeaverCmd;
@@ -65,6 +67,8 @@ mod rational_resampler_cmd;
 mod realpart_cmd;
 mod save_kiss_cmd;
 mod shift_addition_cmd;
+mod tcp_kiss_client_cmd;
+mod tcp_kiss_server_cmd;
 mod throttle_cmd;
 mod timing_recovery_cmd;
 mod weaver_cmd;
@@ -102,6 +106,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::load_kiss_cmd => self.build_load_kiss(grc),
             Rule::fixedlen_to_pdu_cmd => self.build_fixedlen_to_pdu(grc),
             Rule::save_kiss_cmd => self.build_save_kiss(grc),
+            Rule::tcp_kiss_server_cmd => self.build_tcp_kiss_server(grc),
+            Rule::tcp_kiss_client_cmd => self.build_tcp_kiss_client(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::pack_bits_cmd => self.build_pack_bits(grc),
             Rule::pattern_search_cmd => self.build_pattern_search(grc),

@@ -87,6 +87,10 @@ pub mod satellites_fixedlen_to_pdu;
 use self::satellites_fixedlen_to_pdu::SatellitesFixedlenToPduConverter;
 pub mod satellites_kiss_file_sink;
 use self::satellites_kiss_file_sink::SatellitesKissFileSinkConverter;
+pub mod satellites_kiss_server_sink;
+use self::satellites_kiss_server_sink::SatellitesKissServerSinkConverter;
+pub mod satellites_kiss_client_source;
+use self::satellites_kiss_client_source::SatellitesKissClientSourceConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -157,6 +161,8 @@ impl Grc2FutureSdr {
             "satellites_kiss_file_source" => Box::new(SatellitesKissFileSourceConverter {}),
             "satellites_fixedlen_to_pdu" => Box::new(SatellitesFixedlenToPduConverter {}),
             "satellites_kiss_file_sink" => Box::new(SatellitesKissFileSinkConverter {}),
+            "satellites_kiss_server_sink" => Box::new(SatellitesKissServerSinkConverter {}),
+            "satellites_kiss_client_source" => Box::new(SatellitesKissClientSourceConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),

@@ -936,3 +936,25 @@ pub fn repro_hang_user_command() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn parse_tcp_kiss_server() {
+    let cmds = "csdr load_kiss tests/test.kiss ! tcp_kiss_server 127.0.0.1:8045";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_kiss_server_sink", grc.blocks[1].id);
+    assert_eq!("\"127.0.0.1\"", grc.blocks[1].parameters["address"]);
+    assert_eq!("8045", grc.blocks[1].parameters["port"]);
+}
+
+#[test]
+pub fn parse_tcp_kiss_client() {
+    let cmds = "tcp_kiss_client myhost.com:8045";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(1, grc.blocks.len());
+    assert_eq!("satellites_kiss_client_source", grc.blocks[0].id);
+    assert_eq!("\"myhost.com\"", grc.blocks[0].parameters["address"]);
+    assert_eq!("8045", grc.blocks[0].parameters["port"]);
+}
