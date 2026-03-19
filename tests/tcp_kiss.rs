@@ -62,13 +62,13 @@ fn test_tcp_kiss_server_client() -> Result<()> {
 fn test_tcp_kiss_multi_client() -> Result<()> {
     let port = 18046;
     let addr = format!("127.0.0.1:{}", port);
-    
+
     // Server flowgraph
     let mut fg_server = Flowgraph::new();
     let src = fg_server.add_block(KissFileSource::new("tests/test.kiss")?);
     let server = fg_server.add_block(TcpKissServer::new(&addr)?);
     fg_server.connect_message(src, "output", server, "in_port")?;
-    
+
     // Client 1
     let mut out_path1 = env::temp_dir();
     out_path1.push("tcp_output1.kiss");

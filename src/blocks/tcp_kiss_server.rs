@@ -57,9 +57,7 @@ impl TcpKissServer {
                         }
                         escaped.push(0xC0); // FEND
 
-                        clients.retain_mut(|stream| {
-                            stream.write_all(&escaped).is_ok()
-                        });
+                        clients.retain_mut(|stream| stream.write_all(&escaped).is_ok());
                     }
                 }
             }
