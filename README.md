@@ -203,6 +203,29 @@ save_kiss filename
 
 Serialize a PDU (Blob Message) into a KISS file. It uses `satellites_kiss_file_sink` in GRC (compatible with `gr-satellites`).
 
+### [tcp_kiss_server](#tcp_kiss_server)
+
+Syntax:
+
+```bash
+tcp_kiss_server <host>:<port>
+```
+
+Starts a TCP server in its own thread, listens on the given `<host>:<port>`, and forwards received PDU (Blob Messages) as KISS frames to the connected TCP client. It uses `satellites_kiss_server_sink` in GRC.
+Example: `... ! fixedlen_to_pdu 240 ! tcp_kiss_server 0.0.0.0:8045`
+
+### [tcp_kiss_client](#tcp_kiss_client)
+
+Syntax:
+
+```bash
+tcp_kiss_client <host>:<port>
+```
+
+Connects to a distant TCP server using `<host>:<port>`, reads KISS frames, and decodes them to output PDU (Blob Messages). It uses `satellites_kiss_client_source` in GRC.
+Example to connect to a distant tcp kiss server and serve it again locally: 
+`cargo run -- csdr tcp_kiss_client 192.168.2.45:8045 ! tcp_kiss_server 127.0.0.1:8001`
+
 ### [rational_resampler_cc](#rational_resampler_cc)
 
 Syntax:

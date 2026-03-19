@@ -33,7 +33,7 @@ cpal = { version = "0.15.2"}
 # fsdr-blocks = {  version="0.1"}
 # fsdr-blocks = { path="../fsdr-blocks" }
 fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
-# futures = "0.3.26"
+futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
 pest = "2.0"
