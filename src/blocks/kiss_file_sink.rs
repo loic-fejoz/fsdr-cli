@@ -11,13 +11,13 @@ pub struct KissFileSink {
 }
 
 impl KissFileSink {
-    pub fn new(filename: &str) -> Self {
-        let file = if filename == "-" || filename == "/proc/self/fd/1" {
+    pub fn new(filename: &str) -> Result<Self> {
+        let file = if filename == "-" || filename == "/proc/self/fd/1" || filename.is_empty() {
             None
         } else {
-            Some(File::create(filename).unwrap())
+            Some(File::create(filename)?)
         };
-        Self { file }
+        Ok(Self { file })
     }
 
     async fn in_port(

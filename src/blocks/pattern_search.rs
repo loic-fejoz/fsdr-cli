@@ -123,9 +123,11 @@ where
 
         if consumed > 0 {
             self.input.consume(consumed);
+            io.call_again = true;
         }
         if produced > 0 {
             self.output.produce(produced);
+            io.call_again = true;
         }
 
         if self.input.finished() && consumed == i_len {

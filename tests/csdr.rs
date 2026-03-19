@@ -785,3 +785,154 @@ pub fn parse_rational_resampler_cc() {
     // println!("{grc:?}");
     assert_eq!(2, grc.connections.len());
 }
+
+#[test]
+pub fn parse_fixedlen_to_pdu() {
+    let cmds = "fixedlen_to_pdu 240";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_fixedlen_to_pdu", grc.blocks[1].id);
+    assert_eq!("240", grc.blocks[1].parameter_or("packet_len", "none"));
+    assert_eq!("", grc.blocks[1].parameter_or("syncword_tag", "none"));
+    assert_eq!("False", grc.blocks[1].parameter_or("pack", "none"));
+    assert_eq!(
+        "\"\"",
+        grc.blocks[1].parameter_or("packet_len_tag_key", "none")
+    );
+    assert_eq!("byte", grc.blocks[1].parameter_or("type", "none"));
+    assert_eq!(1, grc.connections.len());
+}
+
+#[test]
+pub fn parse_fixedlen_to_pdu_with_tag() {
+    let cmds = "fixedlen_to_pdu (100+20) sync";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_fixedlen_to_pdu", grc.blocks[1].id);
+    assert_eq!("120", grc.blocks[1].parameter_or("packet_len", "none"));
+    assert_eq!("sync", grc.blocks[1].parameter_or("syncword_tag", "none"));
+}
+
+#[test]
+pub fn parse_save_kiss_chain() {
+    let mut input_file = std::env::temp_dir();
+    input_file.push("test_input.kiss");
+    std::fs::write(&input_file, vec![0xC0, 0x00, 0xC0]).expect("write dummy kiss");
+
+    let mut temp_file = std::env::temp_dir();
+    temp_file.push("test.kiss");
+    let temp_file_str = temp_file.to_str().expect("valid temp path");
+
+    let cmds = format!(
+        "csdr load_kiss {} ! save_kiss {}",
+        input_file.display(),
+        temp_file_str
+    );
+    let result = CsdrParser::parse_multiple_commands(&cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_kiss_file_source", grc.blocks[0].id);
+    assert_eq!("satellites_kiss_file_sink", grc.blocks[1].id);
+
+    // Verify it can be converted to a flowgraph
+    let mut g2f = Grc2FutureSdr::new();
+    let fg = g2f.convert_grc(grc);
+    assert!(
+        fg.is_ok(),
+        "Failed to convert GRC to Flowgraph for save_kiss chain: {:?}",
+        fg.err()
+    );
+
+    let _ = std::fs::remove_file(input_file);
+    let _ = std::fs::remove_file(temp_file);
+}
+
+#[test]
+pub fn parse_fixedlen_to_pdu_chain() {
+    let mut input_file = std::env::temp_dir();
+    input_file.push("test_input_u8.bin");
+    std::fs::write(&input_file, vec![0u8; 1024]).expect("write dummy u8");
+
+    let mut temp_file = std::env::temp_dir();
+    temp_file.push("test2.kiss");
+    let temp_file_str = temp_file.to_str().expect("valid temp path");
+
+    let cmds = format!(
+        "csdr load_u8 {} ! fixedlen_to_pdu 240 ! save_kiss {}",
+        input_file.display(),
+        temp_file_str
+    );
+    let result = CsdrParser::parse_multiple_commands(&cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_file_source", grc.blocks[0].id);
+    assert_eq!("satellites_fixedlen_to_pdu", grc.blocks[1].id);
+    assert_eq!("240", grc.blocks[1].parameter_or("packet_len", "none"));
+    assert_eq!("byte", grc.blocks[1].parameter_or("type", "none"));
+    assert_eq!("satellites_kiss_file_sink", grc.blocks[2].id);
+
+    // Verify connections use port "0" (as GrcBuilder currently does)
+    assert_eq!(2, grc.connections.len());
+    assert_eq!("0", grc.connections[1][1]); // Output port of fixedlen_to_pdu
+
+    // Verify it can be converted to a flowgraph
+    let mut g2f = Grc2FutureSdr::new();
+    let fg = g2f.convert_grc(grc);
+    assert!(
+        fg.is_ok(),
+        "Failed to convert GRC to Flowgraph: {:?}",
+        fg.err()
+    );
+
+    let _ = std::fs::remove_file(input_file);
+    let _ = std::fs::remove_file(temp_file);
+}
+
+#[test]
+pub fn repro_hang_user_command() -> Result<()> {
+    use std::env;
+    use std::fs::File;
+    use std::io::Write;
+
+    let mut input_path = env::temp_dir();
+    input_path.push("some_file.sigmf-data");
+    let mut output_path = env::temp_dir();
+    output_path.push("some_file.kiss");
+
+    {
+        let mut f = File::create(&input_path)?;
+        // Write some dummy data. 1M of zeros (floats)
+        // This is 1,000,000 / 2 = 500,000 complexes.
+        let data = vec![0.0f32; 1000 * 1024];
+        let bytes: &[u8] = unsafe {
+            std::slice::from_raw_parts(
+                data.as_ptr() as *const u8,
+                data.len() * std::mem::size_of::<f32>(),
+            )
+        };
+        f.write_all(bytes)?;
+    }
+
+    let cmd = format!(
+        "csdr load_f {} ! shift_addition_cc ((435166900-435200000)/2400000) ! fmdemod_quadri_cf ! rational_resampler_ff 1 50 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2 ! realpart_cf ! binary_slicer_f_u8 ! pattern_search_u8_u8 (8*240) 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! pack_bits_8to1_u8_u8 ! fixedlen_to_pdu 240 ! save_kiss {}",
+        input_path.display(),
+        output_path.display()
+    );
+
+    let grc = CsdrParser::parse_multiple_commands(cmd.as_str())?.expect("Failed to parse command");
+    let mut g2f = Grc2FutureSdr::new();
+    let fg = g2f.convert_grc(grc)?;
+
+    // This test ensures that the flowgraph completes without hanging.
+    // Hangs often occurred in debug mode due to missing `io.call_again = true`
+    // in some blocks when they produced or consumed data but didn't finish.
+    Runtime::new().run(fg)?;
+
+    // Cleanup
+    let _ = std::fs::remove_file(input_path);
+    let _ = std::fs::remove_file(output_path);
+
+    Ok(())
+}

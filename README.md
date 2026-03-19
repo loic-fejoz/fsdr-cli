@@ -228,6 +228,21 @@ Apply weaver method for SSB decoding. Usually one take 1500Hz as the center of t
 
 ![](weaver.png)
 
+### [fixedlen_to_pdu](#fixedlen_to_pdu)
+
+Syntax:
+
+```bash
+fixedlen_to_pdu packet_len [syncword_tag]
+```
+
+Chunks the input byte stream into Pmt Blob messages (PDUs) of `packet_len` bytes. The `packet_len` can be an expression.
+Example to chunk a byte stream and save it to a KISS file:
+
+```bash
+... ! fixedlen_to_pdu 240 ! save_kiss /tmp/test.kiss
+```
+
 ### [csdr retrocompatibility commands](#csdr-retrocompatibility-commands)
 
 - [x] [realpart_cf](https://github.com/ha7ilm/csdr#realpart_cf) ([jketterl](https://github.com/jketterl/csdr#realpart))[^4]

@@ -34,11 +34,11 @@ impl BlockConverter for FileSourceConverter {
             filename
         };
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "u8" | "uchar" => {
+            "u8" | "uchar" | "byte" => {
                 let blk = FileSource::<u8>::new(filename, repeat);
                 Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
             }
-            "byte" => {
+            "s8" | "char" => {
                 let blk = FileSource::<i8>::new(filename, repeat);
                 Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
             }

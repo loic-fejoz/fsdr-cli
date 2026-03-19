@@ -35,7 +35,7 @@ impl BlockConverter for SatellitesKissFileSinkConverter {
             .get("file")
             .context("satellites_kiss_file_sink: file must be defined")?;
 
-        let block = KissFileSink::new(filename);
+        let block = KissFileSink::new(filename)?;
         Ok(Box::new(KissFileSinkPortAdapter {
             blk: fg.add_block(block).into(),
         }))

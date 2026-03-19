@@ -19,6 +19,7 @@ use self::dump_cmd::DumpCmd;
 use self::eval_cmd::EvalCmd;
 use self::fastdcblock_cmd::FastDCBlockCmd;
 use self::fir_decimate_cmd::FirDecimateCmd;
+use self::fixedlen_to_pdu_cmd::FixedlenToPduCmd;
 use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
 use self::fractional_decimator_cmd::FractionalDecimatorCmd;
 use self::gain_cmd::GainCmd;
@@ -50,6 +51,7 @@ mod dump_cmd;
 pub mod eval_cmd;
 mod fastdcblock_cmd;
 mod fir_decimate_cmd;
+mod fixedlen_to_pdu_cmd;
 mod fmdemod_quadri_cmd;
 mod fractional_decimator_cmd;
 mod gain_cmd;
@@ -98,6 +100,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
             Rule::load_kiss_cmd => self.build_load_kiss(grc),
+            Rule::fixedlen_to_pdu_cmd => self.build_fixedlen_to_pdu(grc),
             Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::pack_bits_cmd => self.build_pack_bits(grc),
@@ -159,11 +162,11 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
 pub struct CsdrParser {}
 
 impl CsdrParser {
-    pub fn parse_command<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {
+    pub fn parse_command(cmd: &str) -> Result<Option<Grc>> {
         // let cmd = CommandsParser::parse_main(cmd.into())?;
         // CsdrCmd::parse(&cmd)
 
-        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd.into())?
+        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd)?
             .next()
             .context("Parsing commands")?;
         let grc_builder = GrcBuilder::new();
@@ -173,8 +176,8 @@ impl CsdrParser {
         Ok(Some(grc))
     }
 
-    pub fn parse_multiple_commands<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {
-        let cmd = CommandsParser::parse_main(cmd.into())?;
+    pub fn parse_multiple_commands(cmd: &str) -> Result<Option<Grc>> {
+        let cmd = CommandsParser::parse_main(cmd)?;
         CsdrCmd::parse(&cmd)
     }
 }

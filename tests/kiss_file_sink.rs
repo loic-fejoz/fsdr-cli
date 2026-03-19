@@ -19,8 +19,8 @@ fn test_kiss_file_sink() -> Result<()> {
 
     // 2. Set up FutureSDR flowgraph
     let mut fg = Flowgraph::new();
-    let src = KissFileSource::new(input_filename);
-    let sink = KissFileSink::new(output_filename);
+    let src = KissFileSource::new(input_filename)?;
+    let sink = KissFileSink::new(output_filename)?;
 
     let src_id = fg.add_block(src);
     let sink_id = fg.add_block(sink);
