@@ -8,6 +8,16 @@ use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 
 #[test]
+pub fn parse_load_kiss() {
+    let cmds = "load_kiss tests/test.kiss";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(1, grc.blocks.len());
+    assert_eq!("satellites_kiss_file_source", grc.blocks[0].id);
+    assert_eq!("tests/test.kiss", grc.blocks[0].parameters["file"]);
+}
+
+#[test]
 pub fn parse_convert_u8_f() {
     let cmds = "convert_u8_f";
     let result = CsdrParser::parse_command(cmds);

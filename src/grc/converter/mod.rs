@@ -81,6 +81,8 @@ pub mod timing_recovery;
 use self::timing_recovery::TimingRecoveryConverter;
 pub mod weaver_ssb;
 use self::weaver_ssb::WeaverSsbConverter;
+pub mod satellites_kiss_file_source;
+use self::satellites_kiss_file_source::SatellitesKissFileSourceConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -148,6 +150,7 @@ impl Grc2FutureSdr {
             "blocks_pack_k_bits_bb" => Box::new(PackBitsConverter {}),
             "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
+            "satellites_kiss_file_source" => Box::new(SatellitesKissFileSourceConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
