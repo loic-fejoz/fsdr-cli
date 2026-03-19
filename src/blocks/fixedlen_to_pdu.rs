@@ -48,6 +48,9 @@ impl<I: CpuBufferReader<Item = u8>> Kernel for FixedlenToPdu<I> {
         }
 
         self.input.consume(consumed);
+        if consumed > 0 {
+            io.call_again = true;
+        }
         if self.input.finished() {
             io.finished = true;
         }

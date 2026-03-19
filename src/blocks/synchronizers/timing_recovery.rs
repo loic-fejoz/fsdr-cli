@@ -136,6 +136,10 @@ impl Kernel for TimingRecovery<Complex32> {
         self.input.consume(current_bitstart_index);
         self.output.produce(oindex);
 
+        if current_bitstart_index > 0 || oindex > 0 {
+            io.call_again = true;
+        }
+
         if self.input.finished() && m == i_len {
             io.finished = true;
         }

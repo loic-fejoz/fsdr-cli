@@ -859,3 +859,50 @@ pub fn parse_fixedlen_to_pdu_chain() {
         fg.err()
     );
 }
+
+#[test]
+pub fn repro_hang_user_command() -> Result<()> {
+    use std::env;
+    use std::fs::File;
+    use std::io::Write;
+
+    let mut input_path = env::temp_dir();
+    input_path.push("some_file.sigmf-data");
+    let mut output_path = env::temp_dir();
+    output_path.push("some_file.kiss");
+
+    {
+        let mut f = File::create(&input_path)?;
+        // Write some dummy data. 1M of zeros (floats)
+        // This is 1,000,000 / 2 = 500,000 complexes.
+        let data = vec![0.0f32; 1000 * 1024];
+        let bytes: &[u8] = unsafe {
+            std::slice::from_raw_parts(
+                data.as_ptr() as *const u8,
+                data.len() * std::mem::size_of::<f32>(),
+            )
+        };
+        f.write_all(bytes)?;
+    }
+
+    let cmd = format!(
+        "csdr load_f {} ! shift_addition_cc ((435166900-435200000)/2400000) ! fmdemod_quadri_cf ! rational_resampler_ff 1 50 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2 ! realpart_cf ! binary_slicer_f_u8 ! pattern_search_u8_u8 (8*240) 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! pack_bits_8to1_u8_u8 ! fixedlen_to_pdu 240 ! save_kiss {}",
+        input_path.display(),
+        output_path.display()
+    );
+
+    let grc = CsdrParser::parse_multiple_commands(cmd.as_str())?.expect("Failed to parse command");
+    let mut g2f = Grc2FutureSdr::new();
+    let fg = g2f.convert_grc(grc)?;
+
+    // This test ensures that the flowgraph completes without hanging.
+    // Hangs often occurred in debug mode due to missing `io.call_again = true`
+    // in some blocks when they produced or consumed data but didn't finish.
+    Runtime::new().run(fg)?;
+
+    // Cleanup
+    let _ = std::fs::remove_file(input_path);
+    let _ = std::fs::remove_file(output_path);
+
+    Ok(())
+}
