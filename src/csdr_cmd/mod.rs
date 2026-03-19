@@ -162,11 +162,11 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
 pub struct CsdrParser {}
 
 impl CsdrParser {
-    pub fn parse_command<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {
+    pub fn parse_command(cmd: &str) -> Result<Option<Grc>> {
         // let cmd = CommandsParser::parse_main(cmd.into())?;
         // CsdrCmd::parse(&cmd)
 
-        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd.into())?
+        let input = CommandsParser::parse(Rule::any_csdr_cmd, cmd)?
             .next()
             .context("Parsing commands")?;
         let grc_builder = GrcBuilder::new();
@@ -176,8 +176,8 @@ impl CsdrParser {
         Ok(Some(grc))
     }
 
-    pub fn parse_multiple_commands<'i>(cmd: impl Into<&'i str>) -> Result<Option<Grc>> {
-        let cmd = CommandsParser::parse_main(cmd.into())?;
+    pub fn parse_multiple_commands(cmd: &str) -> Result<Option<Grc>> {
+        let cmd = CommandsParser::parse_main(cmd)?;
         CsdrCmd::parse(&cmd)
     }
 }

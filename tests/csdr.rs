@@ -817,8 +817,20 @@ pub fn parse_fixedlen_to_pdu_with_tag() {
 
 #[test]
 pub fn parse_save_kiss_chain() {
-    let cmds = "csdr load_kiss /dev/null ! save_kiss /tmp/test.kiss";
-    let result = CsdrParser::parse_multiple_commands(cmds);
+    let mut input_file = std::env::temp_dir();
+    input_file.push("test_input.kiss");
+    std::fs::write(&input_file, vec![0xC0, 0x00, 0xC0]).expect("write dummy kiss");
+
+    let mut temp_file = std::env::temp_dir();
+    temp_file.push("test.kiss");
+    let temp_file_str = temp_file.to_str().expect("valid temp path");
+
+    let cmds = format!(
+        "csdr load_kiss {} ! save_kiss {}",
+        input_file.display(),
+        temp_file_str
+    );
+    let result = CsdrParser::parse_multiple_commands(&cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(2, grc.blocks.len());
     assert_eq!("satellites_kiss_file_source", grc.blocks[0].id);
@@ -832,12 +844,27 @@ pub fn parse_save_kiss_chain() {
         "Failed to convert GRC to Flowgraph for save_kiss chain: {:?}",
         fg.err()
     );
+
+    let _ = std::fs::remove_file(input_file);
+    let _ = std::fs::remove_file(temp_file);
 }
 
 #[test]
 pub fn parse_fixedlen_to_pdu_chain() {
-    let cmds = "csdr load_u8 /dev/zero ! fixedlen_to_pdu 240 ! save_kiss /tmp/test.kiss";
-    let result = CsdrParser::parse_multiple_commands(cmds);
+    let mut input_file = std::env::temp_dir();
+    input_file.push("test_input_u8.bin");
+    std::fs::write(&input_file, vec![0u8; 1024]).expect("write dummy u8");
+
+    let mut temp_file = std::env::temp_dir();
+    temp_file.push("test2.kiss");
+    let temp_file_str = temp_file.to_str().expect("valid temp path");
+
+    let cmds = format!(
+        "csdr load_u8 {} ! fixedlen_to_pdu 240 ! save_kiss {}",
+        input_file.display(),
+        temp_file_str
+    );
+    let result = CsdrParser::parse_multiple_commands(&cmds);
     let grc = result.expect("").unwrap();
     assert_eq!(3, grc.blocks.len());
     assert_eq!("blocks_file_source", grc.blocks[0].id);
@@ -858,6 +885,9 @@ pub fn parse_fixedlen_to_pdu_chain() {
         "Failed to convert GRC to Flowgraph: {:?}",
         fg.err()
     );
+
+    let _ = std::fs::remove_file(input_file);
+    let _ = std::fs::remove_file(temp_file);
 }
 
 #[test]

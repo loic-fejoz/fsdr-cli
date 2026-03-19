@@ -41,7 +41,7 @@ impl BlockConverter for SatellitesKissFileSourceConverter {
             filename
         };
 
-        let block = KissFileSource::new(filename);
+        let block = KissFileSource::new(filename)?;
         Ok(Box::new(KissFileSourcePortAdapter {
             blk: fg.add_block(block).into(),
         }))

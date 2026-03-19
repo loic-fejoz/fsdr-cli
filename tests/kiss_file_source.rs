@@ -53,7 +53,7 @@ fn test_kiss_file_source() -> Result<()> {
 
     // 2. Set up FutureSDR flowgraph
     let mut fg = Flowgraph::new();
-    let src = KissFileSource::new(filename);
+    let src = KissFileSource::new(filename)?;
 
     let received_messages = Arc::new(Mutex::new(Vec::new()));
     let sink = TestMessageSink::new(received_messages.clone());

@@ -12,15 +12,16 @@ pub struct KissFileSource {
 }
 
 impl KissFileSource {
-    pub fn new(filename: &str) -> Self {
+    pub fn new(filename: &str) -> Result<Self> {
         let mut frames = VecDeque::new();
 
         let mut buffer = Vec::new();
-        if let Ok(mut file) = File::open(filename) {
-            let _ = file.read_to_end(&mut buffer);
-        } else if filename == "/proc/self/fd/0" || filename == "-" {
+        if filename == "/proc/self/fd/0" || filename == "-" || filename.is_empty() {
             let mut stdin = std::io::stdin();
-            let _ = stdin.read_to_end(&mut buffer);
+            let _ = stdin.read_to_end(&mut buffer)?;
+        } else {
+            let mut file = File::open(filename)?;
+            let _ = file.read_to_end(&mut buffer)?;
         }
 
         let mut current_frame = Vec::new();
@@ -57,7 +58,7 @@ impl KissFileSource {
             frames.push_back(current_frame);
         }
 
-        Self { frames }
+        Ok(Self { frames })
     }
 }
 
