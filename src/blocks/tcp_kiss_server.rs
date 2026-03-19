@@ -19,16 +19,14 @@ pub struct TcpKissServer {
 
 impl TcpKissServer {
     pub fn new(address: &str) -> Result<Self> {
+        let listener = TcpListener::bind(address)?;
         let (tx, rx) = mpsc::channel::<Event>();
-        let addr = address.to_string();
         let tx_acceptor = tx.clone();
 
         // Acceptor thread
         thread::spawn(move || {
-            if let Ok(listener) = TcpListener::bind(&addr) {
-                for stream in listener.incoming().flatten() {
-                    let _ = tx_acceptor.send(Event::NewClient(stream));
-                }
+            for stream in listener.incoming().flatten() {
+                let _ = tx_acceptor.send(Event::NewClient(stream));
             }
         });
 

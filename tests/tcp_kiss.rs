@@ -1,5 +1,7 @@
 use anyhow::Result;
+use futuresdr::blocks::MessageSource;
 use futuresdr::runtime::Flowgraph;
+use futuresdr::runtime::Pmt;
 use futuresdr::runtime::Runtime;
 use std::env;
 use std::fs;
@@ -7,7 +9,6 @@ use std::thread;
 use std::time::Duration;
 
 use fsdr_cli::blocks::kiss_file_sink::KissFileSink;
-use fsdr_cli::blocks::kiss_file_source::KissFileSource;
 use fsdr_cli::blocks::tcp_kiss_client::TcpKissClient;
 use fsdr_cli::blocks::tcp_kiss_server::TcpKissServer;
 
@@ -18,9 +19,15 @@ fn test_tcp_kiss_server_client() -> Result<()> {
 
     // Server flowgraph
     let mut fg_server = Flowgraph::new();
-    let src = fg_server.add_block(KissFileSource::new("tests/test.kiss")?);
+    let sent_data = vec![0x11, 0x22, 0x33, 0x44];
+    // Send a message every 50ms.
+    let src = fg_server.add_block(MessageSource::new(
+        Pmt::Blob(sent_data.clone()),
+        Duration::from_millis(50),
+        None,
+    ));
     let server = fg_server.add_block(TcpKissServer::new(&addr)?);
-    fg_server.connect_message(src, "output", server, "in_port")?;
+    fg_server.connect_message(src, "out", server, "in_port")?;
 
     // Client flowgraph
     let mut out_path = env::temp_dir();
@@ -32,24 +39,23 @@ fn test_tcp_kiss_server_client() -> Result<()> {
     let snk = fg_client.add_block(KissFileSink::new(&out_file)?);
     fg_client.connect_message(client, "out", snk, "in_port")?;
 
-    // Spawn server flowgraph in a separate thread
+    // Start server
     let _server_handle = thread::spawn(move || {
         Runtime::new().run(fg_server).unwrap();
     });
 
-    // Give server a moment to bind to the port
-    thread::sleep(Duration::from_millis(50));
+    // Give server a moment to start
+    thread::sleep(Duration::from_millis(100));
 
-    // Run client flowgraph
+    // Start client
     let _client_handle = thread::spawn(move || {
         Runtime::new().run(fg_client).unwrap();
     });
 
-    // Wait a bit for processing
-    thread::sleep(Duration::from_millis(200));
+    // Wait for client to receive some messages
+    thread::sleep(Duration::from_millis(500));
 
-    // Verify file content matches roughly. KissFileSink escapes things differently
-    // or adds FENDs, but we can check if it's not empty and created.
+    // Verify file content
     let metadata = fs::metadata(&out_path)?;
     assert!(metadata.len() > 0, "Output file is empty");
 
@@ -64,9 +70,14 @@ fn test_tcp_kiss_multi_client() -> Result<()> {
 
     // Server flowgraph
     let mut fg_server = Flowgraph::new();
-    let src = fg_server.add_block(KissFileSource::new("tests/test.kiss")?);
+    let sent_data = vec![0x55, 0x66, 0x77, 0x88];
+    let src = fg_server.add_block(MessageSource::new(
+        Pmt::Blob(sent_data.clone()),
+        Duration::from_millis(50),
+        None,
+    ));
     let server = fg_server.add_block(TcpKissServer::new(&addr)?);
-    fg_server.connect_message(src, "output", server, "in_port")?;
+    fg_server.connect_message(src, "out", server, "in_port")?;
 
     // Client 1
     let mut out_path1 = env::temp_dir();
@@ -103,8 +114,8 @@ fn test_tcp_kiss_multi_client() -> Result<()> {
         Runtime::new().run(fg_client2).unwrap();
     });
 
-    // Wait for processing
-    thread::sleep(Duration::from_millis(300));
+    // Wait for clients to receive some messages
+    thread::sleep(Duration::from_millis(500));
 
     // Verify both files are populated
     let meta1 = fs::metadata(&out_path1)?;
