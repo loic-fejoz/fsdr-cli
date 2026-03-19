@@ -30,6 +30,7 @@ use self::pack_bits_cmd::PackBitsCmd;
 use self::pattern_search_cmd::PatternSearchCmd;
 use self::rational_resampler_cmd::RationalResamplerCmd;
 use self::realpart_cmd::RealPartCmd;
+use self::save_kiss_cmd::SaveKissCmd;
 use self::shift_addition_cmd::ShiftAdditionCmd;
 use self::throttle_cmd::ThrottleCmd;
 use self::timing_recovery_cmd::TimingRecoveryCmd;
@@ -60,6 +61,7 @@ mod pack_bits_cmd;
 mod pattern_search_cmd;
 mod rational_resampler_cmd;
 mod realpart_cmd;
+mod save_kiss_cmd;
 mod shift_addition_cmd;
 mod throttle_cmd;
 mod timing_recovery_cmd;
@@ -96,6 +98,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
             Rule::load_kiss_cmd => self.build_load_kiss(grc),
+            Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::pack_bits_cmd => self.build_pack_bits(grc),
             Rule::pattern_search_cmd => self.build_pattern_search(grc),

@@ -183,6 +183,26 @@ load_c filename
 
 Use the file as input.
 
+### [load_kiss](#load_kiss)
+
+Syntax:
+
+```bash
+load_kiss filename
+```
+
+Load a KISS file and output framed PDU (Blob Message). It uses `satellites_kiss_file_source` in GRC.
+
+### [save_kiss](#save_kiss)
+
+Syntax:
+
+```bash
+save_kiss filename
+```
+
+Serialize a PDU (Blob Message) into a KISS file. It uses `satellites_kiss_file_sink` in GRC (compatible with `gr-satellites`).
+
 ### [rational_resampler_cc](#rational_resampler_cc)
 
 Syntax:

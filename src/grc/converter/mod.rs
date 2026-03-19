@@ -83,6 +83,8 @@ pub mod weaver_ssb;
 use self::weaver_ssb::WeaverSsbConverter;
 pub mod satellites_kiss_file_source;
 use self::satellites_kiss_file_source::SatellitesKissFileSourceConverter;
+pub mod satellites_kiss_file_sink;
+use self::satellites_kiss_file_sink::SatellitesKissFileSinkConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -151,6 +153,7 @@ impl Grc2FutureSdr {
             "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
             "satellites_kiss_file_source" => Box::new(SatellitesKissFileSourceConverter {}),
+            "satellites_kiss_file_sink" => Box::new(SatellitesKissFileSinkConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
@@ -203,8 +206,13 @@ impl Grc2FutureSdr {
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
-            fg.connect_dyn(src_blk, src_port, tgt_blk, tgt_port)
-                .context("connecting {connection}")?;
+            if fg
+                .connect_dyn(src_blk, src_port, tgt_blk, tgt_port)
+                .is_err()
+            {
+                fg.connect_message(src_blk, src_port, tgt_blk, tgt_port)
+                    .context("connecting message {connection}")?;
+            }
         }
         Ok(fg)
     }
