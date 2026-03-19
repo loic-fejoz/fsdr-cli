@@ -814,3 +814,48 @@ pub fn parse_fixedlen_to_pdu_with_tag() {
     assert_eq!("120", grc.blocks[1].parameter_or("packet_len", "none"));
     assert_eq!("sync", grc.blocks[1].parameter_or("syncword_tag", "none"));
 }
+
+#[test]
+pub fn parse_save_kiss_chain() {
+    let cmds = "csdr load_kiss /dev/null ! save_kiss /tmp/test.kiss";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("satellites_kiss_file_source", grc.blocks[0].id);
+    assert_eq!("satellites_kiss_file_sink", grc.blocks[1].id);
+
+    // Verify it can be converted to a flowgraph
+    let mut g2f = Grc2FutureSdr::new();
+    let fg = g2f.convert_grc(grc);
+    assert!(
+        fg.is_ok(),
+        "Failed to convert GRC to Flowgraph for save_kiss chain: {:?}",
+        fg.err()
+    );
+}
+
+#[test]
+pub fn parse_fixedlen_to_pdu_chain() {
+    let cmds = "csdr load_u8 /dev/zero ! fixedlen_to_pdu 240 ! save_kiss /tmp/test.kiss";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_file_source", grc.blocks[0].id);
+    assert_eq!("satellites_fixedlen_to_pdu", grc.blocks[1].id);
+    assert_eq!("240", grc.blocks[1].parameter_or("packet_len", "none"));
+    assert_eq!("byte", grc.blocks[1].parameter_or("type", "none"));
+    assert_eq!("satellites_kiss_file_sink", grc.blocks[2].id);
+
+    // Verify connections use port "0" (as GrcBuilder currently does)
+    assert_eq!(2, grc.connections.len());
+    assert_eq!("0", grc.connections[1][1]); // Output port of fixedlen_to_pdu
+
+    // Verify it can be converted to a flowgraph
+    let mut g2f = Grc2FutureSdr::new();
+    let fg = g2f.convert_grc(grc);
+    assert!(
+        fg.is_ok(),
+        "Failed to convert GRC to Flowgraph: {:?}",
+        fg.err()
+    );
+}

@@ -20,7 +20,7 @@ impl ConnectorAdapter for FixedlenToPduPortAdapter {
 
     fn adapt_output_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
         match port_name {
-            "pdus" | "out" | "output" => Ok((self.blk, "pdus")),
+            "0" | "pdus" | "out" | "output" => Ok((self.blk, "pdus")),
             _ => bail!("FixedlenToPdu unknown output port: {port_name}"),
         }
     }
