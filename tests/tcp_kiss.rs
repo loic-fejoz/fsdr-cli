@@ -3,7 +3,6 @@ use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 use std::env;
 use std::fs;
-use std::path::PathBuf;
 use std::thread;
 use std::time::Duration;
 
@@ -34,7 +33,7 @@ fn test_tcp_kiss_server_client() -> Result<()> {
     fg_client.connect_message(client, "out", snk, "in_port")?;
 
     // Spawn server flowgraph in a separate thread
-    let server_handle = thread::spawn(move || {
+    let _server_handle = thread::spawn(move || {
         Runtime::new().run(fg_server).unwrap();
     });
 
@@ -42,7 +41,7 @@ fn test_tcp_kiss_server_client() -> Result<()> {
     thread::sleep(Duration::from_millis(50));
 
     // Run client flowgraph
-    let client_handle = thread::spawn(move || {
+    let _client_handle = thread::spawn(move || {
         Runtime::new().run(fg_client).unwrap();
     });
 
