@@ -1,7 +1,7 @@
 use fsdr_cli_macros::{eval_math, fsdr_instantiate};
 use futuresdr::num_complex::Complex32;
-use quote::{quote, ToTokens, TokenStreamExt};
 use proc_macro2::TokenStream;
+use quote::{quote, ToTokens, TokenStreamExt};
 
 #[test]
 fn test_eval_math() {
@@ -61,11 +61,11 @@ fn test_complex_type_handling() {
     let codegen_tokens = get_fir_metadata_codegen(taps, center);
     let codegen_string = codegen_tokens.to_string();
     println!("Complex generated tokens: {}", codegen_string);
-    
+
     // Now it should be interpolated!
     assert!(codegen_string.contains("vec ! [0.1f32 , 0.2f32 , 0.3f32]"));
     assert!(codegen_string.contains("Complex32 :: new (1.0f32 , - 1.0f32)"));
-    
+
     // And NO literal "taps" identifier remaining in the tuple
     assert!(!codegen_string.contains("( taps"));
 }

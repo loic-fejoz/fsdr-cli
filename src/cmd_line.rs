@@ -8,6 +8,7 @@ pub trait HighLevelCmdLine<'i> {
     fn as_grc_cmd(&self) -> Option<&Pair<'i, Rule>>;
     fn as_csdr_cmd(&self) -> Option<&Pair<'i, Rule>>;
     fn as_iqengine_cmd(&self) -> Option<&Pair<'i, Rule>>;
+    fn generate_path(&self) -> Option<&'i str>;
 }
 
 impl<'i> HighLevelCmdLine<'i> for Pair<'i, Rule> {
@@ -42,5 +43,12 @@ impl<'i> HighLevelCmdLine<'i> for Pair<'i, Rule> {
 
     fn is_help_cmd(&self) -> bool {
         matches!(self.as_rule(), Rule::help_cmd)
+    }
+
+    fn generate_path(&self) -> Option<&'i str> {
+        self.clone()
+            .into_inner()
+            .find(|p| matches!(p.as_rule(), Rule::generate_opt))
+            .map(|p| p.into_inner().next().unwrap().as_str())
     }
 }

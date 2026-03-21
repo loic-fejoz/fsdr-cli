@@ -1,18 +1,16 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
+use crate::grc::backend::FsdrBackend;
 use anyhow::{Context, Result};
-use futuresdr::blocks::FileSource;
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
 
 pub struct FileSourceConverter {}
 
-impl BlockConverter for FileSourceConverter {
+impl<B: FsdrBackend> BlockConverter<B> for FileSourceConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
         let item_type = blk
             .parameters
             .get("type")
@@ -29,29 +27,16 @@ impl BlockConverter for FileSourceConverter {
             .to_lowercase()
             .parse::<bool>()?;
         let filename = if "-" == filename {
-            "/proc/self/fd/0"
+            "/proc/self/fd/0".to_string()
         } else {
-            filename
+            filename.clone()
         };
-        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "u8" | "uchar" | "byte" => {
-                let blk = FileSource::<u8>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
-            }
-            "s8" | "char" => {
-                let blk = FileSource::<i8>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
-            }
-            "f32" | "float" => {
-                let blk = FileSource::<f32>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
-            }
-            "c32" | "complex" => {
-                let blk = FileSource::<Complex32>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
-            }
+        let blk_ref = match &(item_type[..]) {
+            "u8" | "uchar" | "byte" => backend.add_file_source_u8(filename, repeat)?,
+            "f32" | "float" => backend.add_file_source_f32(filename, repeat)?,
+            "c32" | "complex" => backend.add_file_source_c32(filename, repeat)?,
             _ => todo!("Unhandled FileSource Type {item_type}"),
         };
-        Ok(blk)
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

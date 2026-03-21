@@ -1,42 +1,44 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
-use anyhow::Result;
+use super::{parameter_as_f64, BlockInstance};
+use crate::grc::backend::FsdrBackend;
+use anyhow::{bail, Result};
 use futuresdr::blocks::Throttle;
 use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
 
 pub struct ThrottleConverter {}
 
-impl BlockConverter for ThrottleConverter {
+impl<B: FsdrBackend> BlockConverter<B> for ThrottleConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let rate = Grc2FutureSdr::parameter_as_f64(blk, "samples_per_second", "48000")?;
-        let item_type = blk
-            .parameters
-            .get("type")
-            .expect("item type must be defined");
-        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "char" => {
-                let blk = Throttle::<u8>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
-            }
-            "short" => {
-                let blk = Throttle::<i16>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
-            }
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let item_type = blk.parameter_or("type", "float");
+        let rate = parameter_as_f64(blk, "samples_per_second", "48000")?;
+
+        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match &item_type[..] {
             "float" => {
-                let blk = Throttle::<f32>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                let blk = Throttle::<f32>::new(rate as f64);
+                let blk_ref = backend.add_block_runtime(blk)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
             }
             "complex" => {
-                let blk = Throttle::<Complex32>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                let blk = Throttle::<Complex32>::new(rate as f64);
+                let blk_ref = backend.add_block_runtime(blk)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
             }
-            _ => todo!("Unhandled blocks_throttle Type {item_type}"),
+            "short" => {
+                let blk = Throttle::<i16>::new(rate as f64);
+                let blk_ref = backend.add_block_runtime(blk)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
+            }
+            "byte" => {
+                let blk = Throttle::<u8>::new(rate as f64);
+                let blk_ref = backend.add_block_runtime(blk)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
+            }
+            _ => bail!("blocks_throttle: Unhandled type {item_type}"),
         };
-        Ok(blk)
+        Ok(adapter)
     }
 }

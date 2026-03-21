@@ -1,20 +1,20 @@
 use futuresdr::blocks::Apply;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
+use super::{parameter_as_f64, BlockInstance};
+use crate::grc::backend::FsdrBackend;
 use anyhow::Result;
-use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogFmDeemphConverter {}
 
-impl BlockConverter for AnalogFmDeemphConverter {
+impl<B: FsdrBackend> BlockConverter<B> for AnalogFmDeemphConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "samp_rate", "48000")? as f32;
-        let tau = Grc2FutureSdr::parameter_as_f64(blk, "tau", "50e-6")? as f32;
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let sample_rate = parameter_as_f64(blk, "samp_rate", "48000")? as f32;
+        let tau = parameter_as_f64(blk, "tau", "50e-6")? as f32;
         let dt = 1.0 / sample_rate;
         let alpha = dt / (tau + dt);
         let mut last = 0.0; // store sample x[n-1]
@@ -23,9 +23,7 @@ impl BlockConverter for AnalogFmDeemphConverter {
             last = r;
             r
         });
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        let blk_ref = backend.add_block_runtime(blk)?;
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

@@ -6,26 +6,26 @@ Welcome! This document provides concise, high-leverage context for AI agents wor
 `fsdr-cli` is a Rust-based CLI tool leveraging FutureSDR for digital signal processing, acting as an advanced replacement for `csdr`. The goal is to produce reliable, high-performance DSP flowgraphs.
 It translates CSDR-style command pipelines into an intermediate graph structure (GRC) that is strictly compatible with the **GNU Radio Companion (.grc)** file format.
 
-### GRC Compatibility
-The intermediate graph must be 100% compatible with GNU Radio Companion. This means:
-- Block IDs and parameter names must match GRC definitions.
-- Parameter values and enumerations (e.g., window types, item types) must follow GRC standards.
-- This compatibility allows `fsdr-cli` to execute `.grc` files directly using the FutureSDR runtime.
+### Dual-Backend Architecture (Futamura Projection)
+The project supports two execution modes through an abstract backend:
+1. **Interpreted (Runtime)**: Builds a live FutureSDR flowgraph for immediate execution.
+2. **Compiled (Codegen)**: Generates optimized Rust source code where all complex parameters (filter taps, windows) are pre-computed and baked into the binary.
 
-- **Tech Stack**: Rust (edition 2021), FutureSDR, anynow, pest (Grc/Command grammar).
-- **Core Dependencies**: `futuresdr`, `fsdr-blocks`, `cpal` (audio).
+- **Tech Stack**: Rust (edition 2021), FutureSDR, anynow, pest, **proc-macros (fsdr-cli-macros)**.
+- **Core Dependencies**: `futuresdr`, `fsdr-blocks`, `quote`, `proc-macro2`.
 
 ## Critical Commands
 - **Build:** `cargo build` / `cargo build --release`
-- **Test:** `make test` (runs both `cargo test` and `csdr` verification checks), `cargo test`
+- **Test:** `make test`, `cargo test`, `cargo test -p fsdr-cli-macros`
 - **Typecheck & Lint:** `cargo clippy -- -D warnings`, `cargo fmt`
 
 ## Directory Map
-- `src/`: Core logic (`main.rs`, `lib.rs`) and CLI parsing (`cmd_line.pest`, `cmd_grammar.rs`, `cmd_line.rs`).
+- `src/`: Core logic and CLI parsing.
+- `src/grc/backend.rs`: The `FsdrBackend` trait and its Runtime/Codegen implementations.
+- `src/grc/converter/`: Generic block converters supporting both backends.
+- `fsdr-cli-macros/`: Procedural macro crate providing `#[fsdr_instantiate]`.
 - `src/blocks/`: Custom FutureSDR DSP blocks specific to this CLI.
-- `src/csdr_cmd/`: Parsers and mapping logic to translate `csdr` commands to FutureSDR blocks.
-- `src/grc/`: GNU Radio Companion YAML/layout support and standard generation (`builder.rs`).
-- `src/grc/converter/`: Specialized logic for mapping GRC blocks back into FutureSDR kernels.
+- `src/csdr_cmd/`: Parsers and mapping logic to translate `csdr` commands to GRC instances.
 - `tests/`: Integration tests, data files, and benchmarking.
 - `Makefile`: Heavily used for end-to-end `csdr` output comparison checks.
 

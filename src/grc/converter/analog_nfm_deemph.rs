@@ -2,19 +2,19 @@ use anyhow::bail;
 use futuresdr::blocks::FirBuilder;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
+use super::{parameter_as_f64, BlockInstance};
+use crate::grc::backend::FsdrBackend;
 use anyhow::Result;
-use futuresdr::runtime::Flowgraph;
 
 pub struct DeemphasisNfmConverter {}
 
-impl BlockConverter for DeemphasisNfmConverter {
+impl<B: FsdrBackend> BlockConverter<B> for DeemphasisNfmConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "samp_rate", "48000")? as usize;
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let sample_rate = parameter_as_f64(blk, "samp_rate", "48000")? as usize;
         let blk = match sample_rate {
             48000 => {
                 #[rustfmt::skip]
@@ -39,9 +39,7 @@ impl BlockConverter for DeemphasisNfmConverter {
             _ => bail!("Unhandled sample rate for analog_NFM_deemph. Must be one of 8000, 11025, 44100, 48000."),
 
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        let blk_ref = backend.add_block_runtime(blk)?;
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

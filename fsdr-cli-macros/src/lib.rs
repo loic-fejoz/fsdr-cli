@@ -85,6 +85,7 @@ pub fn fsdr_instantiate(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_name = &input_fn.sig.ident;
     let codegen_fn_name = quote::format_ident!("{}_codegen", fn_name);
     let fn_args = &input_fn.sig.inputs;
+    let stmts = &transformed_block.stmts;
 
     let expanded = quote! {
         #original_fn
@@ -93,7 +94,7 @@ pub fn fsdr_instantiate(_attr: TokenStream, item: TokenStream) -> TokenStream {
         pub fn #codegen_fn_name(#fn_args) -> proc_macro2::TokenStream {
             // By using transformed_block, which contains #ident sequences,
             // this quote! will interpolate the values of the arguments.
-            quote::quote! { #transformed_block }
+            quote::quote! { #(#stmts)* }
         }
     };
 

@@ -18,10 +18,8 @@ use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 use itertools::join;
 mod grc;
+use crate::grc::converter::convert_grc_runtime;
 use grc::Grc;
-// mod csdr;
-// use csdr::CsdrParser;
-use grc::converter::Grc2FutureSdr;
 
 pub mod cmd_line;
 pub mod csdr_cmd;
@@ -30,7 +28,7 @@ pub mod cmd_grammar;
 pub mod grc_cmd;
 use grc_cmd::GrcCmd;
 pub mod iqengine_cmd;
-use iqengine_cmd::IQEngineCmd;
+use crate::iqengine_cmd::IQEngineCmd;
 pub mod blocks;
 pub mod iqengine_blockconverter;
 mod iqengine_plugin;
@@ -52,14 +50,7 @@ fn main() -> Result<()> {
 
     // Get back all the arguments as a big one command line ready to be parsed
     let one_liner = join(input, " ");
-    // let one_liner = input.fold(String::new(), |mut a, b| {
-    //     a.reserve(b.len() + 1);
-    //     a.push(' ');
-    //     a.push_str(&b);
-    //     a
-    // });
     let one_liner = one_liner.trim();
-    //println!("actual input: '{input}'");
     let input = cmd_grammar::CommandsParser::parse_main(one_liner);
 
     if let Err(err) = input {
@@ -106,14 +97,13 @@ fn main() -> Result<()> {
         {
             bail!("iqengine feature not available. Please download another version.");
         }
-        //#[cfg(feature = "iqengine")]
+        #[cfg(feature = "iqengine")]
         {
             let filename = iqengine_cmd.iqengine_configuration();
             return iqengine_plugin::start_iqengine_daemon(filename);
         }
     } else if let Some(grc_cmd) = input.as_grc_cmd() {
         let filename = grc_cmd.filename();
-        // println!("Loading {filename}...");
         fg = Some(grc::GrcParser::load(filename)?);
     } else if let Some(csdr_cmd) = input.as_csdr_cmd() {
         fg = csdr_cmd.parse()?;
@@ -131,7 +121,16 @@ fn main() -> Result<()> {
     }
 
     let fg = fg.context("No flowgraph was defined. Please check your command line arguments.")?;
-    let fg: Flowgraph = Grc2FutureSdr::new().convert_grc(fg)?;
+
+    if let Some(gen_path) = input.generate_path() {
+        let rust_code = crate::grc::converter::convert_grc_to_rust(fg)?;
+        std::fs::write(gen_path, rust_code)
+            .context(format!("failed to write generated code to {gen_path}"))?;
+        println!("Rust code generated into {gen_path}");
+        return Ok(());
+    }
+
+    let fg: Flowgraph = convert_grc_runtime(fg)?;
     Runtime::new().run(fg)?;
     Ok(())
 }

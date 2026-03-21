@@ -1,41 +1,41 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
+use crate::grc::backend::FsdrBackend;
 use anyhow::Result;
 use futuresdr::blocks::NullSink;
 use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
 
 pub struct NullSinkConverter {}
 
-impl BlockConverter for NullSinkConverter {
+impl<B: FsdrBackend> BlockConverter<B> for NullSinkConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
         let item_type = blk
             .parameters
             .get("type")
             .expect("item type must be defined");
-        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "char" => {
+        let blk_ref = match &(item_type[..]) {
+            "char" | "u8" => {
                 let blk = NullSink::<u8>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                backend.add_block_runtime(blk)?
             }
-            "short" => {
+            "short" | "i16" => {
                 let blk = NullSink::<i16>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                backend.add_block_runtime(blk)?
             }
-            "float" => {
+            "float" | "f32" => {
                 let blk = NullSink::<f32>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                backend.add_block_runtime(blk)?
             }
-            "complex" => {
+            "complex" | "c32" => {
                 let blk = NullSink::<Complex32>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                backend.add_block_runtime(blk)?
             }
             _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
         };
-        Ok(blk)
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

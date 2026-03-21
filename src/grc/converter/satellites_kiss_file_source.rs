@@ -1,22 +1,22 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
 use crate::blocks::kiss_file_source::KissFileSource;
+use crate::grc::backend::FsdrBackend;
 use anyhow::{bail, Context, Result};
-use futuresdr::runtime::{BlockId, Flowgraph};
 
 #[derive(Clone, Copy)]
-pub struct KissFileSourcePortAdapter {
-    blk: BlockId,
+pub struct KissFileSourcePortAdapter<BR: Clone> {
+    blk: BR,
 }
 
-impl ConnectorAdapter for KissFileSourcePortAdapter {
-    fn adapt_input_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
+impl<BR: Clone> ConnectorAdapter<BR> for KissFileSourcePortAdapter<BR> {
+    fn adapt_input_port(&self, port_name: &str) -> Result<(BR, &str)> {
         bail!("KissFileSource has no input port: {port_name}");
     }
 
-    fn adapt_output_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
+    fn adapt_output_port(&self, port_name: &str) -> Result<(BR, &str)> {
         match port_name {
-            "0" | "out" | "output" => Ok((self.blk, "output")),
+            "0" | "out" | "output" => Ok((self.blk.clone(), "output")),
             _ => bail!("Unknown output port name {port_name}"),
         }
     }
@@ -24,12 +24,12 @@ impl ConnectorAdapter for KissFileSourcePortAdapter {
 
 pub struct SatellitesKissFileSourceConverter {}
 
-impl BlockConverter for SatellitesKissFileSourceConverter {
+impl<B: FsdrBackend> BlockConverter<B> for SatellitesKissFileSourceConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
         let filename = blk
             .parameters
             .get("file")
@@ -42,8 +42,7 @@ impl BlockConverter for SatellitesKissFileSourceConverter {
         };
 
         let block = KissFileSource::new(filename)?;
-        Ok(Box::new(KissFileSourcePortAdapter {
-            blk: fg.add_block(block).into(),
-        }))
+        let blk_ref = backend.add_block_runtime(block)?;
+        Ok(Box::new(KissFileSourcePortAdapter { blk: blk_ref }))
     }
 }

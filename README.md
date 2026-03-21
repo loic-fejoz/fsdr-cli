@@ -115,6 +115,22 @@ Yet, thanks to newly added `weaver_lsb_cf` and `weaver_usb_cf` we may have bette
 fsdr-cli csdr load_c tests/ssb_lsb_256k_complex2.dat ! shift_addition_cc "(-51500/256000)" ! rational_resampler_cc 48000 256000 ! weaver_usb_cf "(1500/48000)" ! gain_ff 0.00000008 ! limit_ff ! audio 48_000 1
 ```
 
+## Rust Code Generation (Futamura Projection)
+
+`fsdr-cli` can export any DSP flowgraph (whether from `csdr` commands or a `.grc` file) as a standalone, optimized Rust source code file. This feature leverages the [Futamura projection](https://en.wikipedia.org/wiki/Partial_evaluation#Futamura_projections) concept: the tool partially evaluates the flowgraph, resolves all parameters (like filter taps), and bakes them directly into the generated Rust code.
+
+To generate Rust code, add the `--generate <filepath>` flag:
+
+```bash
+# Generate optimized Rust code from a csdr pipeline
+fsdr-cli csdr --generate my_dsp_app.rs load_f input.bin ! gain_ff 2.0 ! dump_f
+
+# Generate optimized Rust code from a GRC flowgraph
+fsdr-cli grc tests/chain1.grc --generate generated_app.rs
+```
+
+The resulting file is a standard Rust program that uses the `futuresdr` runtime. All complex math (like windowing and tap generation) is already performed, resulting in a standalone binary with zero runtime overhead for parameter resolution.
+
 ## IQEngine plugins
 
 ```bash

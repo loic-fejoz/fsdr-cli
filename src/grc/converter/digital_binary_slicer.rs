@@ -1,21 +1,17 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
+use crate::grc::backend::FsdrBackend;
 use anyhow::Result;
-use futuresdr::blocks::Apply;
-use futuresdr::runtime::Flowgraph;
 
 pub struct DigitalBinarySlicerConverter {}
 
-impl BlockConverter for DigitalBinarySlicerConverter {
+impl<B: FsdrBackend> BlockConverter<B> for DigitalBinarySlicerConverter {
     fn convert(
         &self,
         _blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let blk = Apply::<_, f32, u8>::new(move |v: &f32| -> u8 { (*v).ge(&0.0f32).into() });
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let blk_ref = backend.add_binary_slicer_fb()?;
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }
