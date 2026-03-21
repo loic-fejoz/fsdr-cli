@@ -25,7 +25,21 @@ The intermediate graph is the source of truth for block definitions.
 - **TryInto**: Conversion from strings to `GrcItemType` must use `try_into()?` for safe propagation.
 
 ## Parameter Extraction
-Use `Grc2FutureSdr::parameter_as_f64` and similar helpers in `src/grc/converter/mod.rs` to extract block parameters with expression evaluation support.
+Use `parameter_as_f64` and similar standalone helpers in `src/grc/converter/mod.rs` to extract block parameters with expression evaluation support.
+
+## Backend Abstraction
+All block conversion logic must be generic over `B: FsdrBackend`.
+- **Do not** use `Flowgraph` directly in block converters.
+- **Do not** use `BlockId` directly in return types; use `B::BlockRef`.
+- Return `Box<dyn ConnectorAdapter<B::BlockRef>>`.
+
+## Futamura Projection (Code Generation)
+When adding new blocks, you must ensure they work for both runtime execution and source code generation.
+- **Single Source of Truth**: Use the `#[fsdr_instantiate]` macro in `src/grc/backend.rs`.
+- **ToTokens Wrappers**: If a parameter is a complex type (like `Vec<f32>` or `Complex32`), use one of the `Codegen...` wrappers (e.g., `CodegenTaps`) to ensure it can be baked into the generated source code.
+- **Explicit Types**: In `#[fsdr_instantiate]` functions, always use explicit type annotations for `Apply` or `Sink` closures to aid the compiler in the generated code.
 
 ## Testing
-Always run `cargo test` after modifying building logic. Complex commands often have dedicated tests (e.g., `tests/grc_parse.rs`).
+Always run `cargo test` after modifying building logic. 
+- Use `cargo test -p fsdr-cli-macros` for changes to the macro system.
+- Use `tests/codegen.rs` to verify that new blocks generate valid, compilable Rust code.

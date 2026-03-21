@@ -14,3 +14,9 @@ The most critical part of `fsdr-cli` is perfectly replicating or replacing `csdr
 ## Mocking
 - Avoid over-mocking the Runtime. 
 - You can test individual blocks by creating a manual `Flowgraph`, instantiating a `futuresdr::blocks::VectorSource` with known byte slices, your block under test, and a `futuresdr::blocks::VectorSink` to capture the output and assert against expected results.
+
+## Code Generation Testing
+When adding or modifying block generation:
+1. **Verification**: Run `cargo run --bin fsdr-cli -- csdr --generate test.rs [your command]` and verify `test.rs` is valid Rust.
+2. **Integration Tests**: Add a test case to `tests/codegen.rs`.
+3. **Optimized Baking**: Ensure that pre-computed values (like filter taps) appear as literals in the generated code, confirming that the Futamura projection is actually baking the data.

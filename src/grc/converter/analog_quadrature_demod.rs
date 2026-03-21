@@ -1,31 +1,24 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
+use super::{parameter_as_f64, BlockInstance};
+use crate::grc::backend::FsdrBackend;
 use anyhow::{bail, Result};
 use futuresdr::blocks::Apply;
 use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogQuadratureDemoConverter {}
 
-impl BlockConverter for AnalogQuadratureDemoConverter {
+impl<B: FsdrBackend> BlockConverter<B> for AnalogQuadratureDemoConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let gain = Grc2FutureSdr::parameter_as_f64(blk, "gain", "1.0")? as f32;
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let gain = parameter_as_f64(blk, "gain", "1.0")? as f32;
         let algo = blk.parameter_or("algorithm", "quadri");
-        let blk: Box<dyn ConnectorAdapter> = match algo {
+        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match algo {
             "quadri" => {
-                // Quadrature demodulator: phase difference between consecutive samples.
-                // arg(x[n] * conj(x[n-1]))
-                let mut last = Complex32::new(0.0, 0.0);
-                let blk: Apply<_, Complex32, f32> = Apply::new(move |v: &Complex32| -> f32 {
-                    let arg = (v * last.conj()).arg();
-                    last = *v;
-                    arg * gain
-                });
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                let blk_ref = backend.add_quadrature_demod_cf(gain)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
             }
             "atan" => {
                 // Atan demodulator: differentiate the instantaneous phase.
@@ -43,10 +36,11 @@ impl BlockConverter for AnalogQuadratureDemoConverter {
                     last_phase = phase;
                     diff * gain
                 });
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                let blk_ref = backend.add_block_runtime(blk)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
             }
             _ => bail!("analog_quadrature_demod: Unknown algorithm: {algo}"),
         };
-        Ok(blk)
+        Ok(adapter)
     }
 }

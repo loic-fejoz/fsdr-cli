@@ -1,24 +1,20 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
+use super::{parameter_as_f64, BlockInstance};
+use crate::grc::backend::FsdrBackend;
 use anyhow::Result;
-use fsdr_blocks::math::FrequencyShifter;
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
 
 pub struct FreqShiftCcConverter {}
 
-impl BlockConverter for FreqShiftCcConverter {
+impl<B: FsdrBackend> BlockConverter<B> for FreqShiftCcConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "sample_rate", "48000")? as f32;
-        let freq = Grc2FutureSdr::parameter_as_f64(blk, "freq", "1.0")? as f32;
-        let blk = FrequencyShifter::<Complex32>::new(freq, sample_rate);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let sample_rate = parameter_as_f64(blk, "sample_rate", "48000")? as f32;
+        let freq = parameter_as_f64(blk, "freq", "1.0")? as f32;
+
+        let blk_ref = backend.add_freq_shift_cc(freq, sample_rate)?;
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

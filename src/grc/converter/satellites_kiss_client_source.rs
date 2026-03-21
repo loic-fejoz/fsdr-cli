@@ -1,22 +1,22 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
 use crate::blocks::tcp_kiss_client::TcpKissClient;
+use crate::grc::backend::FsdrBackend;
 use anyhow::{bail, Context, Result};
-use futuresdr::runtime::{BlockId, Flowgraph};
 
 #[derive(Clone, Copy)]
-pub struct TcpKissClientSourcePortAdapter {
-    blk: BlockId,
+pub struct TcpKissClientSourcePortAdapter<BlockRef: Clone> {
+    blk: BlockRef,
 }
 
-impl ConnectorAdapter for TcpKissClientSourcePortAdapter {
-    fn adapt_input_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
+impl<BlockRef: Clone> ConnectorAdapter<BlockRef> for TcpKissClientSourcePortAdapter<BlockRef> {
+    fn adapt_input_port(&self, port_name: &str) -> Result<(BlockRef, &str)> {
         bail!("TcpKissClient has no input port: {port_name}");
     }
 
-    fn adapt_output_port(&self, port_name: &str) -> Result<(BlockId, &str)> {
+    fn adapt_output_port(&self, port_name: &str) -> Result<(BlockRef, &str)> {
         match port_name {
-            "0" | "out" | "out_port" | "output" | "pdus" => Ok((self.blk, "out")),
+            "0" | "out" | "out_port" | "output" | "pdus" => Ok((self.blk.clone(), "out")),
             _ => bail!("Unknown output port name {port_name}"),
         }
     }
@@ -24,12 +24,12 @@ impl ConnectorAdapter for TcpKissClientSourcePortAdapter {
 
 pub struct SatellitesKissClientSourceConverter {}
 
-impl BlockConverter for SatellitesKissClientSourceConverter {
+impl<B: FsdrBackend> BlockConverter<B> for SatellitesKissClientSourceConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
         let address = blk
             .parameters
             .get("address")
@@ -41,8 +41,7 @@ impl BlockConverter for SatellitesKissClientSourceConverter {
 
         let address = address.trim_matches('"');
         let block = TcpKissClient::new(&format!("{}:{}", address, port))?;
-        Ok(Box::new(TcpKissClientSourcePortAdapter {
-            blk: fg.add_block(block).into(),
-        }))
+        let blk_ref = backend.add_block_runtime(block)?;
+        Ok(Box::new(TcpKissClientSourcePortAdapter { blk: blk_ref }))
     }
 }

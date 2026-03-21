@@ -118,7 +118,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::timing_recovery_cmd => self.build_timing_recovery(grc),
             Rule::weaver_lsb_cmd | Rule::weaver_usb_cmd => self.build_weaver(grc),
 
-            Rule::csdr_save_opt => Ok(grc),
+            Rule::csdr_save_opt | Rule::generate_opt => Ok(grc),
             _ => {
                 let rule = self.as_rule();
                 bail!("unknown any cmd: {rule:?}");

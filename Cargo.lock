@@ -895,13 +895,17 @@ dependencies = [
  "axum 0.7.9",
  "cpal 0.15.3",
  "fsdr-blocks",
+ "fsdr-cli-macros",
  "futures",
  "futuresdr",
  "http 1.4.0",
  "iqengine-plugin",
  "itertools 0.14.0",
+ "num-traits",
  "pest",
  "pest_derive",
+ "proc-macro2",
+ "quote",
  "serde",
  "serde_derive",
  "serde_yaml",
@@ -909,6 +913,17 @@ dependencies = [
  "tokio",
  "tower 0.4.13",
  "tower-http 0.5.2",
+]
+
+[[package]]
+name = "fsdr-cli-macros"
+version = "0.1.0"
+dependencies = [
+ "futuresdr",
+ "num-complex",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

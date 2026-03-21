@@ -1,6 +1,7 @@
 use anyhow::Result;
 use fsdr_cli::csdr_cmd::CsdrParser;
-use fsdr_cli::grc::converter::Grc2FutureSdr;
+use fsdr_cli::grc::backend::RuntimeBackend;
+use fsdr_cli::grc::converter::{convert_grc_runtime, Grc2FutureSdr};
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSource;
 use futuresdr::num_complex::Complex32;
@@ -90,7 +91,9 @@ pub fn convert_dump_u8_connects_to_u8_source() -> Result<()> {
     let orig: Vec<u8> = vec![0x00, 0x01, 0x02, 0x03, 0xFF];
     let src = fg.add_block(VectorSource::<u8>::new(orig));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
 
     // Before the fix this line failed with:
@@ -111,7 +114,9 @@ pub fn convert_dump_f_connects_to_f32_source() -> Result<()> {
     let orig: Vec<f32> = vec![0.0, 1.0, -1.0, 0.5];
     let src = fg.add_block(VectorSource::<f32>::new(orig));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
 
     fg.connect_dyn(&src, "output", but_in, in_name)?;
@@ -232,7 +237,9 @@ pub fn parse_limit_ff_with_max_amplitude() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -283,7 +290,9 @@ pub fn parse_limit_ff_with_max_amplitude_expr() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -374,7 +383,9 @@ pub fn parse_fastdc_block() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -410,7 +421,9 @@ pub fn parse_amdemod_cf() -> Result<()> {
     let src = fg.add_block(VectorSource::<Complex32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -465,7 +478,9 @@ pub fn parse_agc_ff() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -612,7 +627,9 @@ pub fn parse_fir_decimate_cc() -> Result<()> {
     let src = fg.add_block(VectorSource::<Complex32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<Complex32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -711,7 +728,9 @@ pub fn parse_deemphasis_nfm_ff() -> Result<()> {
     let src = fg.add_block(VectorSource::<f32>::new(orig));
     let vect_sink_0 = fg.add_block(VectorSink::<f32>::new(1024));
 
-    let block_under_test = Grc2FutureSdr::new().convert_block(&mut fg, &grc.blocks[1])?;
+    let mut backend = RuntimeBackend { fg: &mut fg };
+    let block_under_test =
+        Grc2FutureSdr::<RuntimeBackend>::new().convert_block(&mut backend, &grc.blocks[1])?;
     let (but_in, in_name) = block_under_test.adapt_input_port("in")?;
     let (but_out, out_name) = block_under_test.adapt_output_port("out")?;
 
@@ -837,8 +856,7 @@ pub fn parse_save_kiss_chain() {
     assert_eq!("satellites_kiss_file_sink", grc.blocks[1].id);
 
     // Verify it can be converted to a flowgraph
-    let mut g2f = Grc2FutureSdr::new();
-    let fg = g2f.convert_grc(grc);
+    let fg = convert_grc_runtime(grc);
     assert!(
         fg.is_ok(),
         "Failed to convert GRC to Flowgraph for save_kiss chain: {:?}",
@@ -878,8 +896,7 @@ pub fn parse_fixedlen_to_pdu_chain() {
     assert_eq!("0", grc.connections[1][1]); // Output port of fixedlen_to_pdu
 
     // Verify it can be converted to a flowgraph
-    let mut g2f = Grc2FutureSdr::new();
-    let fg = g2f.convert_grc(grc);
+    let fg = convert_grc_runtime(grc);
     assert!(
         fg.is_ok(),
         "Failed to convert GRC to Flowgraph: {:?}",
@@ -922,8 +939,7 @@ pub fn repro_hang_user_command() -> Result<()> {
     );
 
     let grc = CsdrParser::parse_multiple_commands(cmd.as_str())?.expect("Failed to parse command");
-    let mut g2f = Grc2FutureSdr::new();
-    let fg = g2f.convert_grc(grc)?;
+    let fg = convert_grc_runtime(grc)?;
 
     // This test ensures that the flowgraph completes without hanging.
     // Hangs often occurred in debug mode due to missing `io.call_again = true`

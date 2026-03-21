@@ -7,12 +7,10 @@ pub trait GrcCmd<'i> {
 
 impl<'i> GrcCmd<'i> for Pair<'i, Rule> {
     fn filename(&self) -> &'i str {
-        let cmd = self.clone();
-        let mut args = cmd.into_inner();
-        let first = args.next().expect("missig filepath to GNU Radio flowgraph");
-        match first.as_rule() {
-            Rule::filepath => first.as_str(),
-            _ => todo!(),
-        }
+        self.clone()
+            .into_inner()
+            .find(|p| matches!(p.as_rule(), Rule::filepath))
+            .expect("missing filepath to GNU Radio flowgraph")
+            .as_str()
     }
 }

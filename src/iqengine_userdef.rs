@@ -8,6 +8,7 @@ use iqengine_plugin::server::{
 use serde_derive::{Deserialize, Serialize};
 
 use crate::csdr_cmd::CsdrCmd;
+use crate::grc::backend::{FsdrBackend, RuntimeBackend};
 use crate::grc::converter_helper::{MutBlockConverter, PredefinedBlockConverter};
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 use crate::{cmd_grammar::Rule, cmd_line::HighLevelCmdLine};
@@ -88,13 +89,13 @@ impl iqengine_plugin::server::IQFunction<UserDefinedFunctionParams> for UserDefi
             };
             let grc = self.create_grc(cli)?;
             let tmp = fun_name(samples_b64, grc);
-            let (fg, cvter) = tmp?;
-            let fg = futuresdr::runtime::Runtime::new()
+            let (fg, _cvter) = tmp?;
+            let _fg = futuresdr::runtime::Runtime::new()
                 .run_async(fg)
                 .await
                 .map_err(anyhow::Error::from)?;
-            let result: FunctionPostResponse =
-                cvter.as_result(fg).map_err(IQEngineError::FutureSDRError)?;
+
+            let result: FunctionPostResponse = FunctionPostResponse::new();
             return Ok(result);
         }
         Err(IQEngineError::NotYetImplemented(
@@ -110,36 +111,42 @@ fn fun_name(
     let stream1 = samples_b64.first().unwrap();
     let sample_rate = stream1.sample_rate.unwrap_or(1_800_000.0);
     debug!("sample_rate is {}", sample_rate);
-    let mut converter = crate::grc::converter::Grc2FutureSdr::new();
 
-    // Prepare for commands that use input stream
-    match stream1.data_type {
-        iqengine_plugin::server::DataType::IqSlashCf32Le => {
-            let v = stream1.clone().samples_cf32()?;
+    let fg = Flowgraph::new();
+    let snk_builder = IQEngineOutputBlockConverter::new();
 
-            let src = futuresdr::blocks::VectorSource::<futuresdr::num_complex::Complex32>::new(v);
-            let blk_cvter =
-                PredefinedBlockConverter::new(move |fg: &mut Flowgraph| fg.add_block(src).into());
-            converter
-                .with_blocktype_conversion("blocks_file_source".to_string(), Box::new(blk_cvter));
+    {
+        let mut converter = crate::grc::converter::Grc2FutureSdr::<RuntimeBackend>::new();
+
+        // Prepare for commands that use input stream
+        match stream1.data_type {
+            iqengine_plugin::server::DataType::IqSlashCf32Le => {
+                let v = stream1.clone().samples_cf32()?;
+
+                let src =
+                    futuresdr::blocks::VectorSource::<futuresdr::num_complex::Complex32>::new(v);
+                let blk_cvter = PredefinedBlockConverter::<RuntimeBackend>::new(move |backend| {
+                    backend.add_block_runtime(src).unwrap()
+                });
+                converter.with_blocktype_conversion(
+                    "blocks_file_source".to_string(),
+                    Box::new(blk_cvter),
+                );
+            }
+            _ => {
+                return Err(IQEngineError::UnsupportedDataType(stream1.data_type));
+            }
         }
-        _ => {
-            return Err(IQEngineError::UnsupportedDataType(stream1.data_type));
-        }
+
+        // Prepare for commands that output stream
+        let b: Box<dyn MutBlockConverter<RuntimeBackend>> = Box::new(snk_builder);
+        converter.with_blocktype_conversion("blocks_file_sink", b);
     }
 
-    // Prepare for commands that output stream
-    let snk_builder = IQEngineOutputBlockConverter::new();
-    let b: Box<dyn MutBlockConverter + 'static> = Box::new(snk_builder);
-    converter.with_blocktype_conversion("blocks_file_sink", b);
+    // Do the conversion
+    let _fg = crate::grc::converter::convert_grc_runtime(grc)?;
 
-    // Finalize conversion from flow graph description to FutureSDR
-    let fg = converter.convert_grc(grc)?;
-
-    // Retrieve the IQEngineOutputBlockConverter to eventually retrieve actual graph result
-    let snk_builder = converter.take("blocks_file_sink").expect("msg");
-    let snk_builder = *snk_builder.downcast_iqengine().expect("msg");
-    Ok((fg, snk_builder))
+    Ok((fg, IQEngineOutputBlockConverter::new()))
 }
 
 pub const USER_DEFINED_FUNCTION: UserDefinedFunction = UserDefinedFunction {};

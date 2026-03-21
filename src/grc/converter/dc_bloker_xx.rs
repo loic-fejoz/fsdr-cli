@@ -1,23 +1,21 @@
 use crate::blocks::DCBlocker;
+use crate::grc::backend::FsdrBackend;
 
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
+use super::{parameter_as_f64, BlockInstance};
 use anyhow::Result;
-use futuresdr::runtime::Flowgraph;
 
 pub struct DcBlockerXx {}
 
-impl BlockConverter for DcBlockerXx {
+impl<B: FsdrBackend> BlockConverter<B> for DcBlockerXx {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let min_bufsize = Grc2FutureSdr::parameter_as_f64(blk, "length", "32")? as usize;
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let min_bufsize = parameter_as_f64(blk, "length", "32")? as usize;
         let blk = DCBlocker::<f32>::new(min_bufsize);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        let blk_ref = backend.add_block_runtime(blk)?;
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

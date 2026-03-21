@@ -1,35 +1,27 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::BlockInstance;
+use crate::grc::backend::FsdrBackend;
 use anyhow::{Context, Result};
-use futuresdr::blocks::Sink;
-use futuresdr::runtime::Flowgraph;
 
 pub struct DumpConverter {}
 
-impl BlockConverter for DumpConverter {
+impl<B: FsdrBackend> BlockConverter<B> for DumpConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
         let item_type = blk
             .parameters
             .get("type")
             .context("dump: item type must be defined")?;
 
-        let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "float" | "f" => {
-                let blk: futuresdr::blocks::Sink<_, f32> = Sink::new(|x: &f32| print!("{:e} ", *x));
-                let blk = fg.add_block(blk);
-                Box::new(DefaultPortAdapter::new(blk.into()))
-            }
-            "u8" => {
-                let blk: futuresdr::blocks::Sink<_, u8> = Sink::new(|x: &u8| print!("{:02x} ", *x));
-                let blk = fg.add_block(blk);
-                Box::new(DefaultPortAdapter::new(blk.into()))
-            }
+        let blk_ref = match &(item_type[..]) {
+            "float" | "f" => backend.add_dump_f32()?,
+            "u8" => backend.add_dump_u8()?,
+            "c" | "complex" | "c32" => backend.add_dump_c32()?,
             _ => todo!("Unhandled dump of Type {item_type}"),
         };
-        Ok(blk)
+        Ok(Box::new(DefaultPortAdapter::new(blk_ref)))
     }
 }

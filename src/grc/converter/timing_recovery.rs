@@ -1,34 +1,34 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
-use super::{BlockInstance, Grc2FutureSdr};
-use crate::blocks::synchronizers::{TimingAlgorithm, TimingRecovery};
-use anyhow::{bail, Result};
-use futuresdr::num_complex::Complex32;
-use futuresdr::runtime::Flowgraph;
+use super::{parameter_as_f64, BlockInstance};
+use crate::grc::backend::FsdrBackend;
+use anyhow::{Context, Result};
 
 pub struct TimingRecoveryConverter {}
 
-impl BlockConverter for TimingRecoveryConverter {
+impl<B: FsdrBackend> BlockConverter<B> for TimingRecoveryConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
-        fg: &mut Flowgraph,
-    ) -> Result<Box<dyn ConnectorAdapter>> {
-        let algo = blk.parameter_or("algorithm", "GARDNER");
-        let decim = Grc2FutureSdr::parameter_as_f32(blk, "decimation", "8")? as usize;
+        backend: &mut B,
+    ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
+        let decim = parameter_as_f64(blk, "decimation", "1")? as usize;
+
         if decim <= 4 || !decim.is_multiple_of(4) {
-            bail!("decimation factor for timing recovery must be divisible by 4, and strictly greater than 4.")
+            panic!("timing_recovery: decim must be a multiple of 4 and > 4 (decim={decim})");
         }
-        let mu = Grc2FutureSdr::parameter_as_f32(blk, "mu", "0.5")?;
-        let max_error = Grc2FutureSdr::parameter_as_f32(blk, "max_error", "2")?;
-        let algo = match algo {
-            "GARDNER" => TimingAlgorithm::GARDNER,
-            "EARLYLATE" => TimingAlgorithm::EARLYLATE,
-            _ => bail!("Unknown timing recovery algorithm: {algo}"),
+
+        let item_type = blk
+            .parameters
+            .get("type")
+            .context("timing_recovery: item type must be defined")?;
+
+        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match &(item_type[..]) {
+            "cc" | "complex" => {
+                let blk_ref = backend.add_timing_recovery_cc(decim)?;
+                Box::new(DefaultPortAdapter::new(blk_ref))
+            }
+            _ => todo!("Unhandled timing_recovery Type {item_type}"),
         };
-        let blk = TimingRecovery::<Complex32>::new(algo, decim, mu, max_error);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        Ok(adapter)
     }
 }
