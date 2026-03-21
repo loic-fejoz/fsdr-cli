@@ -64,6 +64,11 @@ inherits = "release"
 lto = "fat"
 
 # Config for 'cargo dist'
+[workspace]
+members = [
+    "fsdr-cli-macros"
+]
+
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
 cargo-dist-version = "0.17.0"

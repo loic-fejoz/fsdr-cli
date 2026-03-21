@@ -912,6 +912,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fsdr-cli-macros"
+version = "0.1.0"
+dependencies = [
+ "futuresdr",
+ "num-complex",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "futuredsp"
 version = "0.0.9-dev"
 source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
