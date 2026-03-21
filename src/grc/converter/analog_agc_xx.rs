@@ -23,12 +23,14 @@ impl<B: FsdrBackend> BlockConverter<B> for AnalogAgcXxConverter {
 
         let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match &(item_type[..]) {
             "complex" => {
-                let blk = Agc::<Complex32>::new(reference, gain, max_gain, 0.0, 0.0, false, false);
+                // Correct order: squelch, max_gain, gain, adjustment_rate, reference_power, gain_lock, auto_lock
+                let blk =
+                    Agc::<Complex32>::new(0.0, max_gain, gain, 0.0001, reference, false, false);
                 let blk_ref = backend.add_block_runtime(blk)?;
                 Box::new(DefaultPortAdapter::new(blk_ref))
             }
             "float" => {
-                let blk = Agc::<f32>::new(reference, gain, max_gain, 0.0, 0.0, false, false);
+                let blk = Agc::<f32>::new(0.0, max_gain, gain, 0.0001, reference, false, false);
                 let blk_ref = backend.add_block_runtime(blk)?;
                 Box::new(DefaultPortAdapter::new(blk_ref))
             }

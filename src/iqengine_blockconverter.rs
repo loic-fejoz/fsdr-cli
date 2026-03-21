@@ -14,6 +14,12 @@ impl IQEngineOutputBlockConverter {
     }
 }
 
+impl Default for IQEngineOutputBlockConverter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<B: FsdrBackend> MutBlockConverter<B> for IQEngineOutputBlockConverter {
     fn convert(
         &mut self,

@@ -112,7 +112,7 @@ fn fun_name(
     let sample_rate = stream1.sample_rate.unwrap_or(1_800_000.0);
     debug!("sample_rate is {}", sample_rate);
 
-    let mut fg = Flowgraph::new();
+    let fg = Flowgraph::new();
     let snk_builder = IQEngineOutputBlockConverter::new();
 
     {

@@ -16,7 +16,7 @@ impl<B: FsdrBackend> BlockConverter<B> for ThrottleConverter {
         let item_type = blk.parameter_or("type", "float");
         let rate = parameter_as_f64(blk, "samples_per_second", "48000")?;
 
-        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match &item_type[..] {
+        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match item_type {
             "float" => {
                 let blk = Throttle::<f32>::new(rate as f64);
                 let blk_ref = backend.add_block_runtime(blk)?;

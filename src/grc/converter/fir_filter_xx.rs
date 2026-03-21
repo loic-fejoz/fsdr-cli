@@ -30,7 +30,7 @@ impl<B: FsdrBackend> BlockConverter<B> for FirFilterXxConverter {
                 .get("window")
                 .context("fir_filter_xxx: window must be defined")?;
             let taps_length: usize = (4.0 / transition_bw) as usize;
-            let taps_length = if taps_length % 2 == 0 {
+            let taps_length = if taps_length.is_multiple_of(2) {
                 taps_length + 1
             } else {
                 taps_length

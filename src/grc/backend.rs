@@ -213,6 +213,7 @@ fn build_f32_to_s16() -> Apply<impl FnMut(&f32) -> i16 + Send + 'static, f32, i1
 }
 
 #[fsdr_instantiate]
+#[allow(dead_code)]
 fn build_float_to_complex() -> Apply<impl FnMut(&f32) -> Complex32 + Send + 'static, f32, Complex32>
 {
     Apply::<_, f32, Complex32>::new(|x| Complex32::new(*x, 0.0))
@@ -296,8 +297,8 @@ fn build_pattern_search_u8(
 fn build_pack_bits_8to1() -> ApplyNM<impl FnMut(&[u8], &mut [u8]) + Send + 'static, u8, u8, 8, 1> {
     ApplyNM::<_, u8, u8, 8, 1>::new(move |v: &[u8], res: &mut [u8]| {
         let mut val = 0u8;
-        for i in 0..8 {
-            val = (val << 1) | (v[i] & 1);
+        for item in v.iter().take(8) {
+            val = (val << 1) | (item & 1);
         }
         res[0] = val;
     })
@@ -452,7 +453,12 @@ impl<'a> FsdrBackend for RuntimeBackend<'a> {
         dst: &BlockId,
         dst_port: &str,
     ) -> Result<()> {
-        self.fg.connect_dyn(*src, src_port, *dst, dst_port)?;
+        if let Err(e) = self.fg.connect_dyn(*src, src_port, *dst, dst_port) {
+            // If it's not a stream port, try message port
+            self.fg
+                .connect_message(*src, src_port, *dst, dst_port)
+                .map_err(|_| e)?;
+        }
         Ok(())
     }
 
@@ -489,6 +495,12 @@ impl CodegenBackend {
         let id = format!("blk_{}", self.block_count);
         self.block_count += 1;
         id
+    }
+}
+
+impl Default for CodegenBackend {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -734,7 +746,9 @@ impl FsdrBackend for CodegenBackend {
         let src_ident = quote::format_ident!("{}", src);
         let dst_ident = quote::format_ident!("{}", dst);
         self.tokens.extend(quote! {
-            fg.connect_dyn(&#src_ident, #src_port, &#dst_ident, #dst_port).unwrap();
+            if let Err(_) = fg.connect_dyn(&#src_ident, #src_port, &#dst_ident, #dst_port) {
+                fg.connect_message(&#src_ident, #src_port, &#dst_ident, #dst_port).unwrap();
+            }
         });
         Ok(())
     }

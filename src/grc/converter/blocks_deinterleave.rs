@@ -15,7 +15,7 @@ impl<B: FsdrBackend> BlockConverter<B> for DeinterleaveBlockConverter {
     ) -> Result<Box<dyn ConnectorAdapter<B::BlockRef>>> {
         let item_type = blk.parameter_or("type", "float");
 
-        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match &item_type[..] {
+        let adapter: Box<dyn ConnectorAdapter<B::BlockRef>> = match item_type {
             "float" => {
                 let blk = Deinterleave::<f32>::new();
                 let blk_ref = backend.add_block_runtime(blk)?;
