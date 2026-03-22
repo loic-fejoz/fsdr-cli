@@ -1,0 +1,19 @@
+id: dsb
+label: DSB
+category: '[FutureSDR]'
+
+parameters:
+- id: q_value
+  label: Q Value
+  dtype: float
+  default: '0.0'
+
+inputs:
+- domain: stream
+  dtype: float
+
+outputs:
+- domain: stream
+  dtype: complex
+
+file_format: 1

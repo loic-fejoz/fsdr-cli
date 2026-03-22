@@ -1,5 +1,8 @@
 # fsdr-cli
 
+[![CI](https://github.com/loic-fejoz/fsdr-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/loic-fejoz/fsdr-cli/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/loic-fejoz/fsdr-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/loic-fejoz/fsdr-cli)
+
 A command line interface based on [FutureSDR](http://www.futuresdr.org) meant to be
 
 * a line-for-line replacement of [csdr](https://github.com/jketterl/csdr) ([original](https://github.com/ha7ilm/csdr)),
@@ -367,4 +370,31 @@ Example to chunk a byte stream and save it to a KISS file:
 [^1]: Used in simple WFM demodulation
 [^2]: Used in NFM demodulation
 [^3]: Used in AM demodulation
-[^4]: Used in SSB demodulation
+## GNU Radio Integration
+
+`fsdr-cli` can load and execute GNU Radio Companion (`.grc`) files. However, some blocks used by `fsdr-cli` (especially those converted from `csdr` commands) are not standard GNU Radio blocks.
+
+To open `.grc` files generated or used by `fsdr-cli` in GNU Radio Companion, you need to add the custom block definitions to your GNU Radio blocks path.
+
+### Adding Custom Block Definitions
+
+1.  Locate your GNU Radio blocks path. It is usually determined by the `GRC_BLOCKS_PATH` environment variable. If not set, it often defaults to `~/.grc_gnuradio/` or `/usr/local/share/gnuradio/grc/blocks`.
+2.  Create a symbolic link or copy the YAML files from the `gnuradio` folder of this repository to your blocks path:
+
+```bash
+# Example: adding to your local user GRC blocks path
+mkdir -p ~/.grc_gnuradio
+ln -s $(pwd)/gnuradio/*.block.yml ~/.grc_gnuradio/
+```
+
+3.  Restart GNU Radio Companion. You should now see a new category `[FutureSDR]` in the block library, and you'll be able to open `.grc` files that use these blocks without errors.
+
+### Debugging .grc files
+
+You can generate a `.grc` file from any `csdr` command line to inspect the flowgraph in GRC:
+
+```bash
+fsdr-cli csdr --output my_flowgraph.grc "convert_u8_f | fmdemod_quadri_cf | audio 48000 1"
+```
+
+Then open `my_flowgraph.grc` in GNU Radio Companion.
