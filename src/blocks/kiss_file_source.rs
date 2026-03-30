@@ -30,7 +30,9 @@ impl KissFileSource {
         for &byte in &buffer {
             if byte == 0xC0 {
                 if !current_frame.is_empty() {
-                    frames.push_back(current_frame.clone());
+                    // Strip the command byte (the first byte)
+                    let data = current_frame[1..].to_vec();
+                    frames.push_back(data);
                     current_frame.clear();
                 }
             } else if byte == 0xDB {
@@ -51,11 +53,6 @@ impl KissFileSource {
                     current_frame.push(byte);
                 }
             }
-        }
-
-        // Check if there is an unterminated frame at the end
-        if !current_frame.is_empty() {
-            frames.push_back(current_frame);
         }
 
         Ok(Self { frames })

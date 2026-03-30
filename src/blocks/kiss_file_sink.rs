@@ -29,8 +29,9 @@ impl KissFileSink {
     ) -> Result<Pmt> {
         match p {
             Pmt::Blob(data) => {
-                let mut escaped = Vec::with_capacity(data.len() + 2);
+                let mut escaped = Vec::with_capacity(data.len() * 2 + 3);
                 escaped.push(0xC0); // FEND
+                escaped.push(0x00); // Command byte (Port 0, Data)
                 for &byte in &data {
                     if byte == 0xC0 {
                         escaped.push(0xDB);
