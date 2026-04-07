@@ -958,3 +958,163 @@ pub fn parse_tcp_kiss_client() {
     assert_eq!("\"myhost.com\"", grc.blocks[0].parameters["address"]);
     assert_eq!("8045", grc.blocks[0].parameters["port"]);
 }
+
+#[test]
+pub fn parse_fmdemod_quadri_cf() {
+    let cmds = "fmdemod_quadri_cf";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_quadrature_demod_cf", grc.blocks[1].id);
+    assert_eq!("1.0", grc.blocks[1].parameters["gain"]);
+}
+
+#[test]
+pub fn parse_fmdemod_atan_cf() {
+    let cmds = "fmdemod_atan_cf";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_quadrature_demod_cf", grc.blocks[1].id);
+    assert_eq!("atan", grc.blocks[1].parameters["algorithm"]);
+}
+
+#[test]
+pub fn parse_fractional_decimator_ff() {
+    let cmds = "fractional_decimator_ff 5.5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("rational_resampler_xxx", grc.blocks[1].id);
+    assert_eq!("5.5", grc.blocks[1].parameters["decim"]);
+}
+
+#[test]
+pub fn parse_bandpass_fir_fft_cc() {
+    let cmds = "bandpass_fir_fft_cc 0.1 0.2 0.05 HAMMING";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("band_pass_filter", grc.blocks[1].id);
+    assert_eq!("0.1", grc.blocks[1].parameters["low_cutoff_freq"]);
+    assert_eq!("0.2", grc.blocks[1].parameters["high_cutoff_freq"]);
+    assert_eq!("0.05", grc.blocks[1].parameters["width"]);
+    assert_eq!("window.WIN_HAMMING", grc.blocks[1].parameters["win"]);
+}
+
+#[test]
+pub fn parse_dsb_fc() {
+    let cmds = "dsb_fc";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("dsb", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_deemphasis_wfm_ff() {
+    let cmds = "deemphasis_wfm_ff 48000 50e-6";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_fm_deemph", grc.blocks[1].id);
+    assert_eq!("48000", grc.blocks[1].parameters["samp_rate"]);
+    assert_eq!("50e-6", grc.blocks[1].parameters["tau"]);
+}
+
+#[test]
+pub fn parse_binary_slicer_f_u8() {
+    let cmds = "binary_slicer_f_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("digital_binary_slicer_fb", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_gain_ff() {
+    let cmds = "gain_ff 2.5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_multiply_const_vxx", grc.blocks[1].id);
+    assert_eq!("2.5", grc.blocks[1].parameters["const"]);
+}
+
+#[test]
+pub fn parse_pack_bits_8to1_u8_u8() {
+    let cmds = "pack_bits_8to1_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_pack_k_bits_bb", grc.blocks[1].id);
+    assert_eq!("8", grc.blocks[1].parameters["k"]);
+}
+
+#[test]
+pub fn parse_pattern_search_u8_u8() {
+    let cmds = "pattern_search_u8_u8 240 1 0 1 1";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("pattern_search", grc.blocks[1].id);
+    assert_eq!("240", grc.blocks[1].parameters["values_after"]);
+    assert_eq!("1,0,1,1", grc.blocks[1].parameters["pattern_values"]);
+}
+
+#[test]
+pub fn parse_timing_recovery_cc() {
+    let cmds = "timing_recovery_cc GARDNER 20 0.5 2";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("timing_recovery", grc.blocks[1].id);
+    assert_eq!("GARDNER", grc.blocks[1].parameters["algorithm"]);
+    assert_eq!("20", grc.blocks[1].parameters["decimation"]);
+    assert_eq!("0.5", grc.blocks[1].parameters["mu"]);
+    assert_eq!("2", grc.blocks[1].parameters["max_error"]);
+}
+
+#[test]
+pub fn parse_audio() {
+    let cmds = "audio 48000 2";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("audio_sink", grc.blocks[1].id);
+    assert_eq!("48000", grc.blocks[1].parameters["samp_rate"]);
+    assert_eq!("2", grc.blocks[1].parameters["num_inputs"]);
+}
+
+#[test]
+pub fn parse_load_f() {
+    let cmds = "load_f input.bin";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("blocks_file_source", grc.blocks[0].id);
+    assert_eq!("input.bin", grc.blocks[0].parameters["file"]);
+    assert_eq!("float", grc.blocks[0].parameters["type"]);
+}
+
+#[test]
+pub fn parse_load_c() {
+    let cmds = "load_c input.c32";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("blocks_file_source", grc.blocks[0].id);
+    assert_eq!("input.c32", grc.blocks[0].parameters["file"]);
+    assert_eq!("complex", grc.blocks[0].parameters["type"]);
+}
+
+#[test]
+pub fn parse_load_u8() {
+    let cmds = "load_u8 input.u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("blocks_file_source", grc.blocks[0].id);
+    assert_eq!("input.u8", grc.blocks[0].parameters["file"]);
+    assert_eq!("byte", grc.blocks[0].parameters["type"]);
+}

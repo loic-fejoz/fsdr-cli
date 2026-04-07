@@ -31,7 +31,9 @@ impl TcpKissClient {
                     for &byte in &buffer[..n] {
                         if byte == 0xC0 {
                             if !current_frame.is_empty() {
-                                let _ = tx.unbounded_send(current_frame.clone());
+                                // Strip the command byte (the first byte)
+                                let data = current_frame[1..].to_vec();
+                                let _ = tx.unbounded_send(data);
                                 current_frame.clear();
                             }
                         } else if byte == 0xDB {

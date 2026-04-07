@@ -1,0 +1,20 @@
+id: octave_complex_c
+label: Octave Complex (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: vlen
+  label: Vector Length
+  dtype: int
+  default: '1024'
+- id: nfft
+  label: NFFT
+  dtype: int
+  default: '1024'
+
+inputs:
+- domain: stream
+  dtype: complex
+  vlen: ${ vlen }
+
+file_format: 1

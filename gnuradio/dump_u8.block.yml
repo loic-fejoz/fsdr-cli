@@ -1,0 +1,15 @@
+id: dump_u8
+label: Dump U8
+category: '[FutureSDR]'
+
+parameters:
+- id: type
+  label: Type
+  dtype: string
+  default: 'u8'
+
+inputs:
+- domain: stream
+  dtype: byte
+
+file_format: 1

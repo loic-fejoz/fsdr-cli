@@ -1,0 +1,147 @@
+options:
+  parameters:
+    author: fsdr-cli
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: fsdrcli
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Created by fsdr-cli
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [760, 0.0]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: blocks_complex_to_real_1
+  id: blocks_complex_to_real
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [176, 328.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_sink_5
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: '-'
+    type: byte
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [872, 304.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_source_0
+  id: blocks_file_source
+  parameters:
+    affinity: ''
+    alias: ''
+    begin_tag: pmt.PMT_NIL
+    comment: ''
+    file: '-'
+    length: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    repeat: 'True'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [24, 288.0]
+    rotation: 0
+    state: enabled
+- name: blocks_pack_k_bits_bb_4
+  id: blocks_pack_k_bits_bb
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    k: '8'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [704, 320.0]
+    rotation: 0
+    state: enabled
+- name: digital_binary_slicer_fb_2
+  id: digital_binary_slicer_fb
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [344, 328.0]
+    rotation: 0
+    state: enabled
+- name: pattern_search_3
+  id: pattern_search
+  parameters:
+    alias: ''
+    comment: ''
+    pattern_values: 1,0,1,1,1,0,1,1,1,1,1,1,0,0,1,0,0,1,1,0,0,0,0,0,1,0,0,1,1,1
+    values_after: '1920'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [496, 320.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [blocks_complex_to_real_1, '0', digital_binary_slicer_fb_2, '0']
+- [blocks_file_source_0, '0', blocks_complex_to_real_1, '0']
+- [blocks_pack_k_bits_bb_4, '0', blocks_file_sink_5, '0']
+- [digital_binary_slicer_fb_2, '0', pattern_search_3, '0']
+- [pattern_search_3, '0', blocks_pack_k_bits_bb_4, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.9.2

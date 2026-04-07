@@ -1,0 +1,15 @@
+id: dump_c
+label: Dump C
+category: '[FutureSDR]'
+
+parameters:
+- id: type
+  label: Type
+  dtype: string
+  default: 'c'
+
+inputs:
+- domain: stream
+  dtype: complex
+
+file_format: 1

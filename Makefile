@@ -97,7 +97,10 @@ test-ssb-debug: tests/ssb_lsb_256k_complex2.dat
 test-ssb-csdr:
 	$(FSDR_CLI) csdr load_c tests/ssb_lsb_256k_complex2.dat ! csdr shift_addition_cc -0.201171875 ! csdr fir_decimate_cc 5 0.005 HAMMING ! csdr bandpass_fir_fft_cc 0.0 0.1 0.05 ! csdr realpart_cf ! csdr agc_ff ! csdr limit_ff ! csdr convert_f_s16 | mplayer -cache 1024 -quiet -rawaudio samplesize=2:channels=1:rate=48000 -demuxer rawaudio -
 
-.PHONY: csdr-compare cargo-test csdr-compare-realpart-c-f csdr-compare-dump-u8
+.PHONY: csdr-compare cargo-test csdr-compare-realpart-c-f csdr-compare-dump-u8 coverage-report
+
+coverage-report:
+	cargo tarpaulin --workspace --all-targets --out Html
 
 
 spino-csdr:
