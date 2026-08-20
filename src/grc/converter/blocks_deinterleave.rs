@@ -22,25 +22,25 @@ impl BlockConverter for DeinterleaveBlockConverter {
             "char" => {
                 let blk = Deinterleave::<u8>::new();
                 Box::new(DeinterleavePortAdapter {
-                    blk: fg.add_block(blk).into(),
+                    blk: fg.add(blk)?.id(),
                 })
             }
             "short" => {
                 let blk = Deinterleave::<i16>::new();
                 Box::new(DeinterleavePortAdapter {
-                    blk: fg.add_block(blk).into(),
+                    blk: fg.add(blk)?.id(),
                 })
             }
             "float" => {
                 let blk = Deinterleave::<f32>::new();
                 Box::new(DeinterleavePortAdapter {
-                    blk: fg.add_block(blk).into(),
+                    blk: fg.add(blk)?.id(),
                 })
             }
             "complex" => {
                 let blk = Deinterleave::<Complex32>::new();
                 Box::new(DeinterleavePortAdapter {
-                    blk: fg.add_block(blk).into(),
+                    blk: fg.add(blk)?.id(),
                 })
             }
             _ => bail!("Unhandled blocks_deinterleave Type {item_type}"),

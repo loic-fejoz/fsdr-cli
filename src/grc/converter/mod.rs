@@ -222,10 +222,10 @@ impl Grc2FutureSdr {
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
             if fg
-                .connect_dyn(src_blk, src_port, tgt_blk, tgt_port)
+                .stream_dyn(src_blk, src_port, tgt_blk, tgt_port)
                 .is_err()
             {
-                fg.connect_message(src_blk, src_port, tgt_blk, tgt_port)
+                fg.message(src_blk, src_port, tgt_blk, tgt_port)
                     .context("connecting message {connection}")?;
             }
         }
@@ -251,18 +251,18 @@ impl Grc2FutureSdr {
                             {
                                 let eval_blk =
                                     crate::blocks::VariableEvaluator::new(freq_expr.to_string());
-                                let eval_id = fg.add_block(eval_blk);
+                                let eval_id = fg.add(eval_blk)?.id();
 
                                 if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
                                     if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
                                     {
-                                        let _ = fg.connect_message(
+                                        let _ = fg.message(
                                             cat_id,
                                             "variables",
-                                            eval_id.clone(),
+                                            eval_id,
                                             "update_var",
                                         );
-                                        let _ = fg.connect_message(
+                                        let _ = fg.message(
                                             eval_id,
                                             "out",
                                             target_id,
@@ -278,19 +278,19 @@ impl Grc2FutureSdr {
                             if tone_expr.chars().any(|c| c.is_ascii_alphabetic()) {
                                 let eval_blk =
                                     crate::blocks::VariableEvaluator::new(tone_expr.to_string());
-                                let eval_id = fg.add_block(eval_blk);
+                                let eval_id = fg.add(eval_blk)?.id();
 
                                 if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
                                     if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
                                     {
-                                        let _ = fg.connect_message(
+                                        let _ = fg.message(
                                             cat_id,
                                             "variables",
-                                            eval_id.clone(),
+                                            eval_id,
                                             "update_var",
                                         );
                                         let _ = fg
-                                            .connect_message(eval_id, "out", target_id, "set_tone");
+                                            .message(eval_id, "out", target_id, "set_tone");
                                     }
                                 }
                             }

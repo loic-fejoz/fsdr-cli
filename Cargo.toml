@@ -26,13 +26,11 @@ iqengine = [ 'dep:axum', 'dep:http', 'dep:tokio', 'dep:tower', 'dep:tower-http',
 # futuresdr = { version = "0.0", features=['audio']}
 # futuresdr = { path="../FutureSDR", features=['audio']}
 # futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
+futuresdr = { path = "/home/loic/projets/FutureSDR", features=['audio']}
 
 async-trait = "0.1"
-cpal = { version = "0.15.2"}
-# fsdr-blocks = {  version="0.1"}
-# fsdr-blocks = { path="../fsdr-blocks" }
-fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
+cpal = { version = "0.18.0"}
+fsdr-blocks = { path = "/home/loic/projets/fsdr-blocks" }
 futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
@@ -52,8 +50,18 @@ tower-http = { version = "0.5.2", features = ["cors"], optional = true  }
 itertools = "0.14.0"
 
 [patch."https://github.com/FutureSDR/FutureSDR"]
-futuresdr = { path = "FutureSDR-temp" }
-futuredsp = { path = "FutureSDR-temp/crates/futuredsp" }
+futuresdr = { path = "/home/loic/projets/FutureSDR" }
+futuredsp = { path = "/home/loic/projets/FutureSDR/crates/futuredsp" }
+
+[patch."https://github.com/FutureSDR/fsdr-blocks"]
+fsdr-blocks = { path = "/home/loic/projets/fsdr-blocks" }
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "dsp_benchmarks"
+harness = false
 
 [profile.release]
 codegen-units = 1

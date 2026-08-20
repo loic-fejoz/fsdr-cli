@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::channel::mpsc;
 use futures::StreamExt;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::io::Read;
 use std::net::TcpStream;
@@ -68,7 +68,7 @@ impl Kernel for TcpKissClient {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         match self.rx.next().await {
             Some(frame) => {

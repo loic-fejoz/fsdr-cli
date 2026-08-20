@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futuresdr::num_complex::Complex32;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use std::io::Write;
 
 #[derive(Block)]
@@ -28,7 +28,7 @@ impl<I: CpuBufferReader<Item = Complex32>> Kernel for OctaveComplex<I> {
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let i = self.input.slice();
 

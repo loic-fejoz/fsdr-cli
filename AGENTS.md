@@ -14,6 +14,7 @@ The intermediate graph must be 100% compatible with GNU Radio Companion. This me
 
 - **Tech Stack**: Rust (edition 2021), FutureSDR, anynow, pest (Grc/Command grammar).
 - **Core Dependencies**: `futuresdr`, `fsdr-blocks`, `cpal` (audio).
+- **Fast-Math Performance**: Crucial DSP inner loops utilize `core::intrinsics` (`fadd_fast`, `fsub_fast`, `fmul_fast`) with `#![feature(core_intrinsics)]` and `#![allow(internal_features)]` for maximum throughput, following SatDump/GNU Radio fast_math practices.
 
 ## Critical Commands
 - **Build:** `cargo build` / `cargo build --release`

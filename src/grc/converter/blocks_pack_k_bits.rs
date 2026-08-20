@@ -23,8 +23,8 @@ impl BlockConverter for PackBitsConverter {
                 .reduce(|a, b| a | b)
                 .expect("guarantee to not be empty due to ApplyNM");
         });
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

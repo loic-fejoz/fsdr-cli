@@ -10,6 +10,7 @@
 - **Parsing:** Use standard `pest_derive` structures. Do not manually write string tokenizers; extend `cmd_line.pest`.
 - **No Manual Formatting:** Do not configure or argue over spaces/tabs/braces. We use what `cargo fmt` defines.
 - **Linting:** We enforce `cargo clippy`. Fix all warnings before submitting changes.
+- **Fast-Math Intrinsics:** Critical DSP inner loops use `core::intrinsics::fadd_fast`, `fsub_fast`, and `fmul_fast` to optimize float performance (similar to SatDump / GNU Radio fast_math). `#![allow(internal_features)]` is maintained in `src/lib.rs` and `src/main.rs`.
 
 ## Error Handling
 We use `anyhow` for robust, contextual error reporting.

@@ -1,3 +1,6 @@
+#![feature(core_intrinsics)]
+#![allow(internal_features)]
+
 pub extern crate async_trait;
 
 #[macro_use]

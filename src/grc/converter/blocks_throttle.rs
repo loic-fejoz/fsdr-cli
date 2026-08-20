@@ -21,19 +21,19 @@ impl BlockConverter for ThrottleConverter {
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
             "char" => {
                 let blk = Throttle::<u8>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "short" => {
                 let blk = Throttle::<i16>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "float" => {
                 let blk = Throttle::<f32>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "complex" => {
                 let blk = Throttle::<Complex32>::new(rate);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => todo!("Unhandled blocks_throttle Type {item_type}"),
         };

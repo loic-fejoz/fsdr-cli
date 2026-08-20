@@ -22,9 +22,9 @@ fn test_kiss_file_sink() -> Result<()> {
     let src = KissFileSource::new(input_filename)?;
     let sink = KissFileSink::new(output_filename)?;
 
-    let src_id = fg.add_block(src);
-    let sink_id = fg.add_block(sink);
-    fg.connect_message(src_id, "output", sink_id, "in_port")?;
+    let src_id = fg.add(src)?.id();
+    let sink_id = fg.add(sink)?.id();
+    fg.message(src_id, "output", sink_id, "in_port")?;
 
     // 3. Run flowgraph
     Runtime::new().run(fg)?;

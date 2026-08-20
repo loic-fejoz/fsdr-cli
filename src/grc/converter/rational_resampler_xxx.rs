@@ -19,13 +19,13 @@ impl BlockConverter for RationalResamplerXxConverter {
         let blk: Box<dyn ConnectorAdapter> = match kind {
             "fff" => {
                 let blk = FirBuilder::resampling::<f32, f32>(interp, decim);
-                let blk = fg.add_block(blk);
-                Box::new(DefaultPortAdapter::new(blk.into()))
+                let blk = fg.add(blk)?.id();
+                Box::new(DefaultPortAdapter::new(blk))
             }
             "ccc" => {
                 let blk = FirBuilder::resampling::<Complex32, Complex32>(interp, decim);
-                let blk = fg.add_block(blk);
-                Box::new(DefaultPortAdapter::new(blk.into()))
+                let blk = fg.add(blk)?.id();
+                Box::new(DefaultPortAdapter::new(blk))
             }
             _ => bail!("Unknown rational resampler type: {kind}"),
         };

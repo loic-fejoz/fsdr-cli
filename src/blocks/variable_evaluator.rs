@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::channel::mpsc;
 use futures::StreamExt;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::collections::HashMap;
 
@@ -33,7 +33,7 @@ impl VariableEvaluator {
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         let _ = self.tx.unbounded_send(p);
@@ -47,7 +47,7 @@ impl Kernel for VariableEvaluator {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         match self.rx.next().await {
             Some(Pmt::String(msg)) => {

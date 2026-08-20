@@ -20,7 +20,7 @@ csdr-compare: csdr-compare-realpart-c-f csdr-compare-dump-u8
 define csdr_compare_cmd
 
 	export CSDR_FIXED_BUFSIZE=$(3) && \
-	head -c $(2) ./tests/france-culture-extract.c32 > /tmp/fsdr-test.bin && \
+	head -c $(2) ./tests/france-culture-extract.u8 > /tmp/fsdr-test.bin && \
 	csdr $(1)        < /tmp/fsdr-test.bin | head -c $(3)  > /tmp/csdr-output.bin && \
 	$(FSDR_CLI) $(1) < /tmp/fsdr-test.bin | head -c $(3)  > /tmp/fsdr-output.bin   && \
 	ls -al /tmp/fsdr-test.bin /tmp/fsdr-output.bin /tmp/csdr-output.bin && \

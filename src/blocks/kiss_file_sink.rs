@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::fs::File;
 use std::io::Write;
@@ -24,7 +24,7 @@ impl KissFileSink {
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         match p {

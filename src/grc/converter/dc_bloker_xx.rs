@@ -15,8 +15,8 @@ impl BlockConverter for DcBlockerXx {
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let min_bufsize = Grc2FutureSdr::parameter_as_f64(blk, "length", "32")? as usize;
         let blk = DCBlocker::<f32>::new(min_bufsize);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

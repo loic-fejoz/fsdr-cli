@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::channel::mpsc;
 use futures::StreamExt;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
@@ -17,8 +17,8 @@ pub struct CatServer {
 impl CatServer {
     pub fn new(
         port: u16,
-        initial_rx_freq: f32,
-        initial_tx_freq: f32,
+        initial_rx_freq: u64,
+        initial_tx_freq: u64,
         initial_ctcss: i32,
     ) -> Result<Self> {
         let (tx, rx) = mpsc::unbounded::<String>();
@@ -60,7 +60,7 @@ impl CatServer {
                         let cmd = line.trim();
 
                         if let Some(stripped) = cmd.strip_prefix("F ") {
-                            if let Ok(freq) = stripped.trim().parse::<f32>() {
+                            if let Ok(freq) = stripped.trim().parse::<u64>() {
                                 state.lock().unwrap().rx_freq = freq;
                                 let _ = tx.unbounded_send(format!("rx_freq={}", freq));
                                 let _ = writer.write_all(b"RPRT 0\n");
@@ -68,7 +68,7 @@ impl CatServer {
                                 let _ = writer.write_all(b"RPRT 1\n");
                             }
                         } else if let Some(stripped) = cmd.strip_prefix("I ") {
-                            if let Ok(freq) = stripped.trim().parse::<f32>() {
+                            if let Ok(freq) = stripped.trim().parse::<u64>() {
                                 state.lock().unwrap().tx_freq = freq;
                                 let _ = tx.unbounded_send(format!("tx_freq={}", freq));
                                 let _ = writer.write_all(b"RPRT 0\n");
@@ -111,10 +111,10 @@ impl CatServer {
                             }
                         } else if cmd == "f" {
                             let freq = state.lock().unwrap().rx_freq;
-                            let _ = writer.write_all(format!("{}\n", freq as i64).as_bytes());
+                            let _ = writer.write_all(format!("{}\n", freq).as_bytes());
                         } else if cmd == "i" {
                             let freq = state.lock().unwrap().tx_freq;
-                            let _ = writer.write_all(format!("{}\n", freq as i64).as_bytes());
+                            let _ = writer.write_all(format!("{}\n", freq).as_bytes());
                         } else if cmd == "c" {
                             let tone = state.lock().unwrap().ctcss_tone;
                             let _ = writer.write_all(format!("{}\n", tone).as_bytes());
@@ -146,8 +146,8 @@ impl CatServer {
 }
 
 struct CatState {
-    rx_freq: f32,
-    tx_freq: f32,
+    rx_freq: u64,
+    tx_freq: u64,
     ctcss_tone: i32,
     ctcss_sql: i32,
     dcs_code: i32,
@@ -160,7 +160,7 @@ impl Kernel for CatServer {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         match self.rx.next().await {
             Some(msg) => {

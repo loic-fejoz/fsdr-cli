@@ -8,7 +8,7 @@ use std::time::Duration;
 #[test]
 fn test_cat_server_tcp_commands() -> Result<()> {
     let port = 18532;
-    let _server = CatServer::new(port, 144500000.0, 144500000.0, 885)?;
+    let _server = CatServer::new(port, 144500000, 144500000, 885)?;
 
     // Give server a moment to start listening
     thread::sleep(Duration::from_millis(50));

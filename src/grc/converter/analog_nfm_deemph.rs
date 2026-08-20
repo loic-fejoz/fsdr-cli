@@ -39,8 +39,8 @@ impl BlockConverter for DeemphasisNfmConverter {
             _ => bail!("Unhandled sample rate for analog_NFM_deemph. Must be one of 8000, 11025, 44100, 48000."),
 
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

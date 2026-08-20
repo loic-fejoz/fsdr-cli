@@ -20,19 +20,19 @@ impl BlockConverter for NullSinkConverter {
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
             "char" => {
                 let blk = NullSink::<u8>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "short" => {
                 let blk = NullSink::<i16>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "float" => {
                 let blk = NullSink::<f32>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "complex" => {
                 let blk = NullSink::<Complex32>::new();
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
         };

@@ -14,8 +14,8 @@ impl BlockConverter for CtcssGeneratorConverter {
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "sample_rate", "48000")? as f32;
         let blk = CtcssGenerator::new(sample_rate);
-        let blk = fg.add_block(blk);
-        let adapter = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let adapter = DefaultPortAdapter::new(blk);
         Ok(Box::new(adapter))
     }
 }

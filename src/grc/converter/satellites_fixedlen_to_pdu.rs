@@ -2,7 +2,7 @@ use super::super::converter_helper::{BlockConverter, ConnectorAdapter};
 use super::BlockInstance;
 use crate::blocks::FixedlenToPdu;
 use anyhow::{bail, Context, Result};
-use futuresdr::prelude::DefaultCpuReader;
+use futuresdr::runtime::dev::DefaultCpuReader;
 use futuresdr::runtime::{BlockId, Flowgraph};
 
 #[derive(Clone, Copy)]
@@ -45,7 +45,7 @@ impl BlockConverter for SatellitesFixedlenToPduConverter {
 
         let block = FixedlenToPdu::<DefaultCpuReader<u8>>::new(packet_len);
         Ok(Box::new(FixedlenToPduPortAdapter {
-            blk: fg.add_block(block).into(),
+            blk: fg.add(block)?.id(),
         }))
     }
 }

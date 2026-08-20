@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 
 #[derive(Block)]
@@ -27,7 +27,7 @@ impl<I: CpuBufferReader<Item = u8>> Kernel for FixedlenToPdu<I> {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let i = self.input.slice();
         if i.is_empty() {

@@ -42,7 +42,7 @@ impl BlockConverter for SatellitesKissClientSourceConverter {
         let address = address.trim_matches('"');
         let block = TcpKissClient::new(&format!("{}:{}", address, port))?;
         Ok(Box::new(TcpKissClientSourcePortAdapter {
-            blk: fg.add_block(block).into(),
+            blk: fg.add(block)?.id(),
         }))
     }
 }

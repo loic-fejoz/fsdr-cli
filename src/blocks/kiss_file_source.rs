@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -65,7 +65,7 @@ impl Kernel for KissFileSource {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         if let Some(frame) = self.frames.pop_front() {
             mio.post("output", Pmt::Blob(frame)).await?;

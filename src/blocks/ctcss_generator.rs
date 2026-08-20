@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::f32::consts::PI;
 
@@ -32,7 +32,7 @@ impl CtcssGenerator {
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         if let Pmt::F32(tone) = p {
@@ -50,7 +50,7 @@ impl Kernel for CtcssGenerator {
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let m;
         let ilen;
@@ -64,11 +64,12 @@ impl Kernel for CtcssGenerator {
             if m > 0 {
                 if self.tone > 0.0 {
                     let phase_inc = 2.0 * PI * self.tone / self.sample_rate;
-                    for (in_sample, out_sample) in i.iter().zip(o.iter_mut()).take(m) {
-                        *out_sample = *in_sample + self.amplitude * self.phase.sin();
-                        self.phase += phase_inc;
+                    for (in_sample, out_sample) in i[..m].iter().zip(o[..m].iter_mut()) {
+                        let tone_sample = unsafe { core::intrinsics::fmul_fast(self.amplitude, self.phase.sin()) };
+                        *out_sample = unsafe { core::intrinsics::fadd_fast(*in_sample, tone_sample) };
+                        self.phase = unsafe { core::intrinsics::fadd_fast(self.phase, phase_inc) };
                         if self.phase > 2.0 * PI {
-                            self.phase -= 2.0 * PI;
+                            self.phase = unsafe { core::intrinsics::fsub_fast(self.phase, 2.0 * PI) };
                         }
                     }
                 } else {
