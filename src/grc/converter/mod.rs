@@ -42,7 +42,11 @@ use self::blocks_complex_to_real::RealpartCfConverter;
 pub mod convert;
 use self::convert::ConvertBlockConverter;
 pub mod blocks_file_sink;
+pub mod cat_server;
+use self::cat_server::CatServerConverter;
+pub mod ctcss_generator;
 use self::blocks_file_sink::FileSinkConverter;
+use self::ctcss_generator::CtcssGeneratorConverter;
 pub mod blocks_file_source;
 use self::blocks_file_source::FileSourceConverter;
 pub mod blocks_float_to_complex;
@@ -127,6 +131,8 @@ impl Grc2FutureSdr {
             "band_pass_filter" => Box::new(BandPassFilterConverter {}),
             "audio_sink" => Box::new(AudioSinkConverter {}),
             "blocks_add_const_vxx" => Box::new(AddConstVxConverter {}),
+            "cat_server" => Box::new(CatServerConverter {}),
+            "ctcss_gen" => Box::new(CtcssGeneratorConverter {}),
             "blocks_deinterleave" => Box::new(DeinterleaveBlockConverter {}),
             "digital_binary_slicer_fb" => Box::new(DigitalBinarySlicerConverter {}),
             "dsb" => Box::new(DsbConverter {}),
@@ -223,6 +229,77 @@ impl Grc2FutureSdr {
                     .context("connecting message {connection}")?;
             }
         }
+
+        // Automatic wiring of dynamic variables from CatServer to VariableEvaluator
+        let cat_server_name = grc
+            .blocks
+            .iter()
+            .find(|b| b.id == "cat_server")
+            .map(|b| b.name.clone());
+
+        if let Some(cat_name) = cat_server_name {
+            if let Some(cat_adapter) = names_to_adapter.get(&cat_name) {
+                // Get the CatServer BlockId
+                if let Ok((cat_id, _)) = cat_adapter.adapt_output_port("0") {
+                    for blk in &grc.blocks {
+                        if blk.id == "blocks_freqshift_cc" {
+                            let freq_expr = blk.parameter_or("freq", "1.0");
+                            // Simple heuristic to detect if the expression contains a variable
+                            if freq_expr
+                                .chars()
+                                .any(|c| c.is_ascii_alphabetic() && c != 'e' && c != 'E')
+                            {
+                                let eval_blk =
+                                    crate::blocks::VariableEvaluator::new(freq_expr.to_string());
+                                let eval_id = fg.add_block(eval_blk);
+
+                                if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
+                                    if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
+                                    {
+                                        let _ = fg.connect_message(
+                                            cat_id,
+                                            "variables",
+                                            eval_id.clone(),
+                                            "update_var",
+                                        );
+                                        let _ = fg.connect_message(
+                                            eval_id,
+                                            "out",
+                                            target_id,
+                                            "set_frequency",
+                                        );
+                                    }
+                                }
+                            }
+                        }
+
+                        if blk.id == "ctcss_gen" {
+                            let tone_expr = blk.parameter_or("tone", "0.0");
+                            if tone_expr.chars().any(|c| c.is_ascii_alphabetic()) {
+                                let eval_blk =
+                                    crate::blocks::VariableEvaluator::new(tone_expr.to_string());
+                                let eval_id = fg.add_block(eval_blk);
+
+                                if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
+                                    if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
+                                    {
+                                        let _ = fg.connect_message(
+                                            cat_id,
+                                            "variables",
+                                            eval_id.clone(),
+                                            "update_var",
+                                        );
+                                        let _ = fg
+                                            .connect_message(eval_id, "out", target_id, "set_tone");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(fg)
     }
 

@@ -914,7 +914,6 @@ dependencies = [
 [[package]]
 name = "futuredsp"
 version = "0.0.9-dev"
-source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "num-complex",
  "num-traits",
@@ -1026,7 +1025,6 @@ dependencies = [
 [[package]]
 name = "futuresdr"
 version = "0.0.40-dev"
-source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "anyhow",
  "async-executor",
@@ -1082,7 +1080,6 @@ dependencies = [
 [[package]]
 name = "futuresdr-macros"
 version = "0.0.9-dev"
-source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "indexmap",
  "prettyplease",
@@ -1094,7 +1091,6 @@ dependencies = [
 [[package]]
 name = "futuresdr-types"
 version = "0.0.15-dev"
-source = "git+https://github.com/FutureSDR/FutureSDR?branch=main#96562fe5042c465b1a3a95a11805e6d30c1a5aeb"
 dependencies = [
  "dyn-clone",
  "num-complex",

@@ -229,6 +229,46 @@ Connects to a distant TCP server using `<host>:<port>`, reads KISS frames, and d
 Example to connect to a distant tcp kiss server and serve it again locally: 
 `cargo run -- csdr tcp_kiss_client 192.168.2.45:8045 ! tcp_kiss_server 127.0.0.1:8001`
 
+### [cat_server](#cat_server)
+
+Syntax:
+
+```bash
+cat_server [--port 4532] [--rx_freq 145830000] [--tx_freq 145830000] [--ctcss_tone 885]
+```
+
+Starts a CAT (Computer Aided Transceiver) server implementing the `rigctld` (Hamlib) protocol. It allows external applications like GPredict to control parameters of the flowgraph.
+
+Available parameters:
+*   `--port`: TCP port to listen on (default: 4532).
+*   `--rx_freq`: Initial receive frequency in Hz.
+*   `--tx_freq`: Initial transmit frequency in Hz.
+*   `--ctcss_tone`: Initial transmit CTCSS tone in tenths of Hz (e.g., 885 for 88.5 Hz).
+
+When a `cat_server` is present in the flowgraph, the following variables become available for use in expressions throughout the pipeline:
+
+*   `rx_freq`: Current receive frequency (set via the `F` command).
+*   `tx_freq`: Current transmit frequency (set via the `I` command).
+*   `ctcss_tone`: Current transmit CTCSS tone in Hz (set via the `C` command).
+*   `ctcss_sql`: Current receive CTCSS tone in Hz (set via the `\set_ctcss_sql` command).
+*   `dcs_code`: Current transmit DCS code (set via the `D` command).
+*   `dcs_sql`: Current receive DCS code (set via the `\set_dcs_sql` command).
+
+Example:
+```bash
+fsdr-cli cat_server 4532 ! ctcss_gen "{ctcss_tone}" ! ...
+```
+
+### [ctcss_gen](#ctcss_gen)
+
+Syntax:
+
+```bash
+ctcss_gen [tone]
+```
+
+Adds a sub-audible CTCSS tone to the input audio stream. `tone` is in Hz.
+
 ### [rational_resampler_cc](#rational_resampler_cc)
 
 Syntax:

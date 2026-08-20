@@ -10,8 +10,10 @@ use self::amdemod_cmd::AmDemodCmd;
 use self::audio_cmd::AudioCmd;
 use self::bandpass_fir_fft_cmd::BandpassFirFftcmd;
 use self::binary_slicer::BinarySlicerCmd;
+use self::cat_server_cmd::CatServerCmd;
 use self::clipdetect_cmd::ClipDetectCmd;
 use self::convert_cmd::ConvertCmd;
+use self::ctcss_gen_cmd::CtcssGenCmd;
 use self::deemphasis_nfm_ff_cmd::DeemphasisNfnCmd;
 use self::deemphasis_wfm_ff_cmd::DeemphasisWfmCmd;
 use self::dsb_cmd::DsbCmd;
@@ -44,8 +46,10 @@ mod amdemod_cmd;
 mod audio_cmd;
 mod bandpass_fir_fft_cmd;
 mod binary_slicer;
+mod cat_server_cmd;
 mod clipdetect_cmd;
 mod convert_cmd;
+mod ctcss_gen_cmd;
 mod deemphasis_nfm_ff_cmd;
 mod deemphasis_wfm_ff_cmd;
 mod dsb_cmd;
@@ -85,6 +89,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::audio_cmd => self.build_audio_sink(grc),
             Rule::bandpass_fir_fft_cc_cmd => self.build_bandpass_fir_fft_cc(grc),
             Rule::binary_slicer_cmd => self.build_binary_slicer(grc),
+            Rule::cat_server_cmd => CatServerCmd::build_cat_server(self, grc),
+            Rule::ctcss_gen_cmd => CtcssGenCmd::build_ctcss_gen(self, grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
             Rule::convert_cmd => self.build_convert(grc),
             Rule::deemphasis_nfm_cmd => self.build_deemphasis_nfm(grc),

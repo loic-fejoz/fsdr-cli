@@ -1,23 +1,21 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
-use crate::blocks::FrequencyShifter;
+use crate::blocks::CtcssGenerator;
 use anyhow::Result;
 use futuresdr::runtime::Flowgraph;
 
-pub struct FreqShiftCcConverter {}
+pub struct CtcssGeneratorConverter {}
 
-impl BlockConverter for FreqShiftCcConverter {
+impl BlockConverter for CtcssGeneratorConverter {
     fn convert(
         &self,
         blk: &BlockInstance,
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let sample_rate = Grc2FutureSdr::parameter_as_f64(blk, "sample_rate", "48000")? as f32;
-        let freq = Grc2FutureSdr::parameter_as_f64(blk, "freq", "1.0")? as f32;
-        let blk = FrequencyShifter::new(freq, sample_rate);
+        let blk = CtcssGenerator::new(sample_rate);
         let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
-        let blk = Box::new(blk);
-        Ok(blk)
+        let adapter = DefaultPortAdapter::new(blk.into());
+        Ok(Box::new(adapter))
     }
 }
