@@ -4,6 +4,7 @@ use fsdr_cli::grc::converter::Grc2FutureSdr;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSource;
 use futuresdr::num_complex::Complex32;
+use futuresdr::prelude::connect;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 
@@ -1117,4 +1118,161 @@ pub fn parse_load_u8() {
     assert_eq!("blocks_file_source", grc.blocks[0].id);
     assert_eq!("input.u8", grc.blocks[0].parameters["file"]);
     assert_eq!("byte", grc.blocks[0].parameters["type"]);
+}
+
+#[test]
+pub fn parse_fft_cc() {
+    let cmds = "fft_cc 512 1024 HAMMING";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fft_block", grc.blocks[1].id);
+    assert_eq!("512", grc.blocks[1].parameters["fft_size"]);
+    assert_eq!("1024", grc.blocks[1].parameters["every_n_samples"]);
+    assert_eq!("HAMMING", grc.blocks[1].parameters["window"]);
+    assert_eq!("complex", grc.blocks[1].parameters["type"]);
+}
+
+#[test]
+pub fn parse_fft_fc() {
+    let cmds = "fft_fc 512 512 BLACKMAN";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fft_block", grc.blocks[1].id);
+    assert_eq!("512", grc.blocks[1].parameters["fft_size"]);
+    assert_eq!("512", grc.blocks[1].parameters["every_n_samples"]);
+    assert_eq!("BLACKMAN", grc.blocks[1].parameters["window"]);
+    assert_eq!("float", grc.blocks[1].parameters["type"]);
+}
+
+#[test]
+pub fn parse_logpower_cf() {
+    let cmds = "logpower_cf 10";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("logpower_cf", grc.blocks[1].id);
+    assert_eq!("10", grc.blocks[1].parameters["add_db"]);
+}
+
+#[test]
+pub fn parse_logaveragepower_cf() {
+    let cmds = "logaveragepower_cf 512 10 5.0";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("logaveragepower_cf", grc.blocks[1].id);
+    assert_eq!("512", grc.blocks[1].parameters["fft_size"]);
+    assert_eq!("10", grc.blocks[1].parameters["avg_number"]);
+    assert_eq!("5.0", grc.blocks[1].parameters["add_db"]);
+}
+
+#[test]
+pub fn parse_fft_exchange_sides_ff() {
+    let cmds = "fft_exchange_sides_ff 512";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fft_exchange_sides_ff", grc.blocks[1].id);
+    assert_eq!("512", grc.blocks[1].parameters["fft_size"]);
+}
+
+#[test]
+pub fn test_logpower_cf_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<Complex32>::new(vec![
+        Complex32::new(1.0, 0.0),
+        Complex32::new(0.0, 2.0),
+        Complex32::new(3.0, 4.0),
+    ]);
+    let logp = fsdr_cli::blocks::LogPowerCf::new(0.0);
+    let snk = VectorSink::<f32>::new(10);
+
+    connect!(fg, src > logp > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 3);
+    // 10 * log10(1^2) + 0 = 0
+    assert!((out[0] - 0.0).abs() < 1e-4);
+    // 10 * log10(2^2) = 10 * log10(4) ~= 6.0206
+    assert!((out[1] - (10.0 * 4.0f32.log10())).abs() < 1e-4);
+    // 10 * log10(3^2 + 4^2) = 10 * log10(25) ~= 13.9794
+    assert!((out[2] - (10.0 * 25.0f32.log10())).abs() < 1e-4);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_fft_exchange_sides_ff_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<f32>::new(vec![1.0, 2.0, 3.0, 4.0]);
+    let swap = fsdr_cli::blocks::FftExchangeSidesFf::new(4);
+    let snk = VectorSink::<f32>::new(10);
+
+    connect!(fg, src > swap > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[3.0, 4.0, 1.0, 2.0]);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_fft_cc_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    // 4-point impulse [1, 0, 0, 0] with BOXCAR window should yield [1, 1, 1, 1]
+    let src = VectorSource::<Complex32>::new(vec![
+        Complex32::new(1.0, 0.0),
+        Complex32::new(0.0, 0.0),
+        Complex32::new(0.0, 0.0),
+        Complex32::new(0.0, 0.0),
+    ]);
+    let fft = fsdr_cli::blocks::FftCc::new(4, 4, "NONE");
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > fft > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 4);
+    for sample in out {
+        assert!((sample.re - 1.0).abs() < 1e-4);
+        assert!(sample.im.abs() < 1e-4);
+    }
+
+    Ok(())
+}
+
+#[test]
+pub fn test_logaveragepower_cf_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<Complex32>::new(vec![
+        Complex32::new(1.0, 0.0),
+        Complex32::new(0.0, 2.0),
+        Complex32::new(3.0, 0.0),
+        Complex32::new(0.0, 4.0),
+    ]);
+    let logavg = fsdr_cli::blocks::LogAveragePowerCf::new(2, 2, 0.0);
+    let snk = VectorSink::<f32>::new(10);
+
+    connect!(fg, src > logavg > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 2);
+    assert!((out[0] - (10.0 * 5.0f32.log10())).abs() < 1e-4);
+    assert!((out[1] - 10.0).abs() < 1e-4);
+
+    Ok(())
 }

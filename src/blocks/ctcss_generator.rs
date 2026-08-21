@@ -65,11 +65,15 @@ impl Kernel for CtcssGenerator {
                 if self.tone > 0.0 {
                     let phase_inc = 2.0 * PI * self.tone / self.sample_rate;
                     for (in_sample, out_sample) in i[..m].iter().zip(o[..m].iter_mut()) {
-                        let tone_sample = unsafe { core::intrinsics::fmul_fast(self.amplitude, self.phase.sin()) };
-                        *out_sample = unsafe { core::intrinsics::fadd_fast(*in_sample, tone_sample) };
+                        let tone_sample = unsafe {
+                            core::intrinsics::fmul_fast(self.amplitude, self.phase.sin())
+                        };
+                        *out_sample =
+                            unsafe { core::intrinsics::fadd_fast(*in_sample, tone_sample) };
                         self.phase = unsafe { core::intrinsics::fadd_fast(self.phase, phase_inc) };
                         if self.phase > 2.0 * PI {
-                            self.phase = unsafe { core::intrinsics::fsub_fast(self.phase, 2.0 * PI) };
+                            self.phase =
+                                unsafe { core::intrinsics::fsub_fast(self.phase, 2.0 * PI) };
                         }
                     }
                 } else {

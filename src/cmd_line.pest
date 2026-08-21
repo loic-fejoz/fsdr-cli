@@ -69,8 +69,16 @@ cat_server_tx_freq_param = { ^"--tx_freq" ~ number_or_paren_expr }
 cat_server_ctcss_tone_param = { ^"--ctcss_tone" ~ number_or_paren_expr }
 cat_server_cmd = { "cat_server" ~ (cat_server_port_param | cat_server_rx_freq_param | cat_server_tx_freq_param | cat_server_ctcss_tone_param)* }
 ctcss_gen_cmd = { "ctcss_gen" ~ number_or_paren_expr? }
+fft_opt_flag = { ^"--octave" | ^"--benchmark" }
+fft_cc_cmd = { ("fft_cc" | "fft") ~ number_or_paren_expr ~ number_or_paren_expr ~ ident? ~ fft_opt_flag* }
+fft_fc_cmd = { "fft_fc" ~ number_or_paren_expr ~ number_or_paren_expr ~ ident? ~ fft_opt_flag* }
+logpower_add_db_flag = { (^"--add_db=" | ^"--add_db" | ^"-a") ~ number_or_paren_expr }
+logpower_cf_cmd = { ("logpower_cf" | "logpower") ~ (logpower_add_db_flag | number_or_paren_expr)? }
+logavg_add_db_flag = { (^"--add=" | ^"--add" | ^"-a") ~ number_or_paren_expr }
+logaveragepower_cf_cmd = { ("logaveragepower_cf" | "logaveragepower") ~ number_or_paren_expr ~ number_or_paren_expr ~ (logavg_add_db_flag | number_or_paren_expr)? }
+fft_exchange_sides_ff_cmd = { ("fft_exchange_sides_ff" | "fftswap") ~ number_or_paren_expr }
 
-any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | cat_server_cmd | ctcss_gen_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | load_kiss_cmd | save_kiss_cmd | tcp_kiss_server_cmd | tcp_kiss_client_cmd | fixedlen_to_pdu_cmd | limit_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
+any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | cat_server_cmd | ctcss_gen_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | save_kiss_cmd | tcp_kiss_server_cmd | tcp_kiss_client_cmd | fixedlen_to_pdu_cmd | limit_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
 
 
 

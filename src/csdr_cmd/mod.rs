@@ -20,6 +20,8 @@ use self::dsb_cmd::DsbCmd;
 use self::dump_cmd::DumpCmd;
 use self::eval_cmd::EvalCmd;
 use self::fastdcblock_cmd::FastDCBlockCmd;
+use self::fft_cmd::FftCmd;
+use self::fft_exchange_sides_cmd::FftExchangeSidesCmd;
 use self::fir_decimate_cmd::FirDecimateCmd;
 use self::fixedlen_to_pdu_cmd::FixedlenToPduCmd;
 use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
@@ -28,6 +30,8 @@ use self::gain_cmd::GainCmd;
 use self::limit_cmd::LimitCmd;
 use self::load_cmd::LoadCmd;
 use self::load_kiss_cmd::LoadKissCmd;
+use self::logaveragepower_cmd::LogAveragePowerCmd;
+use self::logpower_cmd::LogPowerCmd;
 use self::octave_complex_cmd::OctaveComplexCmd;
 use self::pack_bits_cmd::PackBitsCmd;
 use self::pattern_search_cmd::PatternSearchCmd;
@@ -56,6 +60,8 @@ mod dsb_cmd;
 mod dump_cmd;
 pub mod eval_cmd;
 mod fastdcblock_cmd;
+mod fft_cmd;
+mod fft_exchange_sides_cmd;
 mod fir_decimate_cmd;
 mod fixedlen_to_pdu_cmd;
 mod fmdemod_quadri_cmd;
@@ -64,6 +70,8 @@ mod gain_cmd;
 mod limit_cmd;
 mod load_cmd;
 mod load_kiss_cmd;
+mod logaveragepower_cmd;
+mod logpower_cmd;
 mod octave_complex_cmd;
 mod pack_bits_cmd;
 mod pattern_search_cmd;
@@ -102,6 +110,9 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
                 Ok(grc)
             }
             Rule::fastdcblock_cmd => self.build_fastdcblock(grc),
+            Rule::fft_cc_cmd => self.build_fft_cc(grc),
+            Rule::fft_fc_cmd => self.build_fft_fc(grc),
+            Rule::fft_exchange_sides_ff_cmd => self.build_fft_exchange_sides_ff(grc),
             Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
             Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
@@ -110,6 +121,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
             Rule::load_kiss_cmd => self.build_load_kiss(grc),
+            Rule::logaveragepower_cf_cmd => self.build_logaveragepower_cf(grc),
+            Rule::logpower_cf_cmd => self.build_logpower_cf(grc),
             Rule::fixedlen_to_pdu_cmd => self.build_fixedlen_to_pdu(grc),
             Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::tcp_kiss_server_cmd => self.build_tcp_kiss_server(grc),
@@ -161,8 +174,12 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
 
     fn parse(&self) -> Result<Option<Grc>> {
         let mut grc_builder = GrcBuilder::new();
-        for sub_cmd in self.clone().into_inner() {
-            grc_builder = AnyCmd::parse(&sub_cmd, grc_builder)?;
+        if self.as_rule() == Rule::csdr_cmd {
+            for sub_cmd in self.clone().into_inner() {
+                grc_builder = AnyCmd::parse(&sub_cmd, grc_builder)?;
+            }
+        } else {
+            grc_builder = AnyCmd::parse(self, grc_builder)?;
         }
         grc_builder.ensure_sink()?;
         let grc = grc_builder.build()?;

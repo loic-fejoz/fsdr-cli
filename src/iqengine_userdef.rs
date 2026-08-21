@@ -118,8 +118,9 @@ fn fun_name(
             let v = stream1.clone().samples_cf32()?;
 
             let src = futuresdr::blocks::VectorSource::<futuresdr::num_complex::Complex32>::new(v);
-            let blk_cvter =
-                PredefinedBlockConverter::new(move |fg: &mut Flowgraph| fg.add(src).expect("msg").id());
+            let blk_cvter = PredefinedBlockConverter::new(move |fg: &mut Flowgraph| {
+                fg.add(src).expect("msg").id()
+            });
             converter
                 .with_blocktype_conversion("blocks_file_source".to_string(), Box::new(blk_cvter));
         }

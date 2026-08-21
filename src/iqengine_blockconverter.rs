@@ -2,8 +2,8 @@ use crate::grc::builder::GrcItemType;
 use crate::grc::converter_helper::{ConnectorAdapter, DefaultPortAdapter, MutBlockConverter};
 use crate::grc::BlockInstance;
 use anyhow::{bail, Context, Result};
-use futuresdr::{blocks::VectorSink, num_complex::Complex32, runtime::Flowgraph};
 use futuresdr::runtime::{BlockId, BlockRef, TerminatedFlowgraph};
+use futuresdr::{blocks::VectorSink, num_complex::Complex32, runtime::Flowgraph};
 use iqengine_plugin::server::{FunctionPostResponse, SamplesB64, SamplesB64Builder};
 use std::convert::TryInto;
 
@@ -45,10 +45,7 @@ impl IQEngineOutputBlockConverter {
             .context("iqengine_blockconverter: sink_ref not set")?;
 
         let output: SamplesB64 = match (self.data_type, sink_ref) {
-            (
-                Some(iqengine_plugin::server::DataType::IqSlashCf32Le),
-                IQSinkRef::C32(snk_ref),
-            ) => {
+            (Some(iqengine_plugin::server::DataType::IqSlashCf32Le), IQSinkRef::C32(snk_ref)) => {
                 let snk = fg.block(snk_ref)?;
                 let snk_0 = snk.items();
                 SamplesB64Builder::new()

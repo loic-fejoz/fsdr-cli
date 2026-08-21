@@ -350,14 +350,14 @@ Example to chunk a byte stream and save it to a KISS file:
 - [x] [bandpass_fir_fft_cc](https://github.com/ha7ilm/csdr#bandpass_fir_fft_cc) ([jketterl](https://github.com/jketterl/csdr#bandpass))[^4]
 - [x] [agc_ff](https://github.com/ha7ilm/csdr#agc_ff) ([jketterl](https://github.com/jketterl/csdr#agc))[^3][^4]
 - [ ] [fastagc_ff](https://github.com/ha7ilm/csdr#fastagc_ff) ([jketterl](https://github.com/jketterl/csdr#agc))[^2]
-- [ ] [fft_cc](https://github.com/ha7ilm/csdr#fft_cc) ([jketterl](https://github.com/jketterl/csdr#fft))
-- [ ] [fft_fc](https://github.com/ha7ilm/csdr#fft_fc) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [x] [fft_cc](https://github.com/ha7ilm/csdr#fft_cc) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [x] [fft_fc](https://github.com/ha7ilm/csdr#fft_fc) ([jketterl](https://github.com/jketterl/csdr#fft))
 - [ ] [fft_benchmark](https://github.com/ha7ilm/csdr#fft_benchmark) ([jketterl](https://github.com/jketterl/csdr#fft))
-- [ ] [logpower_cf](https://github.com/ha7ilm/csdr#logpower_cf) ([jketterl](https://github.com/jketterl/csdr#logpower))
+- [x] [logpower_cf](https://github.com/ha7ilm/csdr#logpower_cf) ([jketterl](https://github.com/jketterl/csdr#logpower))
 - [ ] [encode_ima_adpcm_i16_u8](https://github.com/ha7ilm/csdr#encode_ima_adpcm_i16_u8) ([jketterl](https://github.com/jketterl/csdr#adpcm))
 - [ ] [decode_ima_adpcm_u8_i16](https://github.com/ha7ilm/csdr#decode_ima_adpcm_u8_i16) ([jketterl](https://github.com/jketterl/csdr#adpcm))
 - [ ] [compress_fft_adpcm_f_u8](https://github.com/ha7ilm/csdr#compress_fft_adpcm_f_u8) ([jketterl](https://github.com/jketterl/csdr#fftadpcm))
-- [ ] [fft_exchange_sides_ff](https://github.com/ha7ilm/csdr#fft_exchange_sides_ff) ([jketterl](https://github.com/jketterl/csdr#fftswap))
+- [x] [fft_exchange_sides_ff](https://github.com/ha7ilm/csdr#fft_exchange_sides_ff) ([jketterl](https://github.com/jketterl/csdr#fftswap))
 - [x] [dsb_fc](https://github.com/ha7ilm/csdr#dsb_fc)
 - [ ] [add_dcoffset_cc](https://github.com/ha7ilm/csdr#add_dcoffset_cc)
 - [ ] [convert_f_samplerf](https://github.com/ha7ilm/csdr#convert_f_samplerf)
@@ -375,7 +375,7 @@ Example to chunk a byte stream and save it to a KISS file:
 - [ ] [awgn_cc](https://github.com/ha7ilm/csdr#awgn_cc)
 - [ ] [add_n_zero_samples_at_beginning_f](https://github.com/ha7ilm/csdr#add_n_zero_samples_at_beginning_f)
 - [ ] [fft_one_side_ff](https://github.com/ha7ilm/csdr#fft_one_side_ff)
-- [ ] [logaveragepower_cf](https://github.com/ha7ilm/csdr#logaveragepower_cf) ([jketterl](https://github.com/jketterl/csdr#logaveragepower))
+- [x] [logaveragepower_cf](https://github.com/ha7ilm/csdr#logaveragepower_cf) ([jketterl](https://github.com/jketterl/csdr#logaveragepower))
 - [ ] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
 - [ ] [psk31_varicode_decoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_decoder_u8_u8) ([jketterl](https://github.com/jketterl/csdr#varicodedecode))
 - [ ] [_fft2octave](https://github.com/ha7ilm/csdr#_fft2octave)

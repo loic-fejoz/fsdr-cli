@@ -21,11 +21,13 @@ fn test_tcp_kiss_server_client() -> Result<()> {
     let mut fg_server = Flowgraph::new();
     let sent_data = vec![0x11, 0x22, 0x33, 0x44];
     // Send a message every 50ms.
-    let src = fg_server.add(MessageSource::new(
-        Pmt::Blob(sent_data.clone()),
-        Duration::from_millis(50),
-        None,
-    ))?.id();
+    let src = fg_server
+        .add(MessageSource::new(
+            Pmt::Blob(sent_data.clone()),
+            Duration::from_millis(50),
+            None,
+        ))?
+        .id();
     let server = fg_server.add(TcpKissServer::new(&addr)?)?.id();
     fg_server.message(src, "out", server, "in_port")?;
 
@@ -71,11 +73,13 @@ fn test_tcp_kiss_multi_client() -> Result<()> {
     // Server flowgraph
     let mut fg_server = Flowgraph::new();
     let sent_data = vec![0x55, 0x66, 0x77, 0x88];
-    let src = fg_server.add(MessageSource::new(
-        Pmt::Blob(sent_data.clone()),
-        Duration::from_millis(50),
-        None,
-    ))?.id();
+    let src = fg_server
+        .add(MessageSource::new(
+            Pmt::Blob(sent_data.clone()),
+            Duration::from_millis(50),
+            None,
+        ))?
+        .id();
     let server = fg_server.add(TcpKissServer::new(&addr)?)?.id();
     fg_server.message(src, "out", server, "in_port")?;
 

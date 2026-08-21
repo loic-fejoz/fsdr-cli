@@ -95,6 +95,14 @@ pub mod satellites_kiss_server_sink;
 use self::satellites_kiss_server_sink::SatellitesKissServerSinkConverter;
 pub mod satellites_kiss_client_source;
 use self::satellites_kiss_client_source::SatellitesKissClientSourceConverter;
+pub mod fft_block;
+use self::fft_block::FftBlockConverter;
+pub mod logpower_cf;
+use self::logpower_cf::LogPowerCfConverter;
+pub mod logaveragepower_cf;
+use self::logaveragepower_cf::LogAveragePowerCfConverter;
+pub mod fft_exchange_sides_ff;
+use self::fft_exchange_sides_ff::FftExchangeSidesFfConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -171,6 +179,10 @@ impl Grc2FutureSdr {
             "satellites_kiss_client_source" => Box::new(SatellitesKissClientSourceConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
+            "fft_block" | "fft_vxx" | "fft_cc" | "fft_fc" => Box::new(FftBlockConverter {}),
+            "logpower_cf" | "logpower" => Box::new(LogPowerCfConverter {}),
+            "logaveragepower_cf" | "logaveragepower" => Box::new(LogAveragePowerCfConverter {}),
+            "fft_exchange_sides_ff" | "fftswap" => Box::new(FftExchangeSidesFfConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)
@@ -221,10 +233,7 @@ impl Grc2FutureSdr {
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
-            if fg
-                .stream_dyn(src_blk, src_port, tgt_blk, tgt_port)
-                .is_err()
-            {
+            if fg.stream_dyn(src_blk, src_port, tgt_blk, tgt_port).is_err() {
                 fg.message(src_blk, src_port, tgt_blk, tgt_port)
                     .context("connecting message {connection}")?;
             }
@@ -256,18 +265,10 @@ impl Grc2FutureSdr {
                                 if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
                                     if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
                                     {
-                                        let _ = fg.message(
-                                            cat_id,
-                                            "variables",
-                                            eval_id,
-                                            "update_var",
-                                        );
-                                        let _ = fg.message(
-                                            eval_id,
-                                            "out",
-                                            target_id,
-                                            "set_frequency",
-                                        );
+                                        let _ =
+                                            fg.message(cat_id, "variables", eval_id, "update_var");
+                                        let _ =
+                                            fg.message(eval_id, "out", target_id, "set_frequency");
                                     }
                                 }
                             }
@@ -283,14 +284,9 @@ impl Grc2FutureSdr {
                                 if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
                                     if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
                                     {
-                                        let _ = fg.message(
-                                            cat_id,
-                                            "variables",
-                                            eval_id,
-                                            "update_var",
-                                        );
-                                        let _ = fg
-                                            .message(eval_id, "out", target_id, "set_tone");
+                                        let _ =
+                                            fg.message(cat_id, "variables", eval_id, "update_var");
+                                        let _ = fg.message(eval_id, "out", target_id, "set_tone");
                                     }
                                 }
                             }
