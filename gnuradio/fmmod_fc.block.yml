@@ -1,0 +1,17 @@
+id: fmmod_fc
+label: FM Modulator
+category: '[Core]/Modulators'
+
+inputs:
+-   domain: stream
+    dtype: float
+
+outputs:
+-   domain: stream
+    dtype: complex
+
+templates:
+    imports: from fsdr_cli.blocks import FmModFc
+    make: FmModFc()
+
+file_format: 1

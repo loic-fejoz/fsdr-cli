@@ -1629,3 +1629,204 @@ pub fn test_costas_loop_execution() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn parse_fmmod_fc() {
+    let cmds = "fmmod_fc";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fmmod_fc", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_fixed_amplitude_cc() {
+    let cmds = "fixed_amplitude_cc 2.5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("fixed_amplitude_cc", grc.blocks[1].id);
+    assert_eq!("2.5", grc.blocks[1].parameters["amplitude"]);
+}
+
+#[test]
+pub fn parse_add_const_cc() {
+    let cmds = "add_const_cc 0.5 1.5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("add_const_cc", grc.blocks[1].id);
+    assert_eq!("0.5", grc.blocks[1].parameters["real"]);
+    assert_eq!("1.5", grc.blocks[1].parameters["imag"]);
+}
+
+#[test]
+pub fn parse_differential_encoder_u8_u8() {
+    let cmds = "differential_encoder_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("differential_encoder_u8_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_differential_decoder_u8_u8() {
+    let cmds = "differential_decoder_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("differential_decoder_u8_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_invert_u8_u8() {
+    let cmds = "invert_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("invert_u8_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_bfsk_demod_cf() {
+    let cmds = "bfsk_demod_cf";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("bfsk_demod_cf", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_detect_nan_ff() {
+    let cmds = "detect_nan_ff";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("detect_nan_ff", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_yes_f() {
+    let cmds = "yes_f 4.2";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("yes_f", grc.blocks[0].id);
+    assert_eq!("4.2", grc.blocks[0].parameters["value"]);
+}
+
+#[test]
+pub fn test_fmmod_fc_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<f32>::new(vec![0.0, 0.0]);
+    let mod_blk = fsdr_cli::blocks::FmModFc::new();
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > mod_blk > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 2);
+    assert!((out[0].re - 1.0).abs() < 1e-4);
+    assert!(out[0].im.abs() < 1e-4);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_fixed_amplitude_cc_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<Complex32>::new(vec![Complex32::new(3.0, 4.0)]);
+    let fix_amp = fsdr_cli::blocks::FixedAmplitudeCc::new(10.0);
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > fix_amp > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 1);
+    assert!((out[0].norm() - 10.0).abs() < 1e-4);
+    assert!((out[0].re - 6.0).abs() < 1e-4);
+    assert!((out[0].im - 8.0).abs() < 1e-4);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_add_const_cc_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<Complex32>::new(vec![Complex32::new(1.0, 2.0)]);
+    let add_c = fsdr_cli::blocks::AddConstCc::new(Complex32::new(3.0, 4.0));
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > add_c > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 1);
+    assert!((out[0].re - 4.0).abs() < 1e-4);
+    assert!((out[0].im - 6.0).abs() < 1e-4);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_differential_coding_roundtrip() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<u8>::new(vec![1, 0, 1, 1, 0]);
+    let enc = fsdr_cli::blocks::DifferentialEncoderU8::new();
+    let dec = fsdr_cli::blocks::DifferentialDecoderU8::new();
+    let snk = VectorSink::<u8>::new(10);
+
+    connect!(fg, src > enc > dec > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[1, 0, 1, 1, 0]);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_invert_u8_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<u8>::new(vec![1, 0, 1, 0]);
+    let inv = fsdr_cli::blocks::InvertU8::new();
+    let snk = VectorSink::<u8>::new(10);
+
+    connect!(fg, src > inv > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[0, 1, 0, 1]);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_detect_nan_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<f32>::new(vec![1.5, f32::NAN, 2.5, f32::INFINITY]);
+    let nan_blk = fsdr_cli::blocks::DetectNanFf::new();
+    let snk = VectorSink::<f32>::new(10);
+
+    connect!(fg, src > nan_blk > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[1.5, 0.0, 2.5, 0.0]);
+
+    Ok(())
+}

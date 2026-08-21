@@ -1,0 +1,17 @@
+id: differential_encoder_u8_u8
+label: Differential Encoder
+category: '[Core]/Digital Decoders'
+
+inputs:
+-   domain: stream
+    dtype: byte
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from fsdr_cli.blocks import DifferentialEncoderU8
+    make: DifferentialEncoderU8()
+
+file_format: 1

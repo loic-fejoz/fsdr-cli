@@ -1,0 +1,17 @@
+id: bfsk_demod_cf
+label: 2-FSK Demodulator
+category: '[Core]/Digital Demodulators'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: float
+
+templates:
+    imports: from fsdr_cli.blocks import BfskDemodCf
+    make: BfskDemodCf()
+
+file_format: 1

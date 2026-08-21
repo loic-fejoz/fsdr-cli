@@ -90,8 +90,17 @@ psk31_varicode_decoder_cmd = { "psk31_varicode_decoder_u8_u8" | "varicodedecode"
 psk31_varicode_encoder_cmd = { "psk31_varicode_encoder_u8_u8" | "varicodeencode" }
 bpsk_costas_loop_cmd = { ("bpsk_costas_loop_cc" | "costas_loop_cc") ~ number_or_paren_expr? ~ number_or_paren_expr? }
 pll_cmd = { "pll_cc" ~ number_or_paren_expr? ~ number_or_paren_expr? }
+fmmod_fc_cmd = { "fmmod_fc" | "fmmod" }
+fixed_amplitude_cc_cmd = { ("fixed_amplitude_cc" | "fixed_amplitude") ~ number_or_paren_expr? }
+add_const_cc_cmd = { ("add_const_cc" | "add_const") ~ number_or_paren_expr? ~ number_or_paren_expr? }
+differential_encoder_u8_u8_cmd = { "differential_encoder_u8_u8" }
+differential_decoder_u8_u8_cmd = { "differential_decoder_u8_u8" }
+invert_u8_u8_cmd = { "invert_u8_u8" }
+bfsk_demod_cf_cmd = { "bfsk_demod_cf" | "bfskdemod" }
+detect_nan_ff_cmd = { "detect_nan_ff" }
+yes_f_cmd = { "yes_f" ~ number_or_paren_expr? }
 
-any_csdr_cmd = _{ "csdr"? ~ (add_dcoffset_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | ctcss_gen_cmd | clipdetect_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | pll_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
+any_csdr_cmd = _{ "csdr"? ~ (add_const_cc_cmd | add_dcoffset_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | bfsk_demod_cf_cmd | binary_slicer_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | ctcss_gen_cmd | clipdetect_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | detect_nan_ff_cmd | differential_encoder_u8_u8_cmd | differential_decoder_u8_u8_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fixed_amplitude_cc_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fmmod_fc_cmd | fractional_decimator_cmd | gain_cmd | invert_u8_u8_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | pll_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd | yes_f_cmd) }
 
 
 

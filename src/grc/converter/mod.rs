@@ -121,6 +121,22 @@ pub mod varicode;
 use self::varicode::{VaricodeDecoderConverter, VaricodeEncoderConverter};
 pub mod costas_loop;
 use self::costas_loop::CostasLoopConverter;
+pub mod fmmod;
+use self::fmmod::FmModFcConverter;
+pub mod fixed_amplitude;
+use self::fixed_amplitude::FixedAmplitudeConverter;
+pub mod add_const;
+use self::add_const::AddConstConverter;
+pub mod differential_coding;
+use self::differential_coding::{
+    DifferentialDecoderConverter, DifferentialEncoderConverter, InvertU8Converter,
+};
+pub mod bfsk;
+use self::bfsk::BfskDemodConverter;
+pub mod detect_nan;
+use self::detect_nan::DetectNanConverter;
+pub mod yes_source;
+use self::yes_source::YesFConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -219,6 +235,15 @@ impl Grc2FutureSdr {
             "bpsk_costas_loop_cc" | "digital_costas_loop_cc" | "pll_cc" => {
                 Box::new(CostasLoopConverter {})
             }
+            "fmmod_fc" | "fmmod" => Box::new(FmModFcConverter {}),
+            "fixed_amplitude_cc" | "fixed_amplitude" => Box::new(FixedAmplitudeConverter {}),
+            "add_const_cc" | "add_const" => Box::new(AddConstConverter {}),
+            "differential_encoder_u8_u8" => Box::new(DifferentialEncoderConverter {}),
+            "differential_decoder_u8_u8" => Box::new(DifferentialDecoderConverter {}),
+            "invert_u8_u8" => Box::new(InvertU8Converter {}),
+            "bfsk_demod_cf" | "bfskdemod" => Box::new(BfskDemodConverter {}),
+            "detect_nan_ff" => Box::new(DetectNanConverter {}),
+            "yes_f" => Box::new(YesFConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)

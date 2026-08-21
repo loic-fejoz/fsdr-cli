@@ -1,0 +1,27 @@
+id: add_const_cc
+label: Add Constant
+category: '[Core]/Math Operators'
+
+parameters:
+-   id: real
+    label: Real Offset
+    dtype: real
+    default: '0.0'
+-   id: imag
+    label: Imag Offset
+    dtype: real
+    default: '0.0'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: complex
+
+templates:
+    imports: from fsdr_cli.blocks import AddConstCc
+    make: AddConstCc(complex(${real}, ${imag}))
+
+file_format: 1

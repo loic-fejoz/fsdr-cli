@@ -1,0 +1,19 @@
+id: yes_f
+label: Constant Float Source
+category: '[Core]/Sources'
+
+parameters:
+-   id: value
+    label: Value
+    dtype: real
+    default: '1.0'
+
+outputs:
+-   domain: stream
+    dtype: float
+
+templates:
+    imports: from fsdr_cli.blocks import YesF
+    make: YesF(${value})
+
+file_format: 1
