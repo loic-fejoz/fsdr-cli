@@ -38,3 +38,5 @@ pub mod add_dcoffset;
 pub use add_dcoffset::AddDcOffsetCc;
 pub mod firdes;
 pub use firdes::{firdes_bandpass_c, firdes_filter_length, firdes_lowpass_f};
+pub mod repeat;
+pub use repeat::RepeatU8;

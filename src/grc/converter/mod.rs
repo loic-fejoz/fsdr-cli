@@ -59,6 +59,8 @@ pub mod blocks_null_sink;
 use self::blocks_null_sink::NullSinkConverter;
 pub mod blocks_pack_k_bits;
 use self::blocks_pack_k_bits::PackBitsConverter;
+pub mod blocks_unpack_k_bits;
+use self::blocks_unpack_k_bits::UnpackBitsConverter;
 pub mod blocks_throttle;
 use self::blocks_throttle::ThrottleConverter;
 pub mod blocks_complex_to_mag;
@@ -109,6 +111,8 @@ pub mod decimating_shift_addition_cc;
 use self::decimating_shift_addition_cc::DecimatingShiftAdditionCcConverter;
 pub mod add_dcoffset_cc;
 use self::add_dcoffset_cc::AddDcOffsetCcConverter;
+pub mod repeat_u8;
+use self::repeat_u8::RepeatU8Converter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -179,6 +183,8 @@ impl Grc2FutureSdr {
             "low_pass_filter" => Box::new(LowPassFilterConverter {}),
             "octave_complex_c" => Box::new(OctaveComplexConverter {}),
             "blocks_pack_k_bits_bb" => Box::new(PackBitsConverter {}),
+            "blocks_unpack_k_bits_bb" => Box::new(UnpackBitsConverter {}),
+            "repeat_u8" => Box::new(RepeatU8Converter {}),
             "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
             "satellites_kiss_file_source" => Box::new(SatellitesKissFileSourceConverter {}),

@@ -25,7 +25,7 @@ impl BlockConverter for FileSinkConverter {
             .context("blocks_file_sink: item type must be defined")?;
         let blk = if "-" == filename {
             match &(item_type[..]) {
-                "u8" => {
+                "u8" | "uchar" | "byte" | "char" => {
                     let blk = StdInOutBuilder::<u8>::stdout().as_ne().build();
                     Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
@@ -45,7 +45,7 @@ impl BlockConverter for FileSinkConverter {
             }
         } else {
             match &(item_type[..]) {
-                "u8" => {
+                "u8" | "uchar" | "byte" | "char" => {
                     let blk = FileSink::<u8>::new(filename);
                     Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }

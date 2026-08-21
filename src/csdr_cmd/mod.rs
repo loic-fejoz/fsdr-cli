@@ -13,6 +13,7 @@ use self::bandpass_fir_fft_cmd::BandpassFirFftcmd;
 use self::binary_slicer::BinarySlicerCmd;
 use self::cat_server_cmd::CatServerCmd;
 use self::clipdetect_cmd::ClipDetectCmd;
+use self::clone_cmd::CloneCmd;
 use self::convert_cmd::ConvertCmd;
 use self::ctcss_gen_cmd::CtcssGenCmd;
 use self::dcblock_cmd::DcBlockCmd;
@@ -27,6 +28,7 @@ use self::fft_cmd::FftCmd;
 use self::fft_exchange_sides_cmd::FftExchangeSidesCmd;
 use self::fir_decimate_cmd::FirDecimateCmd;
 use self::fixedlen_to_pdu_cmd::FixedlenToPduCmd;
+use self::flowcontrol_cmd::FlowcontrolCmd;
 use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
 use self::fractional_decimator_cmd::FractionalDecimatorCmd;
 use self::gain_cmd::GainCmd;
@@ -40,6 +42,7 @@ use self::pack_bits_cmd::PackBitsCmd;
 use self::pattern_search_cmd::PatternSearchCmd;
 use self::rational_resampler_cmd::RationalResamplerCmd;
 use self::realpart_cmd::RealPartCmd;
+use self::repeat_cmd::RepeatCmd;
 use self::save_kiss_cmd::SaveKissCmd;
 use self::shift_addition_cmd::ShiftAdditionCmd;
 use self::tcp_kiss_client_cmd::TcpKissClientCmd;
@@ -56,6 +59,7 @@ mod bandpass_fir_fft_cmd;
 mod binary_slicer;
 mod cat_server_cmd;
 mod clipdetect_cmd;
+mod clone_cmd;
 mod convert_cmd;
 mod ctcss_gen_cmd;
 mod dcblock_cmd;
@@ -70,6 +74,7 @@ mod fft_cmd;
 mod fft_exchange_sides_cmd;
 mod fir_decimate_cmd;
 mod fixedlen_to_pdu_cmd;
+mod flowcontrol_cmd;
 mod fmdemod_quadri_cmd;
 mod fractional_decimator_cmd;
 mod gain_cmd;
@@ -83,6 +88,7 @@ mod pack_bits_cmd;
 mod pattern_search_cmd;
 mod rational_resampler_cmd;
 mod realpart_cmd;
+mod repeat_cmd;
 mod save_kiss_cmd;
 mod shift_addition_cmd;
 mod tcp_kiss_client_cmd;
@@ -105,6 +111,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::bandpass_fir_fft_cc_cmd => self.build_bandpass_fir_fft_cc(grc),
             Rule::binary_slicer_cmd => self.build_binary_slicer(grc),
             Rule::cat_server_cmd => CatServerCmd::build_cat_server(self, grc),
+            Rule::clone_cmd => self.build_clone(grc),
             Rule::ctcss_gen_cmd => CtcssGenCmd::build_ctcss_gen(self, grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
             Rule::convert_cmd => self.build_convert(grc),
@@ -122,6 +129,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::fft_cc_cmd => self.build_fft_cc(grc),
             Rule::fft_fc_cmd => self.build_fft_fc(grc),
             Rule::fft_exchange_sides_ff_cmd => self.build_fft_exchange_sides_ff(grc),
+            Rule::flowcontrol_cmd => self.build_flowcontrol(grc),
             Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
             Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
@@ -133,6 +141,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::logaveragepower_cf_cmd => self.build_logaveragepower_cf(grc),
             Rule::logpower_cf_cmd => self.build_logpower_cf(grc),
             Rule::fixedlen_to_pdu_cmd => self.build_fixedlen_to_pdu(grc),
+            Rule::none_cmd => self.build_none(grc),
             Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::tcp_kiss_server_cmd => self.build_tcp_kiss_server(grc),
             Rule::tcp_kiss_client_cmd => self.build_tcp_kiss_client(grc),
@@ -141,6 +150,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::pattern_search_cmd => self.build_pattern_search(grc),
             Rule::rational_resampler_cmd => self.build_rational_resampler(grc),
             Rule::realpart_cmd => self.build_realpart(grc),
+            Rule::repeat_u8_cmd => self.build_repeat_u8(grc),
             Rule::shift_addition_cmd => self.build_shift_addition(grc),
             Rule::throttle_cmd => self.build_throttle(grc),
             Rule::timing_recovery_cmd => self.build_timing_recovery(grc),

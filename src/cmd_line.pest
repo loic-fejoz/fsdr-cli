@@ -53,7 +53,7 @@ tcp_kiss_client_cmd = { "tcp_kiss_client" ~ filepath }
 fixedlen_to_pdu_cmd = { "fixedlen_to_pdu" ~ number_or_paren_expr ~ ident? }
 limit_cmd = {"limit_ff" ~ number_or_paren_expr? }
 octave_complex_cmd = { "octave_complex_c" ~ number_or_paren_expr ~ number_or_paren_expr }
-pack_bits_cmd = { "pack_bits_8to1_u8_u8" }
+pack_bits_cmd = { "pack_bits_8to1_u8_u8" | "pack_bits_1to8_u8_u8" }
 pattern_search_cmd = { "pattern_search_u8_u8" ~ number_or_paren_expr ~ number_or_paren_expr+ }
 resampler_types = { "ff" | "cc" }
 rational_resampler_cmd = { "rational_resampler_" ~ resampler_types ~ number_or_paren_expr ~ number_or_paren_expr ~ (number_or_paren_expr ~ ident?)? }
@@ -61,6 +61,10 @@ realpart_cmd = {"realpart_cf"}
 shift_addition_cmd = { "shift_addition_cc" ~ number_or_paren_expr }
 timing_recovery_cmd = { "timing_recovery_cc" ~ ident ~ number_or_paren_expr ~ number_or_paren_expr ~ number_or_paren_expr }
 throttle_cmd = { "throttle_cc" | "throttle_ff" }
+flowcontrol_cmd = { "flowcontrol" ~ number_or_paren_expr ~ number_or_paren_expr? }
+clone_cmd = { "clone" | "through" }
+none_cmd = { "none" }
+repeat_u8_cmd = { ("repeat_u8" | "repeat") ~ number_or_paren_expr }
 weaver_lsb_cmd = { "weaver_lsb_cf" ~ number_or_paren_expr }
 weaver_usb_cmd = { "weaver_usb_cf" ~ number_or_paren_expr }
 cat_server_port_param = { ^"--port" ~ number_or_paren_expr }
@@ -81,7 +85,7 @@ dcblock_cmd = { ("dcblock_ff" | "dcblock") ~ number_or_paren_expr? }
 decimating_shift_addition_cmd = { "decimating_shift_addition_cc" ~ number_or_paren_expr ~ number_or_paren_expr }
 add_dcoffset_cc_cmd = { ("add_dcoffset_cc" | "add_dcoffset") ~ number_or_paren_expr? ~ number_or_paren_expr? }
 
-any_csdr_cmd = _{ "csdr"? ~ (add_dcoffset_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | cat_server_cmd | ctcss_gen_cmd | clipdetect_cmd | convert_cmd | dcblock_cmd | decimating_shift_addition_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | save_kiss_cmd | tcp_kiss_server_cmd | tcp_kiss_client_cmd | fixedlen_to_pdu_cmd | limit_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
+any_csdr_cmd = _{ "csdr"? ~ (add_dcoffset_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | cat_server_cmd | clone_cmd | ctcss_gen_cmd | clipdetect_cmd | convert_cmd | dcblock_cmd | decimating_shift_addition_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | none_cmd | save_kiss_cmd | tcp_kiss_server_cmd | tcp_kiss_client_cmd | fixedlen_to_pdu_cmd | limit_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
 
 
 

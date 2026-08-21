@@ -1,6 +1,7 @@
 use anyhow::Result;
 use fsdr_cli::csdr_cmd::CsdrParser;
 use fsdr_cli::grc::converter::Grc2FutureSdr;
+use futuresdr::blocks::ApplyNM;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSource;
 use futuresdr::num_complex::Complex32;
@@ -1389,4 +1390,101 @@ pub fn test_firdes_helpers() {
 
     let bp = fsdr_cli::blocks::firdes_bandpass_c(0.1, 0.2, 0.05, "HAMMING");
     assert_eq!(bp.len(), lp.len());
+}
+
+#[test]
+pub fn parse_pack_bits_1to8_u8_u8() {
+    let cmds = "pack_bits_1to8_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_unpack_k_bits_bb", grc.blocks[1].id);
+    assert_eq!("8", grc.blocks[1].parameters["k"]);
+}
+
+#[test]
+pub fn parse_flowcontrol() {
+    let cmds = "flowcontrol 48000";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_throttle", grc.blocks[1].id);
+    assert_eq!("48000", grc.blocks[1].parameters["samples_per_second"]);
+}
+
+#[test]
+pub fn parse_clone() {
+    let cmds = "clone";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(0, grc.blocks.len());
+}
+
+#[test]
+pub fn parse_none() {
+    let cmds = "none";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("blocks_null_sink", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_repeat_u8() {
+    let cmds = "repeat_u8 5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("repeat_u8", grc.blocks[1].id);
+    assert_eq!("5", grc.blocks[1].parameters["repeat"]);
+}
+
+#[test]
+pub fn test_repeat_u8_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<u8>::new(vec![0xAA, 0x55]);
+    let rep = fsdr_cli::blocks::RepeatU8::new(3);
+    let snk = VectorSink::<u8>::new(10);
+
+    connect!(fg, src > rep > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55]);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_pack_bits_1to8_and_8to1_roundtrip() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<u8>::new(vec![0xA5, 0x3C]);
+    let unpack = ApplyNM::<_, u8, u8, 1, 8>::new(move |v: &[u8], d: &mut [u8]| {
+        let byte = v[0];
+        for (i, item) in d.iter_mut().enumerate().take(8) {
+            *item = (byte >> (7 - i)) & 1;
+        }
+    });
+    let pack = ApplyNM::<_, u8, u8, 8, 1>::new(move |v: &[u8], d: &mut [u8]| {
+        d[0] = v
+            .iter()
+            .rev()
+            .enumerate()
+            .map(|(i, u)| (*u) << i)
+            .reduce(|a, b| a | b)
+            .expect("guarantee to not be empty due to ApplyNM");
+    });
+    let snk = VectorSink::<u8>::new(10);
+
+    connect!(fg, src > unpack > pack > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[0xA5, 0x3C]);
+
+    Ok(())
 }
