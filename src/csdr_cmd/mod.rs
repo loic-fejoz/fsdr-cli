@@ -5,6 +5,7 @@ use anyhow::{bail, Context, Result};
 use pest::iterators::Pair;
 use pest::Parser;
 
+use self::add_dcoffset_cmd::AddDcOffsetCmd;
 use self::agc_cmd::AgcCmd;
 use self::amdemod_cmd::AmDemodCmd;
 use self::audio_cmd::AudioCmd;
@@ -14,6 +15,8 @@ use self::cat_server_cmd::CatServerCmd;
 use self::clipdetect_cmd::ClipDetectCmd;
 use self::convert_cmd::ConvertCmd;
 use self::ctcss_gen_cmd::CtcssGenCmd;
+use self::dcblock_cmd::DcBlockCmd;
+use self::decimating_shift_addition_cmd::DecimatingShiftAdditionCmd;
 use self::deemphasis_nfm_ff_cmd::DeemphasisNfnCmd;
 use self::deemphasis_wfm_ff_cmd::DeemphasisWfmCmd;
 use self::dsb_cmd::DsbCmd;
@@ -45,6 +48,7 @@ use self::throttle_cmd::ThrottleCmd;
 use self::timing_recovery_cmd::TimingRecoveryCmd;
 use self::weaver_cmd::WeaverCmd;
 
+mod add_dcoffset_cmd;
 mod agc_cmd;
 mod amdemod_cmd;
 mod audio_cmd;
@@ -54,6 +58,8 @@ mod cat_server_cmd;
 mod clipdetect_cmd;
 mod convert_cmd;
 mod ctcss_gen_cmd;
+mod dcblock_cmd;
+mod decimating_shift_addition_cmd;
 mod deemphasis_nfm_ff_cmd;
 mod deemphasis_wfm_ff_cmd;
 mod dsb_cmd;
@@ -92,6 +98,7 @@ pub trait AnyCmd<'i> {
 impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
     fn parse(&self, grc: GrcBuilder<GraphLevel>) -> Result<GrcBuilder<GraphLevel>> {
         match self.as_rule() {
+            Rule::add_dcoffset_cc_cmd => self.build_add_dcoffset_cc(grc),
             Rule::agc_cmd => self.build_agc(grc),
             Rule::amdemod_cmd => self.build_amdemod(grc),
             Rule::audio_cmd => self.build_audio_sink(grc),
@@ -101,6 +108,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::ctcss_gen_cmd => CtcssGenCmd::build_ctcss_gen(self, grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
             Rule::convert_cmd => self.build_convert(grc),
+            Rule::dcblock_cmd => self.build_dcblock_ff(grc),
+            Rule::decimating_shift_addition_cmd => self.build_decimating_shift_addition_cc(grc),
             Rule::deemphasis_nfm_cmd => self.build_deemphasis_nfm(grc),
             Rule::deemphasis_wfm_cmd => self.build_deemphasis_wfm(grc),
             Rule::dsb_cmd => self.build_dsb(grc),

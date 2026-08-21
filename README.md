@@ -329,9 +329,9 @@ Example to chunk a byte stream and save it to a KISS file:
 - [ ] [shift_table_cc](https://github.com/ha7ilm/csdr#shift_table_cc)
 - [ ] [shift_addfast_cc](https://github.com/ha7ilm/csdr#shift_addfast_cc)
 - [ ] [shift_unroll_cc](https://github.com/ha7ilm/csdr#shift_unroll_cc)
-- [ ] [decimating_shift_addition_cc](https://github.com/ha7ilm/csdr#decimating_shift_addition_cc)
+- [x] [decimating_shift_addition_cc](https://github.com/ha7ilm/csdr#decimating_shift_addition_cc)
 - [ ] [shift_addition_fc](https://github.com/ha7ilm/csdr#shift_addition_fc)
-- [ ] [dcblock_ff](https://github.com/ha7ilm/csdr#dcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))
+- [x] [dcblock_ff](https://github.com/ha7ilm/csdr#dcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))
 - [x] [fastdcblock_ff](https://github.com/ha7ilm/csdr#fastdcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))[^3]
 - [x] [fmdemod_atan_cf](https://github.com/ha7ilm/csdr#fmdemod_atan_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))
 - [x] [fmdemod_quadri_cf](https://github.com/ha7ilm/csdr#fmdemod_quadri_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))[^1]
@@ -340,8 +340,8 @@ Example to chunk a byte stream and save it to a KISS file:
 - [x] [deemphasis_nfm_ff](https://github.com/ha7ilm/csdr#deemphasis_nfm_ff) ([jketterl](https://github.com/jketterl/csdr#deemphasis))[^2]
 - [x] [amdemod_cf](https://github.com/ha7ilm/csdr#amdemod_cf) ([jketterl](https://github.com/jketterl/csdr#amdemod_cf))[^3]
 - [ ] [amdemod_estimator_cf](https://github.com/ha7ilm/csdr#amdemod_estimator_cf) ([jketterl](https://github.com/jketterl/csdr#amdemod_cf))
-- [ ] [firdes_lowpass_f](https://github.com/ha7ilm/csdr#firdes_lowpass_f)
-- [ ] [firdes_bandpass_c](https://github.com/ha7ilm/csdr#firdes_bandpass_c)
+- [x] [firdes_lowpass_f](https://github.com/ha7ilm/csdr#firdes_lowpass_f)
+- [x] [firdes_bandpass_c](https://github.com/ha7ilm/csdr#firdes_bandpass_c)
 - [x] [fir_decimate_cc](https://github.com/ha7ilm/csdr#fir_decimate_cc) ([jketterl](https://github.com/jketterl/csdr#firdecimate))[^2][^3][^4]
 - [ ] [fir_interpolate_cc](https://github.com/ha7ilm/csdr#fir_interpolate_cc)
 - [x] [rational_resampler_ff](https://github.com/ha7ilm/csdr#rational_resampler_ff)
@@ -359,7 +359,7 @@ Example to chunk a byte stream and save it to a KISS file:
 - [ ] [compress_fft_adpcm_f_u8](https://github.com/ha7ilm/csdr#compress_fft_adpcm_f_u8) ([jketterl](https://github.com/jketterl/csdr#fftadpcm))
 - [x] [fft_exchange_sides_ff](https://github.com/ha7ilm/csdr#fft_exchange_sides_ff) ([jketterl](https://github.com/jketterl/csdr#fftswap))
 - [x] [dsb_fc](https://github.com/ha7ilm/csdr#dsb_fc)
-- [ ] [add_dcoffset_cc](https://github.com/ha7ilm/csdr#add_dcoffset_cc)
+- [x] [add_dcoffset_cc](https://github.com/ha7ilm/csdr#add_dcoffset_cc)
 - [ ] [convert_f_samplerf](https://github.com/ha7ilm/csdr#convert_f_samplerf)
 - [ ] [fmmod_fc](https://github.com/ha7ilm/csdr#fmmod_fc)
 - [ ] [fixed_amplitude_cc](https://github.com/ha7ilm/csdr#fixed_amplitude_cc)

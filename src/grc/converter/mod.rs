@@ -103,6 +103,12 @@ pub mod logaveragepower_cf;
 use self::logaveragepower_cf::LogAveragePowerCfConverter;
 pub mod fft_exchange_sides_ff;
 use self::fft_exchange_sides_ff::FftExchangeSidesFfConverter;
+pub mod dcblock_ff;
+use self::dcblock_ff::DcBlockFfConverter;
+pub mod decimating_shift_addition_cc;
+use self::decimating_shift_addition_cc::DecimatingShiftAdditionCcConverter;
+pub mod add_dcoffset_cc;
+use self::add_dcoffset_cc::AddDcOffsetCcConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -164,6 +170,9 @@ impl Grc2FutureSdr {
             "blocks_complex_to_mag" => Box::new(ComplexToMagConverter {}),
             "clipdetect_ff" => Box::new(ClipDetectFfConverter {}),
             "dc_blocker_xx" => Box::new(DcBlockerXx {}),
+            "dcblock_ff" | "dcblock" => Box::new(DcBlockFfConverter {}),
+            "decimating_shift_addition_cc" => Box::new(DecimatingShiftAdditionCcConverter {}),
+            "add_dcoffset_cc" | "add_dcoffset" => Box::new(AddDcOffsetCcConverter {}),
             "deemphasis_nfm_ff" | "analog_nfm_deemph" => Box::new(DeemphasisNfmConverter {}),
             "analog_fm_deemph" => Box::new(AnalogFmDeemphConverter {}),
             "fir_filter_xxx" => Box::new(FirFilterXxConverter {}),

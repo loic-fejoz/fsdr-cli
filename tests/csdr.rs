@@ -1276,3 +1276,117 @@ pub fn test_logaveragepower_cf_execution() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn parse_dcblock_ff() {
+    let cmds = "dcblock_ff 0.995";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("dcblock_ff", grc.blocks[1].id);
+    assert_eq!("0.995", grc.blocks[1].parameters["r"]);
+}
+
+#[test]
+pub fn parse_decimating_shift_addition_cc() {
+    let cmds = "decimating_shift_addition_cc 0.25 4";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("decimating_shift_addition_cc", grc.blocks[1].id);
+    assert_eq!("0.25", grc.blocks[1].parameters["rate"]);
+    assert_eq!("4", grc.blocks[1].parameters["decimation"]);
+}
+
+#[test]
+pub fn parse_add_dcoffset_cc() {
+    let cmds = "add_dcoffset_cc 1.5 0.5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("add_dcoffset_cc", grc.blocks[1].id);
+    assert_eq!("1.5", grc.blocks[1].parameters["offset_re"]);
+    assert_eq!("0.5", grc.blocks[1].parameters["offset_im"]);
+}
+
+#[test]
+pub fn test_dcblock_ff_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    // Constant DC input [2.0, 2.0, 2.0, ...] should decay towards 0.0
+    let src = VectorSource::<f32>::new(vec![2.0; 100]);
+    let dcblock = fsdr_cli::blocks::DcBlockFf::new(0.9);
+    let snk = VectorSink::<f32>::new(100);
+
+    connect!(fg, src > dcblock > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 100);
+    // After 100 samples of constant DC with R=0.9, output should be close to 0
+    assert!(out.last().unwrap().abs() < 1e-3);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_add_dcoffset_cc_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src =
+        VectorSource::<Complex32>::new(vec![Complex32::new(0.0, 0.0), Complex32::new(1.0, 2.0)]);
+    let add_dc = fsdr_cli::blocks::AddDcOffsetCc::new(Complex32::new(1.0, 0.5));
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > add_dc > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 2);
+    assert_eq!(out[0], Complex32::new(1.0, 0.5));
+    assert_eq!(out[1], Complex32::new(2.0, 2.5));
+
+    Ok(())
+}
+
+#[test]
+pub fn test_decimating_shift_addition_cc_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    // 4 complex samples at rate 0.0 (no shift), decimation 2
+    let src = VectorSource::<Complex32>::new(vec![
+        Complex32::new(1.0, 0.0),
+        Complex32::new(9.0, 9.0),
+        Complex32::new(3.0, 0.0),
+        Complex32::new(9.0, 9.0),
+    ]);
+    let dec_shift = fsdr_cli::blocks::DecimatingShiftAdditionCc::new(0.0, 2);
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > dec_shift > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 2);
+    assert!((out[0].re - 1.0).abs() < 1e-4);
+    assert!((out[0].im - 0.0).abs() < 1e-4);
+    assert!((out[1].re - 3.0).abs() < 1e-4);
+    assert!((out[1].im - 0.0).abs() < 1e-4);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_firdes_helpers() {
+    let lp = fsdr_cli::blocks::firdes_lowpass_f(0.1, 0.05, "HAMMING");
+    assert!(!lp.is_empty());
+    assert_eq!(lp.len() % 2, 1); // Symmetric odd length
+    let sum: f32 = lp.iter().sum();
+    assert!((sum - 1.0).abs() < 1e-4); // Normalized sum to 1.0
+
+    let bp = fsdr_cli::blocks::firdes_bandpass_c(0.1, 0.2, 0.05, "HAMMING");
+    assert_eq!(bp.len(), lp.len());
+}
