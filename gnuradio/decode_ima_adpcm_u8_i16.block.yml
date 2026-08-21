@@ -1,0 +1,17 @@
+id: decode_ima_adpcm_u8_i16
+label: IMA ADPCM Decoder
+category: '[Core]/Audio Codecs'
+
+inputs:
+-   domain: stream
+    dtype: byte
+
+outputs:
+-   domain: stream
+    dtype: short
+
+templates:
+    imports: from fsdr_cli.blocks import AdpcmDecoderU8I16
+    make: AdpcmDecoderU8I16()
+
+file_format: 1

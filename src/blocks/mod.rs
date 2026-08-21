@@ -62,3 +62,5 @@ pub mod detect_nan;
 pub use detect_nan::DetectNanFf;
 pub mod yes_source;
 pub use yes_source::YesF;
+pub mod adpcm;
+pub use adpcm::{AdpcmCodec, AdpcmDecoderU8I16, AdpcmEncoderI16U8, CompressFftAdpcmFU8};

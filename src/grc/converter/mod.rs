@@ -137,6 +137,8 @@ pub mod detect_nan;
 use self::detect_nan::DetectNanConverter;
 pub mod yes_source;
 use self::yes_source::YesFConverter;
+pub mod adpcm;
+use self::adpcm::{AdpcmDecoderConverter, AdpcmEncoderConverter, CompressFftAdpcmConverter};
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -244,6 +246,9 @@ impl Grc2FutureSdr {
             "bfsk_demod_cf" | "bfskdemod" => Box::new(BfskDemodConverter {}),
             "detect_nan_ff" => Box::new(DetectNanConverter {}),
             "yes_f" => Box::new(YesFConverter {}),
+            "encode_ima_adpcm_i16_u8" | "adpcm_encoder" => Box::new(AdpcmEncoderConverter {}),
+            "decode_ima_adpcm_u8_i16" | "adpcm_decoder" => Box::new(AdpcmDecoderConverter {}),
+            "compress_fft_adpcm_f_u8" | "fftadpcm" => Box::new(CompressFftAdpcmConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)

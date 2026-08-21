@@ -1830,3 +1830,78 @@ pub fn test_detect_nan_execution() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn parse_encode_ima_adpcm_i16_u8() {
+    let cmds = "encode_ima_adpcm_i16_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("encode_ima_adpcm_i16_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_decode_ima_adpcm_u8_i16() {
+    let cmds = "decode_ima_adpcm_u8_i16";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("decode_ima_adpcm_u8_i16", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_compress_fft_adpcm_f_u8() {
+    let cmds = "compress_fft_adpcm_f_u8 512";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("compress_fft_adpcm_f_u8", grc.blocks[1].id);
+    assert_eq!("512", grc.blocks[1].parameters["fft_size"]);
+}
+
+#[test]
+pub fn test_ima_adpcm_encode_decode_roundtrip() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let original_samples: Vec<i16> = (0..200)
+        .map(|k| (5000.0 * (2.0 * std::f32::consts::PI * (k as f32) / 50.0).sin()) as i16)
+        .collect();
+    let src = VectorSource::<i16>::new(original_samples.clone());
+    let enc = fsdr_cli::blocks::AdpcmEncoderI16U8::new();
+    let dec = fsdr_cli::blocks::AdpcmDecoderU8I16::new();
+    let snk = VectorSink::<i16>::new(250);
+
+    connect!(fg, src > enc > dec > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), original_samples.len());
+    // After the initial adaptation (first ~10 samples), reconstructed samples track closely
+    for (orig, rec) in original_samples[10..].iter().zip(out[10..].iter()) {
+        assert!((orig - rec).abs() < 500, "orig: {}, rec: {}", orig, rec);
+    }
+
+    Ok(())
+}
+
+#[test]
+pub fn test_compress_fft_adpcm_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let fft_size = 16;
+    let input_floats: Vec<f32> = (0..fft_size).map(|i| i as f32).collect();
+    let src = VectorSource::<f32>::new(input_floats);
+    let compress = fsdr_cli::blocks::CompressFftAdpcmFU8::new(fft_size);
+    let snk = VectorSink::<u8>::new(50);
+
+    connect!(fg, src > compress > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    // 10 padding samples (5 bytes) + 16 fft samples (8 bytes) = 13 bytes
+    assert_eq!(out.len(), (10 + fft_size) / 2);
+
+    Ok(())
+}

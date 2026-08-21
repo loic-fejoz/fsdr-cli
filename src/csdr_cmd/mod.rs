@@ -7,6 +7,7 @@ use pest::Parser;
 
 use self::add_const_cmd::AddConstCmd;
 use self::add_dcoffset_cmd::AddDcOffsetCmd;
+use self::adpcm_cmd::AdpcmCmd;
 use self::agc_cmd::AgcCmd;
 use self::amdemod_cmd::AmDemodCmd;
 use self::audio_cmd::AudioCmd;
@@ -64,6 +65,7 @@ use self::yes_cmd::YesCmd;
 
 mod add_const_cmd;
 mod add_dcoffset_cmd;
+mod adpcm_cmd;
 mod agc_cmd;
 mod amdemod_cmd;
 mod audio_cmd;
@@ -139,10 +141,12 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::clone_cmd => self.build_clone(grc),
             Rule::ctcss_gen_cmd => CtcssGenCmd::build_ctcss_gen(self, grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
+            Rule::compress_fft_adpcm_f_u8_cmd => self.build_compress_fft_adpcm(grc),
             Rule::convert_cmd => self.build_convert(grc),
             Rule::dbpsk_cmd => self.build_dbpsk_decoder(grc),
             Rule::dcblock_cmd => self.build_dcblock_ff(grc),
             Rule::decimating_shift_addition_cmd => self.build_decimating_shift_addition_cc(grc),
+            Rule::decode_ima_adpcm_u8_i16_cmd => self.build_adpcm_decoder(grc),
             Rule::deemphasis_nfm_cmd => self.build_deemphasis_nfm(grc),
             Rule::deemphasis_wfm_cmd => self.build_deemphasis_wfm(grc),
             Rule::detect_nan_ff_cmd => self.build_detect_nan(grc),
@@ -150,6 +154,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::differential_decoder_u8_u8_cmd => self.build_differential_decoder(grc),
             Rule::dsb_cmd => self.build_dsb(grc),
             Rule::dump_cmd => self.build_dump(grc),
+            Rule::encode_ima_adpcm_i16_u8_cmd => self.build_adpcm_encoder(grc),
             Rule::eval_cmd => {
                 self.execute_eval()?;
                 Ok(grc)

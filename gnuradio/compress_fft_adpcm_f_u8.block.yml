@@ -1,0 +1,23 @@
+id: compress_fft_adpcm_f_u8
+label: FFT ADPCM Compression
+category: '[Core]/Audio Codecs'
+
+parameters:
+-   id: fft_size
+    label: FFT Size
+    dtype: int
+    default: '1024'
+
+inputs:
+-   domain: stream
+    dtype: float
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from fsdr_cli.blocks import CompressFftAdpcmFU8
+    make: CompressFftAdpcmFU8(${fft_size})
+
+file_format: 1
