@@ -1,0 +1,17 @@
+id: mono2stereo_s16
+label: Mono to Stereo Interleaved
+category: '[Core]/Audio Operators'
+
+inputs:
+-   domain: stream
+    dtype: short
+
+outputs:
+-   domain: stream
+    dtype: short
+
+templates:
+    imports: from fsdr_cli.blocks import Mono2StereoS16
+    make: Mono2StereoS16()
+
+file_format: 1

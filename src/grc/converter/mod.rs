@@ -113,6 +113,14 @@ pub mod add_dcoffset_cc;
 use self::add_dcoffset_cc::AddDcOffsetCcConverter;
 pub mod repeat_u8;
 use self::repeat_u8::RepeatU8Converter;
+pub mod mono2stereo_s16;
+use self::mono2stereo_s16::Mono2StereoS16Converter;
+pub mod dbpsk_decoder;
+use self::dbpsk_decoder::DBPskDecoderConverter;
+pub mod varicode;
+use self::varicode::{VaricodeDecoderConverter, VaricodeEncoderConverter};
+pub mod costas_loop;
+use self::costas_loop::CostasLoopConverter;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -198,6 +206,19 @@ impl Grc2FutureSdr {
             "logpower_cf" | "logpower" => Box::new(LogPowerCfConverter {}),
             "logaveragepower_cf" | "logaveragepower" => Box::new(LogAveragePowerCfConverter {}),
             "fft_exchange_sides_ff" | "fftswap" => Box::new(FftExchangeSidesFfConverter {}),
+            "mono2stereo_s16" | "mono2stereo" => Box::new(Mono2StereoS16Converter {}),
+            "dbpsk_decoder_c_u8" | "dbpskdecoder" | "dbpskdecode" => {
+                Box::new(DBPskDecoderConverter {})
+            }
+            "psk31_varicode_decoder_u8_u8" | "varicodedecode" => {
+                Box::new(VaricodeDecoderConverter {})
+            }
+            "psk31_varicode_encoder_u8_u8" | "varicodeencode" => {
+                Box::new(VaricodeEncoderConverter {})
+            }
+            "bpsk_costas_loop_cc" | "digital_costas_loop_cc" | "pll_cc" => {
+                Box::new(CostasLoopConverter {})
+            }
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)

@@ -1,0 +1,17 @@
+id: dbpsk_decoder_c_u8
+label: Differential BPSK Decoder
+category: '[Core]/Digital Demodulators'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from fsdr_cli.blocks import DBPskDecoder
+    make: DBPskDecoder()
+
+file_format: 1

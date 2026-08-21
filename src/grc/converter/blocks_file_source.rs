@@ -42,6 +42,14 @@ impl BlockConverter for FileSourceConverter {
                 let blk = FileSource::<i8>::new(filename, repeat);
                 Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
+            "i16" | "short" | "s16" => {
+                let blk = FileSource::<i16>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
+            }
+            "u16" => {
+                let blk = FileSource::<u16>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
+            }
             "f32" | "float" => {
                 let blk = FileSource::<f32>::new(filename, repeat);
                 Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))

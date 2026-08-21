@@ -15,7 +15,9 @@ use self::cat_server_cmd::CatServerCmd;
 use self::clipdetect_cmd::ClipDetectCmd;
 use self::clone_cmd::CloneCmd;
 use self::convert_cmd::ConvertCmd;
+use self::costas_loop_cmd::CostasLoopCmd;
 use self::ctcss_gen_cmd::CtcssGenCmd;
+use self::dbpsk_cmd::DBPskCmd;
 use self::dcblock_cmd::DcBlockCmd;
 use self::decimating_shift_addition_cmd::DecimatingShiftAdditionCmd;
 use self::deemphasis_nfm_ff_cmd::DeemphasisNfnCmd;
@@ -37,6 +39,7 @@ use self::load_cmd::LoadCmd;
 use self::load_kiss_cmd::LoadKissCmd;
 use self::logaveragepower_cmd::LogAveragePowerCmd;
 use self::logpower_cmd::LogPowerCmd;
+use self::mono2stereo_cmd::Mono2StereoCmd;
 use self::octave_complex_cmd::OctaveComplexCmd;
 use self::pack_bits_cmd::PackBitsCmd;
 use self::pattern_search_cmd::PatternSearchCmd;
@@ -49,6 +52,7 @@ use self::tcp_kiss_client_cmd::TcpKissClientCmd;
 use self::tcp_kiss_server_cmd::TcpKissServerCmd;
 use self::throttle_cmd::ThrottleCmd;
 use self::timing_recovery_cmd::TimingRecoveryCmd;
+use self::varicode_cmd::VaricodeCmd;
 use self::weaver_cmd::WeaverCmd;
 
 mod add_dcoffset_cmd;
@@ -61,7 +65,9 @@ mod cat_server_cmd;
 mod clipdetect_cmd;
 mod clone_cmd;
 mod convert_cmd;
+mod costas_loop_cmd;
 mod ctcss_gen_cmd;
+mod dbpsk_cmd;
 mod dcblock_cmd;
 mod decimating_shift_addition_cmd;
 mod deemphasis_nfm_ff_cmd;
@@ -83,6 +89,7 @@ mod load_cmd;
 mod load_kiss_cmd;
 mod logaveragepower_cmd;
 mod logpower_cmd;
+mod mono2stereo_cmd;
 mod octave_complex_cmd;
 mod pack_bits_cmd;
 mod pattern_search_cmd;
@@ -95,6 +102,7 @@ mod tcp_kiss_client_cmd;
 mod tcp_kiss_server_cmd;
 mod throttle_cmd;
 mod timing_recovery_cmd;
+mod varicode_cmd;
 mod weaver_cmd;
 
 pub trait AnyCmd<'i> {
@@ -110,11 +118,13 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::audio_cmd => self.build_audio_sink(grc),
             Rule::bandpass_fir_fft_cc_cmd => self.build_bandpass_fir_fft_cc(grc),
             Rule::binary_slicer_cmd => self.build_binary_slicer(grc),
+            Rule::bpsk_costas_loop_cmd | Rule::pll_cmd => self.build_costas_loop(grc),
             Rule::cat_server_cmd => CatServerCmd::build_cat_server(self, grc),
             Rule::clone_cmd => self.build_clone(grc),
             Rule::ctcss_gen_cmd => CtcssGenCmd::build_ctcss_gen(self, grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
             Rule::convert_cmd => self.build_convert(grc),
+            Rule::dbpsk_cmd => self.build_dbpsk_decoder(grc),
             Rule::dcblock_cmd => self.build_dcblock_ff(grc),
             Rule::decimating_shift_addition_cmd => self.build_decimating_shift_addition_cc(grc),
             Rule::deemphasis_nfm_cmd => self.build_deemphasis_nfm(grc),
@@ -141,6 +151,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::logaveragepower_cf_cmd => self.build_logaveragepower_cf(grc),
             Rule::logpower_cf_cmd => self.build_logpower_cf(grc),
             Rule::fixedlen_to_pdu_cmd => self.build_fixedlen_to_pdu(grc),
+            Rule::mono2stereo_s16_cmd => self.build_mono2stereo_s16(grc),
             Rule::none_cmd => self.build_none(grc),
             Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::tcp_kiss_server_cmd => self.build_tcp_kiss_server(grc),
@@ -148,6 +159,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::pack_bits_cmd => self.build_pack_bits(grc),
             Rule::pattern_search_cmd => self.build_pattern_search(grc),
+            Rule::psk31_varicode_decoder_cmd => self.build_varicode_decoder(grc),
+            Rule::psk31_varicode_encoder_cmd => self.build_varicode_encoder(grc),
             Rule::rational_resampler_cmd => self.build_rational_resampler(grc),
             Rule::realpart_cmd => self.build_realpart(grc),
             Rule::repeat_u8_cmd => self.build_repeat_u8(grc),

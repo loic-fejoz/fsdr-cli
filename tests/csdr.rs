@@ -1488,3 +1488,144 @@ pub fn test_pack_bits_1to8_and_8to1_roundtrip() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+pub fn parse_mono2stereo_s16() {
+    let cmds = "mono2stereo_s16";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("mono2stereo_s16", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_dbpsk_decoder_c_u8() {
+    let cmds = "dbpsk_decoder_c_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("dbpsk_decoder_c_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_psk31_varicode_decoder() {
+    let cmds = "psk31_varicode_decoder_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("psk31_varicode_decoder_u8_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_psk31_varicode_encoder() {
+    let cmds = "psk31_varicode_encoder_u8_u8";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("psk31_varicode_encoder_u8_u8", grc.blocks[1].id);
+}
+
+#[test]
+pub fn parse_bpsk_costas_loop_cc() {
+    let cmds = "bpsk_costas_loop_cc 0.05 0.707";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("bpsk_costas_loop_cc", grc.blocks[1].id);
+    assert_eq!("0.05", grc.blocks[1].parameters["loop_bw"]);
+    assert_eq!("0.707", grc.blocks[1].parameters["damping"]);
+}
+
+#[test]
+pub fn parse_pll_cc() {
+    let cmds = "pll_cc 0.01 0.707";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("bpsk_costas_loop_cc", grc.blocks[1].id);
+}
+
+#[test]
+pub fn test_mono2stereo_s16_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<i16>::new(vec![100, 200]);
+    let m2s = fsdr_cli::blocks::Mono2StereoS16::new();
+    let snk = VectorSink::<i16>::new(10);
+
+    connect!(fg, src > m2s > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[100, 100, 200, 200]);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_dbpsk_decoder_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    // 0 phase -> 0 phase (diff 0 -> 1) -> PI phase (diff PI -> 0)
+    let src = VectorSource::<Complex32>::new(vec![
+        Complex32::new(1.0, 0.0),
+        Complex32::new(1.0, 0.0),
+        Complex32::new(-1.0, 0.0),
+    ]);
+    let dbpsk = fsdr_cli::blocks::DBPskDecoder::new();
+    let snk = VectorSink::<u8>::new(10);
+
+    connect!(fg, src > dbpsk > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, &[1, 1, 0]);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_varicode_encode_decode_roundtrip() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let msg = b"HELLO";
+    let src = VectorSource::<u8>::new(msg.to_vec());
+    let enc = fsdr_cli::blocks::VaricodeEncoder::new();
+    let dec = fsdr_cli::blocks::VaricodeDecoder::new();
+    let snk = VectorSink::<u8>::new(20);
+
+    connect!(fg, src > enc > dec > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out, msg);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_costas_loop_execution() -> Result<()> {
+    let mut fg = Flowgraph::new();
+    let src = VectorSource::<Complex32>::new(vec![
+        Complex32::new(1.0, 0.0),
+        Complex32::new(1.0, 0.0),
+        Complex32::new(1.0, 0.0),
+    ]);
+    let costas = fsdr_cli::blocks::CostasLoopCc::new(0.05, 0.707);
+    let snk = VectorSink::<Complex32>::new(10);
+
+    connect!(fg, src > costas > snk;);
+
+    let term_fg = Runtime::new().run(fg)?;
+    let snk_blk = term_fg.block(&snk)?;
+    let out = snk_blk.items();
+
+    assert_eq!(out.len(), 3);
+    assert!((out[0].re - 1.0).abs() < 1e-3);
+    assert!(out[0].im.abs() < 1e-3);
+
+    Ok(())
+}
