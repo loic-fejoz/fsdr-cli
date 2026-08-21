@@ -3,6 +3,7 @@ use futuresdr::num_complex::Complex32;
 use std::f32::consts::PI;
 
 pub fn firdes_filter_length(transition_bw: f32, window_type: &str) -> usize {
+    let transition_bw = transition_bw.max(1e-6);
     let win_str = window_type.to_uppercase();
     let factor = match win_str.as_str() {
         "BLACKMAN" | "WIN_BLACKMAN" | "WINDOW.WIN_BLACKMAN" => 4.0,
