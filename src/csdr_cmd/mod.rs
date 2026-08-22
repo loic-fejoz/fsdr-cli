@@ -17,8 +17,10 @@ use self::binary_slicer::BinarySlicerCmd;
 use self::cat_server_cmd::CatServerCmd;
 use self::clipdetect_cmd::ClipDetectCmd;
 use self::clone_cmd::CloneCmd;
+use self::cmd_trigger_cmd::CmdTriggerCmd;
 use self::convert_cmd::ConvertCmd;
 use self::costas_loop_cmd::CostasLoopCmd;
+use self::ctcss_detect_cmd::CtcssDetectCmd;
 use self::ctcss_gen_cmd::CtcssGenCmd;
 use self::dbpsk_cmd::DBPskCmd;
 use self::dcblock_cmd::DcBlockCmd;
@@ -50,6 +52,7 @@ use self::mono2stereo_cmd::Mono2StereoCmd;
 use self::octave_complex_cmd::OctaveComplexCmd;
 use self::pack_bits_cmd::PackBitsCmd;
 use self::pattern_search_cmd::PatternSearchCmd;
+use self::power_tagger_cmd::PowerTaggerCmd;
 use self::rational_resampler_cmd::RationalResamplerCmd;
 use self::realpart_cmd::RealPartCmd;
 use self::repeat_cmd::RepeatCmd;
@@ -58,6 +61,7 @@ use self::shift_addition_cmd::ShiftAdditionCmd;
 use self::tcp_kiss_client_cmd::TcpKissClientCmd;
 use self::tcp_kiss_server_cmd::TcpKissServerCmd;
 use self::throttle_cmd::ThrottleCmd;
+use self::timer_tagger_cmd::TimerTaggerCmd;
 use self::timing_recovery_cmd::TimingRecoveryCmd;
 use self::varicode_cmd::VaricodeCmd;
 use self::weaver_cmd::WeaverCmd;
@@ -75,8 +79,10 @@ mod binary_slicer;
 mod cat_server_cmd;
 mod clipdetect_cmd;
 mod clone_cmd;
+mod cmd_trigger_cmd;
 mod convert_cmd;
 mod costas_loop_cmd;
+mod ctcss_detect_cmd;
 mod ctcss_gen_cmd;
 mod dbpsk_cmd;
 mod dcblock_cmd;
@@ -108,6 +114,7 @@ mod mono2stereo_cmd;
 mod octave_complex_cmd;
 mod pack_bits_cmd;
 mod pattern_search_cmd;
+mod power_tagger_cmd;
 mod rational_resampler_cmd;
 mod realpart_cmd;
 mod repeat_cmd;
@@ -116,6 +123,7 @@ mod shift_addition_cmd;
 mod tcp_kiss_client_cmd;
 mod tcp_kiss_server_cmd;
 mod throttle_cmd;
+mod timer_tagger_cmd;
 mod timing_recovery_cmd;
 mod varicode_cmd;
 mod weaver_cmd;
@@ -139,6 +147,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::bpsk_costas_loop_cmd | Rule::pll_cmd => self.build_costas_loop(grc),
             Rule::cat_server_cmd => CatServerCmd::build_cat_server(self, grc),
             Rule::clone_cmd => self.build_clone(grc),
+            Rule::cmd_trigger_f_cmd => self.build_cmd_trigger(grc),
+            Rule::ctcss_detect_ff_cmd => self.build_ctcss_detect(grc),
             Rule::ctcss_gen_cmd => CtcssGenCmd::build_ctcss_gen(self, grc),
             Rule::clipdetect_cmd => self.build_clipdetect(grc),
             Rule::compress_fft_adpcm_f_u8_cmd => self.build_compress_fft_adpcm(grc),
@@ -186,6 +196,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::octave_complex_cmd => self.build_octave_complex(grc),
             Rule::pack_bits_cmd => self.build_pack_bits(grc),
             Rule::pattern_search_cmd => self.build_pattern_search(grc),
+            Rule::power_tagger_cc_cmd => self.build_power_tagger(grc),
             Rule::psk31_varicode_decoder_cmd => self.build_varicode_decoder(grc),
             Rule::psk31_varicode_encoder_cmd => self.build_varicode_encoder(grc),
             Rule::rational_resampler_cmd => self.build_rational_resampler(grc),
@@ -193,6 +204,7 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::repeat_u8_cmd => self.build_repeat_u8(grc),
             Rule::shift_addition_cmd => self.build_shift_addition(grc),
             Rule::throttle_cmd => self.build_throttle(grc),
+            Rule::timer_tagger_ff_cmd => self.build_timer_tagger(grc),
             Rule::timing_recovery_cmd => self.build_timing_recovery(grc),
             Rule::weaver_lsb_cmd | Rule::weaver_usb_cmd => self.build_weaver(grc),
             Rule::yes_f_cmd => self.build_yes_f(grc),

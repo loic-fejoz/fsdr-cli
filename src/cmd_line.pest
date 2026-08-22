@@ -102,8 +102,66 @@ yes_f_cmd = { "yes_f" ~ number_or_paren_expr? }
 encode_ima_adpcm_i16_u8_cmd = { "encode_ima_adpcm_i16_u8" | ("adpcm" ~ "--encode") }
 decode_ima_adpcm_u8_i16_cmd = { "decode_ima_adpcm_u8_i16" | ("adpcm" ~ "--decode") }
 compress_fft_adpcm_f_u8_cmd = { ("compress_fft_adpcm_f_u8" | "fftadpcm") ~ number_or_paren_expr }
+single_quoted_string = @{ "'" ~ (!"'" ~ ANY)* ~ "'" }
+double_quoted_string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+unquoted_token = @{ (!(" " | "\t" | "\r" | "\n" | "|" | "!") ~ ANY)+ }
+param_val = { single_quoted_string | double_quoted_string | unquoted_token }
 
-any_csdr_cmd = _{ "csdr"? ~ (add_const_cc_cmd | add_dcoffset_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | bfsk_demod_cf_cmd | binary_slicer_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | ctcss_gen_cmd | clipdetect_cmd | compress_fft_adpcm_f_u8_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | decode_ima_adpcm_u8_i16_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | detect_nan_ff_cmd | differential_encoder_u8_u8_cmd | differential_decoder_u8_u8_cmd | dsb_cmd | dump_cmd | encode_ima_adpcm_i16_u8_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fixed_amplitude_cc_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fmmod_fc_cmd | fractional_decimator_cmd | gain_cmd | invert_u8_u8_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | pll_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd | yes_f_cmd) }
+power_tagger_samp_rate = { ^"--samp-rate" ~ param_val }
+power_tagger_threshold = { ^"--threshold" ~ param_val }
+power_tagger_off_threshold = { ^"--off-threshold" ~ param_val }
+power_tagger_on_threshold = { ^"--on-threshold" ~ param_val }
+power_tagger_delay = { ^"--delay" ~ param_val }
+power_tagger_off_delay = { ^"--off-delay" ~ param_val }
+power_tagger_on_delay = { ^"--on-delay" ~ param_val }
+power_tagger_window = { ^"--window-size" ~ param_val }
+power_tagger_off_tag = { ^"--off-tag" ~ param_val }
+power_tagger_on_tag = { ^"--on-tag" ~ param_val }
+power_tagger_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+power_tagger_param = _{
+    power_tagger_samp_rate
+    | power_tagger_off_threshold
+    | power_tagger_on_threshold
+    | power_tagger_threshold
+    | power_tagger_off_delay
+    | power_tagger_on_delay
+    | power_tagger_delay
+    | power_tagger_window
+    | power_tagger_off_tag
+    | power_tagger_on_tag
+    | power_tagger_debug
+}
+power_tagger_cc_cmd = { ("power_tagger_cc" | "power_tagger") ~ power_tagger_param* }
+
+ctcss_samp_rate = { ^"--samp-rate" ~ param_val }
+ctcss_tone = { (^"--tone" | ^"--tone-freq") ~ param_val }
+ctcss_threshold = { ^"--threshold" ~ param_val }
+ctcss_duration = { ^"--duration" ~ param_val }
+ctcss_tag = { (^"--tag" | ^"--tag-name") ~ param_val }
+ctcss_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+ctcss_param = _{ ctcss_samp_rate | ctcss_tone | ctcss_threshold | ctcss_duration | ctcss_tag | ctcss_debug }
+ctcss_detect_ff_cmd = { ("ctcss_detect_ff" | "ctcss_detect") ~ ctcss_param* }
+
+timer_samp_rate = { ^"--samp-rate" ~ param_val }
+timer_duration = { ^"--duration" ~ param_val }
+timer_start = { (^"--start" | ^"--start-tag") ~ param_val }
+timer_end = { (^"--end" | ^"--end-tag") ~ param_val }
+timer_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+timer_param = _{ timer_samp_rate | timer_duration | timer_start | timer_end | timer_debug }
+timer_tagger_ff_cmd = { ("timer_tagger_ff" | "timer_tagger") ~ timer_param* }
+
+cmd_raw_token = @{ (!("!" | "|" | ("--" ~ ASCII_ALPHA)) ~ ANY)+ }
+cmd_param_val = { single_quoted_string | double_quoted_string | cmd_raw_token }
+
+cmd_trig_samp_rate = { ^"--samp-rate" ~ param_val }
+cmd_trig_start = { ^"--start-tag" ~ param_val }
+cmd_trig_end = { ^"--end-tag" ~ param_val }
+cmd_trig_cmd = { ^"--cmd" ~ cmd_param_val }
+cmd_trig_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+cmd_trig_param = _{ cmd_trig_samp_rate | cmd_trig_start | cmd_trig_end | cmd_trig_cmd | cmd_trig_debug }
+cmd_trigger_f_cmd = { ("cmd_trigger_f" | "cmd_trigger") ~ cmd_trig_param* }
+
+any_csdr_cmd = _{ "csdr"? ~ (add_const_cc_cmd | add_dcoffset_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | bfsk_demod_cf_cmd | binary_slicer_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | cmd_trigger_f_cmd | ctcss_detect_ff_cmd | ctcss_gen_cmd | clipdetect_cmd | compress_fft_adpcm_f_u8_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | decode_ima_adpcm_u8_i16_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | detect_nan_ff_cmd | differential_encoder_u8_u8_cmd | differential_decoder_u8_u8_cmd | dsb_cmd | dump_cmd | encode_ima_adpcm_i16_u8_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fixed_amplitude_cc_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fmmod_fc_cmd | fractional_decimator_cmd | gain_cmd | invert_u8_u8_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | pll_cmd | power_tagger_cc_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timer_tagger_ff_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd | yes_f_cmd) }
 
 
 

@@ -39,6 +39,7 @@ pest_derive = "2.0"
 anyhow = "1.0.102"
 rustfft = "6.4"
 num-complex = "0.4"
+tempfile = "3.10"
 
 # iqengine-plugin = {path="../iqengine-plugin-rs", optional = true  }
 iqengine-plugin = { git = "https://github.com/loic-fejoz/iqengine-plugin-rs/", branch = "main", optional = true   }

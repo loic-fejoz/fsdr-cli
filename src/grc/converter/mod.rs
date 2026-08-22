@@ -16,6 +16,14 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 
 use super::converter_helper::*;
+pub mod analog_power_tagger;
+use self::analog_power_tagger::AnalogPowerTaggerConverter;
+pub mod analog_ctcss_detect;
+use self::analog_ctcss_detect::AnalogCtcssDetectConverter;
+pub mod blocks_timer_tagger;
+use self::blocks_timer_tagger::BlocksTimerTaggerConverter;
+pub mod blocks_cmd_trigger;
+use self::blocks_cmd_trigger::BlocksCmdTriggerConverter;
 pub mod analog_agc_xx;
 use self::analog_agc_xx::AnalogAgcXxConverter;
 pub mod analog_fm_deemph;
@@ -169,6 +177,21 @@ impl Grc2FutureSdr {
     fn block_converter(blk_def: &BlockInstance) -> Result<Box<dyn BlockConverter>> {
         let blk_type = &(blk_def.id[..]);
         let cvter: Box<dyn BlockConverter> = match blk_type {
+            "analog_power_tagger_cc"
+            | "analog_power_tagger"
+            | "power_tagger_cc"
+            | "power_tagger" => Box::new(AnalogPowerTaggerConverter {}),
+            "analog_ctcss_detect_ff"
+            | "analog_ctcss_detect"
+            | "ctcss_detect_ff"
+            | "ctcss_detect" => Box::new(AnalogCtcssDetectConverter {}),
+            "blocks_timer_tagger_ff"
+            | "blocks_timer_tagger"
+            | "timer_tagger_ff"
+            | "timer_tagger" => Box::new(BlocksTimerTaggerConverter {}),
+            "blocks_cmd_trigger_f" | "blocks_cmd_trigger" | "cmd_trigger_f" | "cmd_trigger" => {
+                Box::new(BlocksCmdTriggerConverter {})
+            }
             "analog_agc_xx" => Box::new(AnalogAgcXxConverter {}),
             "analog_quadrature_demod_cf" => Box::new(AnalogQuadratureDemoConverter {}),
             "analog_rail_ff" => Box::new(AnalogRailFfConverter {}),

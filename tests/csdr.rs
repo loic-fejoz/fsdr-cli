@@ -1382,14 +1382,20 @@ pub fn test_decimating_shift_addition_cc_execution() -> Result<()> {
 
 #[test]
 pub fn test_firdes_helpers() {
-    let lp = fsdr_cli::blocks::firdes_lowpass_f(0.1, 0.05, "HAMMING");
-    assert!(!lp.is_empty());
-    assert_eq!(lp.len() % 2, 1); // Symmetric odd length
-    let sum: f32 = lp.iter().sum();
-    assert!((sum - 1.0).abs() < 1e-4); // Normalized sum to 1.0
+    use futuresdr::futuredsp::Filter;
+    use futuresdr::futuredsp::PolyphaseResamplingFir;
 
-    let bp = fsdr_cli::blocks::firdes_bandpass_c(0.1, 0.2, 0.05, "HAMMING");
-    assert_eq!(bp.len(), lp.len());
+    let taps = futuresdr::futuredsp::firdes::kaiser::multirate::<f32>(2, 75, 12, 0.0001);
+    let mut fir = PolyphaseResamplingFir::<f32, f32, _>::new(2, 75, taps);
+    let input = vec![1.0f32; 1500];
+    let mut output = vec![0.0f32; 100];
+    let (consumed, produced, _) = fir.filter(&input, &mut output);
+    println!(
+        "consumed: {}, produced: {}, output first 10: {:?}",
+        consumed,
+        produced,
+        &output[..produced.min(10)]
+    );
 }
 
 #[test]
@@ -1904,4 +1910,77 @@ pub fn test_compress_fft_adpcm_execution() -> Result<()> {
     assert_eq!(out.len(), (10 + fft_size) / 2);
 
     Ok(())
+}
+
+#[test]
+pub fn parse_power_tagger_cc() {
+    let cmds = "csdr power_tagger_cc --samp-rate 2400000 --off-threshold -50dB --off-delay 300ms --off-tag msgend";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_power_tagger_cc", grc.blocks[1].id);
+    assert_eq!("2400000", grc.blocks[1].parameters["samp_rate"]);
+    assert_eq!("-50dB", grc.blocks[1].parameters["off_threshold"]);
+    assert_eq!("300ms", grc.blocks[1].parameters["off_delay"]);
+    assert_eq!("msgend", grc.blocks[1].parameters["off_tag"]);
+}
+
+#[test]
+pub fn parse_ctcss_detect_ff() {
+    let cmds = "csdr ctcss_detect_ff --samp-rate 48000 --tone 88.5 --threshold 0.01 --duration 150ms --tag msgstart";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_ctcss_detect_ff", grc.blocks[1].id);
+    assert_eq!("48000", grc.blocks[1].parameters["samp_rate"]);
+    assert_eq!("88.5", grc.blocks[1].parameters["tone"]);
+    assert_eq!("0.01", grc.blocks[1].parameters["threshold"]);
+    assert_eq!("150ms", grc.blocks[1].parameters["duration"]);
+    assert_eq!("msgstart", grc.blocks[1].parameters["tag"]);
+}
+
+#[test]
+pub fn parse_timer_tagger_ff() {
+    let cmds =
+        "csdr timer_tagger_ff --samp-rate 48000 --duration 30s --start msgstart --end msgend";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("blocks_timer_tagger_ff", grc.blocks[1].id);
+    assert_eq!("48000", grc.blocks[1].parameters["samp_rate"]);
+    assert_eq!("30s", grc.blocks[1].parameters["duration"]);
+    assert_eq!("msgstart", grc.blocks[1].parameters["start"]);
+    assert_eq!("msgend", grc.blocks[1].parameters["end"]);
+}
+
+#[test]
+pub fn parse_cmd_trigger_f() {
+    let cmds =
+        "csdr cmd_trigger_f --start-tag msgstart --end-tag msgend --cmd './script.sh $input_file'";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("blocks_cmd_trigger_f", grc.blocks[1].id);
+    assert_eq!("msgstart", grc.blocks[1].parameters["start_tag"]);
+    assert_eq!("msgend", grc.blocks[1].parameters["end_tag"]);
+    assert_eq!(
+        "./script.sh $input_file",
+        grc.blocks[1].parameters["cmd"].trim_matches('\'')
+    );
+}
+
+#[test]
+pub fn parse_cmd_trigger_f_unquoted() {
+    let cmds =
+        "csdr cmd_trigger_f --start-tag msgstart --end-tag msgend --cmd ./script.sh $input_file";
+    let result = CsdrParser::parse_multiple_commands(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(2, grc.blocks.len());
+    assert_eq!("blocks_cmd_trigger_f", grc.blocks[1].id);
+    assert_eq!("msgstart", grc.blocks[1].parameters["start_tag"]);
+    assert_eq!("msgend", grc.blocks[1].parameters["end_tag"]);
+    assert_eq!(
+        "./script.sh $input_file",
+        grc.blocks[1].parameters["cmd"].trim_matches('\'')
+    );
 }

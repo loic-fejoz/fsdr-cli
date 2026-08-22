@@ -1,8 +1,45 @@
+use crate::cmd_grammar::CommandsParser;
+use crate::csdr_cmd::eval_cmd::EvalCmd;
 use crate::iqengine_blockconverter::IQEngineOutputBlockConverter;
 
 use super::BlockInstance;
 use anyhow::{anyhow, bail, Result};
 use futuresdr::runtime::{BlockId, Flowgraph};
+
+/// Evaluate a string as either a raw float or a parsed mathematical expression.
+pub fn eval_expr_str(s: &str) -> Result<f32> {
+    let trimmed = s.trim().trim_matches('"').trim_matches('\'');
+    if let Ok(val) = trimmed.parse::<f32>() {
+        return Ok(val);
+    }
+    let expr = CommandsParser::parse_expr(trimmed)?;
+    EvalCmd::eval(&expr)
+}
+
+/// Parse a value in linear scale or in decibels (ending with `dB` or `db`).
+pub fn parse_db_or_linear(raw: &str) -> Result<f32> {
+    let s = raw.trim().trim_matches('"').trim_matches('\'');
+    if let Some(stripped) = s.strip_suffix("dB").or_else(|| s.strip_suffix("db")) {
+        let db = eval_expr_str(stripped)?;
+        Ok(10.0f32.powf(db / 10.0))
+    } else {
+        eval_expr_str(s)
+    }
+}
+
+/// Parse a duration in milliseconds (`ms`), seconds (`s`), or direct sample count.
+pub fn parse_duration_samples(raw: &str, samp_rate: f64) -> Result<usize> {
+    let s = raw.trim().trim_matches('"').trim_matches('\'');
+    if let Some(stripped) = s.strip_suffix("ms") {
+        let ms = eval_expr_str(stripped)? as f64;
+        Ok(((ms / 1000.0) * samp_rate).round() as usize)
+    } else if let Some(stripped) = s.strip_suffix('s') {
+        let sec = eval_expr_str(stripped)? as f64;
+        Ok((sec * samp_rate).round() as usize)
+    } else {
+        Ok(eval_expr_str(s)?.round() as usize)
+    }
+}
 
 /// Do the actual conversion from GNU Radio block description into
 /// one or several FutureSDR block.
