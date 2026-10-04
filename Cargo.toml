@@ -1,4 +1,3 @@
-
 [package]
 name = "fsdr-cli"
 version = "0.1.0+202406281158-alpha"
@@ -23,14 +22,11 @@ audio =  [] #["futuresdr/audio"]
 iqengine = [ 'dep:axum', 'dep:http', 'dep:tokio', 'dep:tower', 'dep:tower-http', 'dep:iqengine-plugin', 'dep:serde_derive', 'dep:simple_logger']
 
 [dependencies]
-# futuresdr = { version = "0.0", features=['audio']}
-# futuresdr = { path="../FutureSDR", features=['audio']}
-# futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
-futuresdr = { path = "../FutureSDR", features=['audio']}
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", features=['audio'] }
 
 async-trait = "0.1"
 cpal = { version = "0.18.0"}
-fsdr-blocks = { path = "../fsdr-blocks" }
+fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks" }
 futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
