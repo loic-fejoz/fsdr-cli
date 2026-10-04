@@ -26,7 +26,7 @@ fn test_end_to_end_nfm_ctcss_pipeline() -> Result<()> {
 
     for i in 0..total_samples {
         let t = i as f32 / samp_rate;
-        let is_carrier_on = t >= 0.2 && t <= 0.6;
+        let is_carrier_on = (0.2..=0.6).contains(&t);
 
         if is_carrier_on {
             // Audio signal: CTCSS (0.25 amp) + 1kHz tone (0.75 amp)

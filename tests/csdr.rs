@@ -1408,7 +1408,7 @@ pub fn test_firdes_helpers() {
     use futuresdr::futuredsp::PolyphaseResamplingFir;
 
     let taps = futuresdr::futuredsp::firdes::kaiser::multirate::<f32>(2, 75, 12, 0.0001);
-    let mut fir = PolyphaseResamplingFir::<f32, f32, _>::new(2, 75, taps);
+    let fir = PolyphaseResamplingFir::<f32, f32, _>::new(2, 75, taps);
     let input = vec![1.0f32; 1500];
     let mut output = vec![0.0f32; 100];
     let (consumed, produced, _) = fir.filter(&input, &mut output);

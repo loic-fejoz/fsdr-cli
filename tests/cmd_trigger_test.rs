@@ -1,5 +1,4 @@
 use anyhow::Result;
-use fsdr_blocks::sigmf::DatasetFormat;
 use fsdr_cli::blocks::CmdTrigger;
 use futuresdr::prelude::connect;
 use futuresdr::runtime::dev::prelude::*;
@@ -27,6 +26,7 @@ impl Kernel for TaggedMessageSource {
         let (o, mut out_tags) = self.output.slice_with_tags();
         let m = std::cmp::min(self.total - self.count, o.len());
 
+        #[allow(clippy::needless_range_loop)]
         for idx in 0..m {
             let cur = self.count + idx;
             for (ev_idx, ev_name) in &self.events {

@@ -1,5 +1,3 @@
-#![feature(core_intrinsics)]
-
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use fsdr_blocks::math::FrequencyShifter as FsdrBlocksFreqShift;
 use fsdr_cli::blocks::{CtcssGenerator, DCBlocker, FrequencyShifter};
@@ -24,7 +22,9 @@ fn bench_frequency_shifter(c: &mut Criterion) {
                     input_data.clone(),
                 ))
                 .unwrap();
-            let shifter = fg.add(FrequencyShifter::new(1000.0, 48000.0)).unwrap();
+            let shifter = fg
+                .add(FrequencyShifter::<Complex32>::new(1000.0, 48000.0))
+                .unwrap();
             let snk = fg
                 .add(futuresdr::blocks::VectorSink::<Complex32>::new(
                     sample_count,

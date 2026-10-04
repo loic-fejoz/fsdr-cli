@@ -29,6 +29,7 @@ impl Kernel for TaggedSource {
     ) -> Result<()> {
         let (o, mut out_tags) = self.output.slice_with_tags();
         let m = std::cmp::min(self.total - self.count, o.len());
+        #[allow(clippy::needless_range_loop)]
         for idx in 0..m {
             let cur = self.count + idx;
             if cur == self.tag_at {
