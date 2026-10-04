@@ -48,13 +48,6 @@ tower = {version="0.4.13", optional = true }
 tower-http = { version = "0.5.2", features = ["cors"], optional = true  }
 itertools = "0.14.0"
 
-[patch."https://github.com/FutureSDR/FutureSDR"]
-futuresdr = { path = "../FutureSDR" }
-futuredsp = { path = "../FutureSDR/crates/futuredsp" }
-
-[patch."https://github.com/FutureSDR/fsdr-blocks"]
-fsdr-blocks = { path = "../fsdr-blocks" }
-
 [dev-dependencies]
 criterion = "0.5"
 
