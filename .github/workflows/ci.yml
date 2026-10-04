@@ -10,6 +10,16 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout fsdr-blocks
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/fsdr-blocks
+          path: ../fsdr-blocks
+      - name: Checkout FutureSDR
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/FutureSDR
+          path: ../FutureSDR
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
@@ -21,12 +31,6 @@ jobs:
 
       - name: Install alsalibs
         run: sudo apt-get -y install libasound2-dev
-
-      # - name: Install LTTng
-      #   run: sudo apt-get -y install liblttng-ust-dev
-
-      # - name: Install Soapy
-      #   run: sudo apt-get -y install libsoapysdr-dev
 
       - name: Run cargo fmt (FutureSDR)
         run: cargo fmt --all -- --check
@@ -41,6 +45,16 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout fsdr-blocks
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/fsdr-blocks
+          path: ../fsdr-blocks
+      - name: Checkout FutureSDR
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/FutureSDR
+          path: ../FutureSDR
       - uses: dtolnay/rust-toolchain@nightly
       - run: sudo apt-get update && sudo apt-get install -y libzmq3-dev libasound2-dev liblttng-ust-dev libsoapysdr-dev
       - run: cargo test --all-targets --workspace
@@ -52,6 +66,16 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout fsdr-blocks
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/fsdr-blocks
+          path: ../fsdr-blocks
+      - name: Checkout FutureSDR
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/FutureSDR
+          path: ../FutureSDR
       - uses: dtolnay/rust-toolchain@nightly
       - run: cargo test --all-targets --workspace
 
@@ -62,6 +86,16 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout fsdr-blocks
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/fsdr-blocks
+          path: ../fsdr-blocks
+      - name: Checkout FutureSDR
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/FutureSDR
+          path: ../FutureSDR
       - uses: dtolnay/rust-toolchain@nightly
       - run: cargo test --all-targets --workspace
 
@@ -72,6 +106,16 @@ jobs:
       RUST_BACKTRACE: full
     steps:
       - uses: actions/checkout@v3
+      - name: Checkout fsdr-blocks
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/fsdr-blocks
+          path: ../fsdr-blocks
+      - name: Checkout FutureSDR
+        uses: actions/checkout@v3
+        with:
+          repository: loic-fejoz/FutureSDR
+          path: ../FutureSDR
       - uses: dtolnay/rust-toolchain@nightly
       - run: sudo apt-get update && sudo apt-get install -y libzmq3-dev libasound2-dev liblttng-ust-dev libsoapysdr-dev
       - name: Install cargo-tarpaulin
