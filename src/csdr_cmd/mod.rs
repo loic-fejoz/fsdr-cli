@@ -8,6 +8,7 @@ use pest::Parser;
 use self::add_const_cmd::AddConstCmd;
 use self::add_dcoffset_cmd::AddDcOffsetCmd;
 use self::adpcm_cmd::AdpcmCmd;
+use self::afc_cmd::AfcCmd;
 use self::agc_cmd::AgcCmd;
 use self::amdemod_cmd::AmDemodCmd;
 use self::audio_cmd::AudioCmd;
@@ -70,6 +71,7 @@ use self::yes_cmd::YesCmd;
 mod add_const_cmd;
 mod add_dcoffset_cmd;
 mod adpcm_cmd;
+mod afc_cmd;
 mod agc_cmd;
 mod amdemod_cmd;
 mod audio_cmd;
@@ -138,6 +140,8 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
         match self.as_rule() {
             Rule::add_const_cc_cmd => self.build_add_const(grc),
             Rule::add_dcoffset_cc_cmd => self.build_add_dcoffset_cc(grc),
+            Rule::afc_ff_cmd => self.build_afc_ff(grc),
+            Rule::afc_cc_cmd => self.build_afc_cc(grc),
             Rule::agc_cmd => self.build_agc(grc),
             Rule::amdemod_cmd => self.build_amdemod(grc),
             Rule::audio_cmd => self.build_audio_sink(grc),

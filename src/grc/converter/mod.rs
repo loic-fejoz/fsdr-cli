@@ -18,6 +18,10 @@ use std::collections::HashMap;
 use super::converter_helper::*;
 pub mod analog_power_tagger;
 use self::analog_power_tagger::AnalogPowerTaggerConverter;
+pub mod analog_afc_ff;
+use self::analog_afc_ff::AnalogAfcFfConverter;
+pub mod analog_afc_cc;
+use self::analog_afc_cc::AnalogAfcCcConverter;
 pub mod analog_ctcss_detect;
 use self::analog_ctcss_detect::AnalogCtcssDetectConverter;
 pub mod blocks_timer_tagger;
@@ -181,6 +185,8 @@ impl Grc2FutureSdr {
             | "analog_power_tagger"
             | "power_tagger_cc"
             | "power_tagger" => Box::new(AnalogPowerTaggerConverter {}),
+            "analog_afc_ff" | "afc_ff" => Box::new(AnalogAfcFfConverter {}),
+            "analog_afc_cc" | "afc_cc" => Box::new(AnalogAfcCcConverter {}),
             "analog_ctcss_detect_ff"
             | "analog_ctcss_detect"
             | "ctcss_detect_ff"

@@ -65,10 +65,28 @@ impl BlockConverter for AnalogPowerTaggerConverter {
             .map(|s| s == "true" || s == "1")
             .unwrap_or(false);
 
+        let snr_off_ratio = if let Some(s) = blk.parameters.get("snr_off") {
+            Some(parse_db_or_linear(s)?)
+        } else {
+            None
+        };
+
+        let snr_on_ratio = if let Some(s) = blk.parameters.get("snr_on") {
+            Some(parse_db_or_linear(s)?)
+        } else {
+            None
+        };
+
+        let noise_alpha = if let Some(a) = blk.parameters.get("noise_alpha") {
+            Some(super::super::converter_helper::eval_expr_str(a)?)
+        } else {
+            None
+        };
+
         let item_type = blk.parameter_or("type", "ccc");
         let adapter: Box<dyn ConnectorAdapter> = match item_type {
             "ccc" | "c32" | "complex" => {
-                let block = PowerTagger::<Complex32>::with_debug(
+                let block = PowerTagger::<Complex32>::with_full_options(
                     off_threshold,
                     off_delay,
                     on_threshold,
@@ -77,12 +95,15 @@ impl BlockConverter for AnalogPowerTaggerConverter {
                     off_tag,
                     on_tag,
                     debug,
+                    snr_off_ratio,
+                    snr_on_ratio,
+                    noise_alpha,
                 );
                 let id = fg.add(block)?.id();
                 Box::new(DefaultPortAdapter::new(id))
             }
             "fff" | "f32" | "float" => {
-                let block = PowerTagger::<f32>::with_debug(
+                let block = PowerTagger::<f32>::with_full_options(
                     off_threshold,
                     off_delay,
                     on_threshold,
@@ -91,6 +112,9 @@ impl BlockConverter for AnalogPowerTaggerConverter {
                     off_tag,
                     on_tag,
                     debug,
+                    snr_off_ratio,
+                    snr_on_ratio,
+                    noise_alpha,
                 );
                 let id = fg.add(block)?.id();
                 Box::new(DefaultPortAdapter::new(id))

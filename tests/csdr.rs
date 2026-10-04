@@ -176,6 +176,28 @@ pub fn parse_multiple_commands() {
 }
 
 #[test]
+pub fn parse_afc_ff() {
+    let cmds = "afc_ff --alpha 0.01 --limit 1.5";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_afc_ff", grc.blocks[1].id);
+    assert_eq!("0.01", grc.blocks[1].parameters.get("alpha").unwrap());
+    assert_eq!("1.5", grc.blocks[1].parameters.get("limit").unwrap());
+}
+
+#[test]
+pub fn parse_afc_cc() {
+    let cmds = "afc_cc --alpha 0.005 --max-freq 5000 --samp-rate 48000";
+    let result = CsdrParser::parse_command(cmds);
+    let grc = result.expect("").unwrap();
+    assert_eq!(3, grc.blocks.len());
+    assert_eq!("analog_afc_cc", grc.blocks[1].id);
+    assert_eq!("0.005", grc.blocks[1].parameters.get("alpha").unwrap());
+    assert_eq!("5000", grc.blocks[1].parameters.get("max_freq").unwrap());
+}
+
+#[test]
 pub fn parse_shift_addition_cc_1256() {
     let cmds = "shift_addition_cc 1256";
     let result = CsdrParser::parse_command(cmds);

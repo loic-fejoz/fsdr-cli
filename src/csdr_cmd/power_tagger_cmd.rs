@@ -35,6 +35,18 @@ impl<'i> PowerTaggerCmd<'i> for Pair<'i, Rule> {
                     let mut inner = param.into_inner();
                     block.with_parameter("on_threshold", inner.next().unwrap().as_str());
                 }
+                Rule::power_tagger_snr_off => {
+                    let mut inner = param.into_inner();
+                    block.with_parameter("snr_off", inner.next().unwrap().as_str());
+                }
+                Rule::power_tagger_snr_on => {
+                    let mut inner = param.into_inner();
+                    block.with_parameter("snr_on", inner.next().unwrap().as_str());
+                }
+                Rule::power_tagger_noise_alpha => {
+                    let mut inner = param.into_inner();
+                    block.with_parameter("noise_alpha", inner.next().unwrap().as_str());
+                }
                 Rule::power_tagger_delay => {
                     let mut inner = param.into_inner();
                     block.with_parameter("delay", inner.next().unwrap().as_str());

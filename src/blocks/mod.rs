@@ -3,6 +3,7 @@ pub mod octave_complex;
 pub mod pattern_search;
 pub mod synchronizers;
 pub use octave_complex::OctaveComplex;
+pub use synchronizers::{AfcCc, AfcFf};
 pub mod dcblocker;
 pub use dcblocker::DCBlocker;
 pub mod dsb;

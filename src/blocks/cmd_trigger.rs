@@ -265,12 +265,7 @@ impl<T: SigmfSample> Kernel for CmdTrigger<T> {
 
         if self.input.finished() {
             if let Some(rec) = self.recording.take() {
-                rec.stop_and_trigger(
-                    &self.cmd_template,
-                    self.debug,
-                    &self.end_tag,
-                    &self.tasks,
-                )?;
+                rec.stop_and_trigger(&self.cmd_template, self.debug, &self.end_tag, &self.tasks)?;
             }
             io.finished = true;
         }
@@ -278,18 +273,9 @@ impl<T: SigmfSample> Kernel for CmdTrigger<T> {
         Ok(())
     }
 
-    async fn deinit(
-        &mut self,
-        _mo: &mut MessageOutputs,
-        _meta: &BlockMeta,
-    ) -> Result<()> {
+    async fn deinit(&mut self, _mo: &mut MessageOutputs, _meta: &BlockMeta) -> Result<()> {
         if let Some(rec) = self.recording.take() {
-            rec.stop_and_trigger(
-                &self.cmd_template,
-                self.debug,
-                &self.end_tag,
-                &self.tasks,
-            )?;
+            rec.stop_and_trigger(&self.cmd_template, self.debug, &self.end_tag, &self.tasks)?;
         }
         if let Ok(mut lock) = self.tasks.lock() {
             for handle in lock.drain(..) {

@@ -57,6 +57,11 @@ pub struct PowerTagger<T: PowerSample> {
     debug: bool,
     debug_counter: usize,
     debug_interval: usize,
+
+    snr_off_ratio: Option<f32>,
+    snr_on_ratio: Option<f32>,
+    noise_floor: f32,
+    noise_alpha: f32,
 }
 
 impl<T: PowerSample> PowerTagger<T> {
@@ -70,7 +75,7 @@ impl<T: PowerSample> PowerTagger<T> {
         off_tag: Option<String>,
         on_tag: Option<String>,
     ) -> Self {
-        Self::with_debug(
+        Self::with_full_options(
             off_threshold,
             off_delay,
             on_threshold,
@@ -79,6 +84,9 @@ impl<T: PowerSample> PowerTagger<T> {
             off_tag,
             on_tag,
             false,
+            None,
+            None,
+            None,
         )
     }
 
@@ -92,6 +100,35 @@ impl<T: PowerSample> PowerTagger<T> {
         off_tag: Option<String>,
         on_tag: Option<String>,
         debug: bool,
+    ) -> Self {
+        Self::with_full_options(
+            off_threshold,
+            off_delay,
+            on_threshold,
+            on_delay,
+            window_size,
+            off_tag,
+            on_tag,
+            debug,
+            None,
+            None,
+            None,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn with_full_options(
+        off_threshold: Option<f32>,
+        off_delay: usize,
+        on_threshold: Option<f32>,
+        on_delay: usize,
+        window_size: usize,
+        off_tag: Option<String>,
+        on_tag: Option<String>,
+        debug: bool,
+        snr_off_ratio: Option<f32>,
+        snr_on_ratio: Option<f32>,
+        noise_alpha: Option<f32>,
     ) -> Self {
         let win_size = window_size.max(1);
         Self {
@@ -113,6 +150,10 @@ impl<T: PowerSample> PowerTagger<T> {
             debug,
             debug_counter: 0,
             debug_interval: 200_000,
+            snr_off_ratio,
+            snr_on_ratio,
+            noise_floor: 0.0,
+            noise_alpha: noise_alpha.unwrap_or(0.001),
         }
     }
 }
@@ -156,22 +197,53 @@ impl<T: PowerSample> Kernel for PowerTagger<T> {
 
                 let avg_power = self.moving_sum / (self.window_filled as f32);
 
+                // Update noise floor estimation while OFF and not debouncing a signal
+                if !self.current_state && self.consecutive_on == 0 {
+                    if self.noise_floor == 0.0 {
+                        self.noise_floor = avg_power;
+                    } else {
+                        self.noise_floor = (1.0 - self.noise_alpha) * self.noise_floor
+                            + self.noise_alpha * avg_power;
+                    }
+                }
+
+                let effective_off_th = if let Some(snr_off) = self.snr_off_ratio {
+                    if self.noise_floor > 0.0 {
+                        Some(self.noise_floor * snr_off)
+                    } else {
+                        self.off_threshold
+                    }
+                } else {
+                    self.off_threshold
+                };
+
+                let effective_on_th = if let Some(snr_on) = self.snr_on_ratio {
+                    if self.noise_floor > 0.0 {
+                        Some(self.noise_floor * snr_on)
+                    } else {
+                        self.on_threshold
+                    }
+                } else {
+                    self.on_threshold
+                };
+
                 if self.debug {
                     self.debug_counter += 1;
                     if self.debug_counter >= self.debug_interval {
                         self.debug_counter = 0;
                         let db = 10.0 * avg_power.max(1e-12).log10();
-                        let on_db_str = self
-                            .on_threshold
+                        let noise_db_str =
+                            format!("{:.1}dB", 10.0 * self.noise_floor.max(1e-12).log10());
+                        let on_db_str = effective_on_th
                             .map(|v| format!("{:.1}dB", 10.0 * v.max(1e-12).log10()))
                             .unwrap_or_else(|| "none".into());
-                        let off_db_str = self
-                            .off_threshold
+                        let off_db_str = effective_off_th
                             .map(|v| format!("{:.1}dB", 10.0 * v.max(1e-12).log10()))
                             .unwrap_or_else(|| "none".into());
                         eprintln!(
-                            "[power_tagger] Power: {:>6.1} dB | State: {:3} | OnTh: {} | OffTh: {}",
+                            "[power_tagger] Power: {:>6.1} dB | Noise: {} | State: {:3} | OnTh: {} | OffTh: {}",
                             db,
+                            noise_db_str,
                             if self.current_state { "ON" } else { "OFF" },
                             on_db_str,
                             off_db_str
@@ -181,7 +253,7 @@ impl<T: PowerSample> Kernel for PowerTagger<T> {
 
                 if self.current_state {
                     // Currently ON: check for loss of power
-                    if let Some(off_th) = self.off_threshold {
+                    if let Some(off_th) = effective_off_th {
                         if avg_power < off_th {
                             self.consecutive_off += 1;
                             if self.consecutive_off >= self.off_delay {
@@ -204,7 +276,7 @@ impl<T: PowerSample> Kernel for PowerTagger<T> {
                     }
                 } else {
                     // Currently OFF: check for appearance of power
-                    if let Some(on_th) = self.on_threshold {
+                    if let Some(on_th) = effective_on_th {
                         if avg_power >= on_th {
                             self.consecutive_on += 1;
                             if self.consecutive_on >= self.on_delay {
@@ -224,7 +296,7 @@ impl<T: PowerSample> Kernel for PowerTagger<T> {
                         } else {
                             self.consecutive_on = 0;
                         }
-                    } else if let Some(off_th) = self.off_threshold {
+                    } else if let Some(off_th) = effective_off_th {
                         // If only off_threshold is specified, arm immediately when above threshold
                         if avg_power >= off_th {
                             self.current_state = true;

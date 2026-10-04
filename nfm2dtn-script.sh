@@ -25,3 +25,4 @@ if dtnsend --receiver "dtn://f4jxq-9/files" "$OPUS_FILE"; then
 else
     echo "[nfm2dtn] Warning: dtnsend returned an error (is DTN daemon running?)" >&2
 fi
+rm -f ${OPUS_FILE}

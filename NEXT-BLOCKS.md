@@ -1,10 +1,12 @@
-# Spécifications des Nouveaux Blocs pour `fsdr-cli`
+# Spécifications et Roadmap des Nouveaux Blocs pour `fsdr-cli`
 
-Ce document définit les spécifications pour l'implémentation de quatre nouveaux blocs FutureSDR destinés à permettre le déclenchement de commandes CLI basé sur la détection de signaux dans un flux Narrow FM (NFM).
-
-L'architecture repose sur l'utilisation d'**étiquettes de flux (Stream Tags)** qui se propagent de manière linéaire le long du flux d'échantillons.
+Ce document définit les spécifications pour l'implémentation des prochains blocs FutureSDR, couvrant à la fois les fonctionnalités avancées de détection/déclenchement par étiquettes de flux (Stream Tags) et la roadmap de compatibilité `csdr` (Tiers 6 et 7).
 
 ---
+
+# Partie I — Blocs Déclencheurs et Stream Tags (NFM / SigMF)
+
+L'architecture repose sur l'utilisation d'**étiquettes de flux (Stream Tags)** qui se propagent de manière linéaire le long du flux d'échantillons pour permettre le déclenchement de commandes CLI basé sur la détection de signaux dans un flux Narrow FM (NFM).
 
 ## 1. Détecteur CTCSS (`ctcss_detect_ff`)
 
@@ -36,7 +38,7 @@ L'architecture repose sur l'utilisation d'**étiquettes de flux (Stream Tags)** 
 * **ID GRC :** `analog_power_tagger_cc`
 * **Rôle :** Surveiller la puissance moyenne du signal et insérer un tag de fin lorsque le signal apparait/disparaît (perte de porteuse).
 
-At least one of `off_tag` or `on_tag` must be present. Both can co-exist.
+Au moins un parmi `off_tag` ou `on_tag` doit être présent (les deux peuvent coexister).
 
 ### Paramètres
 * `samp_rate` (expression / float) : Taux d'échantillonnage de l'entrée.
@@ -139,11 +141,7 @@ At least one of `off_tag` or `on_tag` must be present. Both can co-exist.
 
 ---
 
----
-
 ## 5. Exemple d'Intégration en Ligne de Commande (Style `csdr`)
-
-Voici la commande finale et fonctionnelle utilisant la syntaxe réelle des blocs existants de `fsdr-cli` combinée aux nouveaux blocs :
 
 ```bash
 export SAMPLING=2400000
@@ -160,12 +158,82 @@ fsdr-cli csdr convert_u8_f ! convert_ff_c \
 
 ---
 
-## 6. Remarques de Cohérence et Points de Vigilance Technique
+# Partie II — Roadmap de Remplacement CSDR (Tiers 6 & 7)
 
-1. **Pré-requis de propagation des tags (Essentiel) :**
-   * Tous les blocs intermédiaires de la chaîne (comme `rational_resampler_cc`, `fmdemod_quadri_cf`, `deemphasis_nfm_ff`) **doivent impérativement propager et transférer correctement les tags**.
-   * Les blocs effectuant des changements de taux d'échantillonnage (décimation ou interpolation) doivent mettre à l'échelle dynamiquement l'index de chaque tag ($I_{out} = I_{in} \times \frac{\text{interp}}{\text{decim}}$) pour éviter toute désynchronisation.
+Cette section détaille les fonctionnalités prévues pour les prochains paliers d'implémentation de parité avec `csdr`.
 
-2. **Évaluation des expressions (Pest Grammar) :**
-   * La syntaxe proposée utilise des variables d'environnement (`"${SAMPLING}"`) et des expressions mathématiques (`"${SAMPLING}/50"`). L'évaluateur [`Grc2FutureSdr::parameter_as_f64`](file:///home/loic/projets/fsdr-cli/src/grc/converter/mod.rs) doit être capable d'interpréter ces divisions mathématiques après substitution de la variable par l'interpréteur de commandes (Shell).
-   * La grammaire du fichier [`src/cmd_line.pest`](file:///home/loic/projets/fsdr-cli/src/cmd_line.pest) n'est pas modifiée pour les blocs existants (comme `rational_resampler_cc 1 50` ou `deemphasis_nfm_ff 48000`) afin de conserver la stabilité du parser de commandes historique.
+---
+
+## 🎯 **Tier 6 : Générateurs de Bruit, RTTY / UART & Modulation PSK**
+
+Ce palier couvre trois grands domaines complémentaires :
+
+### 1. **Tier 6A : Générateurs & Canaux de Bruit (Simulation & Tests RF)**
+* **`gaussian_noise_c`** (`analog_gaussian_noise_c`) :
+  * **Rôle :** Source génératrice de bruit blanc gaussien complexe (AWGN).
+  * **Algorithme :** Générateur pseudo-aléatoire utilisant la transformée de Box-Muller ou la distribution normale standard $N(0, \sigma^2)$ sur $I$ et $Q$.
+  * **Paramètres :** `variance` / `amplitude` (optionnel).
+* **`uniform_noise_f`** (`analog_uniform_noise_f`) :
+  * **Rôle :** Source génératrice de bruit uniforme sur $[-1.0, 1.0]$.
+* **`awgn_cc`** (`analog_awgn_cc`) :
+  * **Rôle :** Bloc de canal additif insérant du bruit blanc gaussien sur un signal IQ existant selon un niveau de bruit ou SNR spécifié ($y[k] = x[k] + n[k]$).
+  * **Paramètres :** `snr` / `noise_variance`.
+
+### 2. **Tier 6B : Décodage RTTY (Baudot) & Ligne Série (UART)**
+* **`rtty_baudot2ascii_u8_u8`** (`digital_rtty_baudot2ascii_u8_u8`) :
+  * **Rôle :** Décodeur du code ITA2 Baudot (5 bits) vers ASCII 8 bits.
+  * **Logique :** Machine à états gérant les commutations de tables *Letters (LTRS, code 31)* et *Figures (FIGS, code 27)*, retour chariot et saut de ligne.
+* **`generic_slicer_f_u8`** (`digital_generic_slicer_f_u8`) :
+  * **Rôle :** Décisionnaire / trancheur de niveau de signal à seuils configurables ($y = \text{if } x > \text{threshold } 1 \text{ else } 0$).
+  * **Paramètres :** `threshold` (float).
+* **`serial_line_decoder_f_u8`** (`digital_serial_line_decoder_f_u8`) :
+  * **Rôle :** Décodeur de flux série asynchrone (UART / NRZ) à partir d'échantillons suréchantillonnés.
+  * **Paramètres :** `samples_per_baud`, `bits_per_word`, `stop_bits`.
+
+### 3. **Tier 6C : Modulateurs Numériques PSK & Traitement Temporel**
+* **`psk_modulator_u8_c`** (`digital_psk_modulator_u8_c`) :
+  * **Rôle :** Modulateur PSK (BPSK, QPSK, M-PSK) associant chaque symbole ou octet binaire à un point de constellation complexe ($e^{j 2\pi m / M}$).
+  * **Paramètres :** `constellation_size` (ex: 2 pour BPSK, 4 pour QPSK).
+* **`psk31_interpolate_sine_cc`** (`digital_psk31_interpolate_sine_cc`) :
+  * **Rôle :** Filtre de mise en forme sinusoïdale (Sine / Raised Cosine pulse shaping) spécifique au PSK31 pour lisser les transitions de phase et supprimer les lobes secondaires spectraux.
+  * **Paramètres :** `samples_per_symbol`.
+* **`duplicate_samples_ntimes_u8_u8`** (`blocks_duplicate_samples_ntimes_u8_u8`) :
+  * **Rôle :** Suréchantillonneur temporel simple répétant chaque échantillon $N$ fois consécutives.
+  * **Paramètres :** `n` (entier).
+
+---
+
+## 🚀 **Tier 7 : Filtrage Avancé, Interpolation & AGC Simple**
+
+### 1. **Filtres de Mise en Forme & Détection de Crête**
+* **`pulse_shaping_filter_cc` / `firdes_pulse_shaping_filter_f`** (`filter_pulse_shaping_cc`) :
+  * **Rôle :** Filtre RRC (Root Raised Cosine) et calcul des coefficients optimisés pour transmission numérique sans interférence entre symboles (ISI).
+  * **Paramètres :** `alpha` (roll-off, ex: 0.35), `samples_per_symbol`, `num_taps`.
+* **`peaks_fir_cc` / `firdes_peak_c`** (`filter_peaks_fir_cc`) :
+  * **Rôle :** Filtre FIR résonateur pour isolation ou élimination de raies spectrales étroites (détection de crêtes).
+
+### 2. **Interpolateurs FIR & Taux d'Échantillonnage**
+* **`plain_interpolate_cc` / `fir_interpolate_cc`** (`filter_fir_interpolate_cc`) :
+  * **Rôle :** Interpolation entière de flux complexes avec filtrage polyphase ou filtre FIR passe-bas anti-repliement.
+  * **Paramètres :** `interpolation_factor`.
+
+### 3. **Contrôle Automatique de Gain (AGC) Spécialisé**
+* **`simple_agc_cc`** (`analog_simple_agc_cc`) :
+  * **Rôle :** AGC simplifié et ultra-rapide sur signal complexe IQ avec maintien de phase.
+  * **Paramètres :** `rate`, `reference`.
+* **`fastagc_ff`** (`analog_fastagc_ff`) :
+  * **Rôle :** AGC à temps d'attaque et de rétablissement asymétriques et rapides pour signaux audio ou enveloppes.
+
+---
+
+## 📊 Récapitulatif de l'État des Paliers
+
+| Palier | Thématique | Statut |
+| :--- | :--- | :--- |
+| **Tier 1** | Moteur FFT & Métriques spectrales (`fft_cc`, `fft_fc`, `logpower_cf`, `logaveragepower_cf`, `fft_exchange_sides_ff`) | ✅ **Complété & Validé** |
+| **Tier 2** | Filtrage FIR & Translation spectrale (`dcblock_ff`, `decimating_shift_addition_cc`, `add_dcoffset_cc`, `firdes_*`) | ✅ **Complété & Validé** |
+| **Tier 3** | Routage, Flux binaire & Écoulement (`repeat_u8`, `unpack_k_bits`, `flowcontrol`, `clone`, `through`, `none`) | ✅ **Complété & Validé** |
+| **Tier 4** | Démodulation Numérique & Audio (`bpsk_costas_loop_cc`, `pll_cc`, `dbpsk_decoder`, `psk31_varicode_*`, `mono2stereo_s16`) | ✅ **Complété & Validé** |
+| **Tier 5** | Modulation, ADPCM & Utilitaires (`encode/decode_ima_adpcm`, `compress_fft_adpcm`, `fmmod_fc`, `fixed_amplitude_cc`, `add_const_cc`, `differential_*`, `invert_u8`, `bfsk_demod_cf`, `detect_nan_ff`, `yes_f`) | ✅ **Complété & Validé** |
+| **Tier 6** | Générateurs de bruit (AWGN), RTTY Baudot / UART & Modulateurs PSK | ⏳ **Prêt à démarrer** |
+| **Tier 7** | Filtres RRC, Filtres de crête, Interpolateurs & AGC rapides | 📅 **Planifié** |

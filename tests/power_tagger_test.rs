@@ -151,3 +151,60 @@ fn test_power_tagger_debounce_avoids_false_off() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_power_tagger_snr_relative_threshold() -> Result<()> {
+    let mut fg = Flowgraph::new();
+
+    // Noise floor = 0.01 (amplitude ~0.1 => power ~0.01)
+    // Signal = 0.10 (power 0.1, 10x higher = 10 dB SNR)
+    let mut samples = Vec::new();
+    for _ in 0..100 {
+        samples.push(Complex32::new(0.07, 0.07)); // Noise ~0.01
+    }
+    for _ in 0..100 {
+        samples.push(Complex32::new(0.3, 0.3)); // Signal ~0.18 (18x noise)
+    }
+    for _ in 0..100 {
+        samples.push(Complex32::new(0.07, 0.07)); // Back to noise
+    }
+
+    let src = VectorSource::<Complex32>::new(samples);
+    let tagger = PowerTagger::<Complex32>::with_full_options(
+        None,
+        5,
+        None,
+        5,
+        5,
+        Some("msgend".to_string()),
+        Some("msgstart".to_string()),
+        true,      // debug
+        Some(2.0), // snr_off = 3 dB (factor 2.0x noise floor)
+        Some(5.0), // snr_on = 7 dB (factor 5.0x noise floor)
+        Some(0.05),
+    );
+    let snk = TagCollectorSink::<Complex32>::new();
+
+    connect!(fg, src > tagger > snk;);
+
+    let rt = Runtime::new();
+    let fg = rt.run(fg)?;
+
+    let snk_blk = fg.block(&snk)?;
+    let tags = snk_blk.tags();
+
+    println!("COLLECTED TAGS: {:?}", tags);
+
+    let tag_names: Vec<String> = tags
+        .iter()
+        .filter_map(|(_idx, t)| match t {
+            Tag::String(s) => Some(s.clone()),
+            _ => None,
+        })
+        .collect();
+
+    assert!(tag_names.contains(&"msgstart".to_string()));
+    assert!(tag_names.contains(&"msgend".to_string()));
+
+    Ok(())
+}
