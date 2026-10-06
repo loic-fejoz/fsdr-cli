@@ -23,7 +23,11 @@ The intermediate graph is the source of truth for block definitions.
 - **Naming**: All block IDs and parameter keys MUST match their GNU Radio Companion counterparts.
 - **Enumerations**: Parameter values (like `window.WIN_HAMMING` or `byte`) must be identical to what GRC expects.
 - **GrcItemType**: Use the `GrcItemType` enum in `src/grc/builder.rs` for handling data types, using `as_grc()` to get the string representation expected by GRC (e.g., "byte" instead of "u8").
-- **TryInto**: Conversion from strings to `GrcItemType` must use `try_into()?` for safe propagation.
+- **FromStr vs TryFrom**: Always implement `std::str::FromStr` for string-to-enum conversions (`FromStr` is idiomatic in Rust and avoids `clippy::try_from_instead_of_from_str` warnings). Implement `TryFrom<&str>` by delegating to `value.parse()`.
+
+## Multi-Repository Dependency Conventions
+- **`Cargo.toml` vs `.cargo/config.toml`**: `Cargo.toml` must ONLY contain valid, public remote Git URLs (`https://github.com/...`) with explicit branch or commit revision pins (`rev = "..."`, `branch = "..."`). Local filesystem paths (`path = "../..."`) belong exclusively in local, untracked `.cargo/config.toml` files.
+- **Transitive Dependency Unification**: When multiple dependencies reference common crates (e.g., `futuresdr`), ensure all entries in `Cargo.toml` specify identical Git `rev` or `branch` targets to prevent Cargo duplicate crate errors on CI.
 
 ## Parameter Extraction
 Use `Grc2FutureSdr::parameter_as_f64` and similar helpers in `src/grc/converter/mod.rs` to extract block parameters with expression evaluation support.
