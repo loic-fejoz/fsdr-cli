@@ -96,8 +96,16 @@ fn test_cmd_trigger_execution_and_sigmf() -> Result<()> {
         "Expected 2 triggered messages, found: {:?}",
         lines
     );
-    assert!(lines[0].trim().ends_with("message.sigmf-meta"), "line 0 was: {:?}", lines[0]);
-    assert!(lines[1].trim().ends_with("message.sigmf-meta"), "line 1 was: {:?}", lines[1]);
+    assert!(
+        lines[0].trim().ends_with("message.sigmf-meta"),
+        "line 0 was: {:?}",
+        lines[0]
+    );
+    assert!(
+        lines[1].trim().ends_with("message.sigmf-meta"),
+        "line 1 was: {:?}",
+        lines[1]
+    );
 
     Ok(())
 }
