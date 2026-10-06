@@ -43,9 +43,9 @@ where
         let m = cmp::min(i.len(), o.len());
         if m > 0 {
             let add_db = self.add_db;
-            for k in 0..m {
-                let p = i[k].norm_sqr();
-                o[k] = 10.0 * p.log10() + add_db;
+            for (s, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                let p = s.re.mul_add(s.re, s.im.algebraic_mul(s.im));
+                *dst = 10.0f32.mul_add(p.log10(), add_db);
             }
             self.input.consume(m);
             self.output.produce(m);

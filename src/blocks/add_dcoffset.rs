@@ -63,20 +63,16 @@ where
             let scale = self.scale;
 
             if (scale - 1.0).abs() < 1e-6 {
-                for k in 0..m {
-                    let s = i[k];
-                    let re = unsafe { core::intrinsics::fadd_fast(s.re, off.re) };
-                    let im = unsafe { core::intrinsics::fadd_fast(s.im, off.im) };
-                    o[k] = Complex32::new(re, im);
+                for (s, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                    let re = f32::algebraic_add(s.re, off.re);
+                    let im = f32::algebraic_add(s.im, off.im);
+                    *dst = Complex32::new(re, im);
                 }
             } else {
-                for k in 0..m {
-                    let s = i[k];
-                    let re_scaled = unsafe { core::intrinsics::fmul_fast(s.re, scale) };
-                    let im_scaled = unsafe { core::intrinsics::fmul_fast(s.im, scale) };
-                    let re = unsafe { core::intrinsics::fadd_fast(re_scaled, off.re) };
-                    let im = unsafe { core::intrinsics::fadd_fast(im_scaled, off.im) };
-                    o[k] = Complex32::new(re, im);
+                for (s, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                    let re = s.re.mul_add(scale, off.re);
+                    let im = s.im.mul_add(scale, off.im);
+                    *dst = Complex32::new(re, im);
                 }
             }
             self.input.consume(m);

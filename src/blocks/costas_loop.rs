@@ -73,29 +73,22 @@ where
             let max_freq = self.max_freq;
             let min_freq = self.min_freq;
 
-            for (k, &s) in in_slice.iter().enumerate().take(m) {
+            for (src, dst) in in_slice[..m].iter().zip(out_slice[..m].iter_mut()) {
                 let (sin_val, cos_val) = phase.sin_cos();
 
-                // Rotate sample by -phase
-                // (s.re + j*s.im) * (cos - j*sin)
-                let rot_re = s.re * cos_val + s.im * sin_val;
-                let rot_im = -s.re * sin_val + s.im * cos_val;
+                // Rotate sample by -phase using FMA
+                let rot_re = src.re.mul_add(cos_val, src.im.algebraic_mul(sin_val));
+                let rot_im = (-src.re).mul_add(sin_val, src.im.algebraic_mul(cos_val));
 
-                out_slice[k] = Complex32::new(rot_re, rot_im);
+                *dst = Complex32::new(rot_re, rot_im);
 
                 // Phase error detector for BPSK: e = sign(rot_re) * rot_im
                 let sgn = if rot_re >= 0.0 { 1.0 } else { -1.0 };
                 let err = sgn * rot_im;
 
                 // Update frequency and phase
-                freq += beta * err;
-                if freq > max_freq {
-                    freq = max_freq;
-                } else if freq < min_freq {
-                    freq = min_freq;
-                }
-
-                phase += freq + alpha * err;
+                freq = beta.mul_add(err, freq).clamp(min_freq, max_freq);
+                phase = phase + freq + alpha.algebraic_mul(err);
                 while phase > PI {
                     phase -= 2.0 * PI;
                 }

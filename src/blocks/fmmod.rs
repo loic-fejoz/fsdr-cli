@@ -50,8 +50,8 @@ where
         let m = cmp::min(i.len(), o.len());
         if m > 0 {
             let mut phase = self.phase;
-            for (k, &dphase) in i.iter().enumerate().take(m) {
-                phase += dphase;
+            for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                phase = f32::algebraic_add(phase, *src);
                 while phase > PI {
                     phase -= 2.0 * PI;
                 }
@@ -59,7 +59,7 @@ where
                     phase += 2.0 * PI;
                 }
                 let (sin_val, cos_val) = phase.sin_cos();
-                o[k] = Complex32::new(cos_val, sin_val);
+                *dst = Complex32::new(cos_val, sin_val);
             }
             self.phase = phase;
             self.input.consume(m);

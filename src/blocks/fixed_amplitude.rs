@@ -49,13 +49,16 @@ where
         let m = cmp::min(i.len(), o.len());
         if m > 0 {
             let amp = self.amplitude;
-            for (k, &s) in i.iter().enumerate().take(m) {
-                let norm = s.norm();
-                if norm > 1e-12 {
-                    let factor = amp / norm;
-                    o[k] = Complex32::new(s.re * factor, s.im * factor);
+            for (s, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                let norm_sqr = s.re.mul_add(s.re, s.im.algebraic_mul(s.im));
+                if norm_sqr > 1e-24 {
+                    let factor = amp / norm_sqr.sqrt();
+                    *dst = Complex32::new(
+                        f32::algebraic_mul(s.re, factor),
+                        f32::algebraic_mul(s.im, factor),
+                    );
                 } else {
-                    o[k] = Complex32::new(amp, 0.0);
+                    *dst = Complex32::new(amp, 0.0);
                 }
             }
             self.input.consume(m);
