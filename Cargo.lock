@@ -965,7 +965,6 @@ dependencies = [
 [[package]]
 name = "futuredsp"
 version = "0.8.0"
-source = "git+https://github.com/FutureSDR/FutureSDR?rev=729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8#729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8"
 dependencies = [
  "num-complex",
  "num-traits",
@@ -1076,7 +1075,6 @@ dependencies = [
 [[package]]
 name = "futuresdr"
 version = "0.8.0"
-source = "git+https://github.com/FutureSDR/FutureSDR?rev=729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8#729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8"
 dependencies = [
  "anyhow",
  "async-executor",
@@ -1130,7 +1128,6 @@ dependencies = [
 [[package]]
 name = "futuresdr-macros"
 version = "0.8.0"
-source = "git+https://github.com/FutureSDR/FutureSDR?rev=729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8#729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1140,7 +1137,6 @@ dependencies = [
 [[package]]
 name = "futuresdr-types"
 version = "0.8.0"
-source = "git+https://github.com/FutureSDR/FutureSDR?rev=729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8#729f7aeba9fc47a5f5d8a2c88568ef78f6f868a8"
 dependencies = [
  "dyn-clone",
  "num-complex",
@@ -4286,3 +4282,7 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+
+[[patch.unused]]
+name = "fsdr-blocks"
+version = "0.2.0"

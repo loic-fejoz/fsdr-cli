@@ -64,10 +64,10 @@ impl GrcItemType {
     }
 }
 
-impl TryFrom<&str> for GrcItemType {
-    type Error = anyhow::Error;
+impl std::str::FromStr for GrcItemType {
+    type Err = anyhow::Error;
 
-    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+    fn from_str(value: &str) -> std::result::Result<Self, Self::Err> {
         match value {
             "u8" => Ok(Self::U8),
             "s8" => Ok(Self::S8),
@@ -89,6 +89,14 @@ impl TryFrom<&str> for GrcItemType {
             "f64" => Ok(Self::F64),
             _ => bail!("Unknown GNU Radio type: {value}"),
         }
+    }
+}
+
+impl TryFrom<&str> for GrcItemType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+        value.parse()
     }
 }
 

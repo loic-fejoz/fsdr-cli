@@ -107,8 +107,17 @@ impl ActiveRecording {
         }
 
         let temp_dir = self.temp_dir;
-        match std::process::Command::new("sh")
-            .arg("-c")
+        let mut child_cmd = if cfg!(target_os = "windows") {
+            let mut c = std::process::Command::new("cmd");
+            c.arg("/C");
+            c
+        } else {
+            let mut c = std::process::Command::new("sh");
+            c.arg("-c");
+            c
+        };
+
+        match child_cmd
             .arg(&cmd_str)
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::inherit())
