@@ -8,7 +8,8 @@ use std::io::Write;
 
 #[test]
 fn test_end_to_end_nfm_ctcss_pipeline() -> Result<()> {
-    let output_flag_file = tempfile::NamedTempFile::new()?.into_temp_path();
+    let temp_dir = tempfile::tempdir()?;
+    let output_flag_file = temp_dir.path().join("output_flag.txt");
     let flag_file_str = output_flag_file.to_str().unwrap().to_string();
 
     let samp_rate = 2_400_000.0f32;
@@ -92,7 +93,11 @@ fn test_end_to_end_nfm_ctcss_pipeline() -> Result<()> {
         "Expected at least 1 message triggered by the pipeline, found: {:?}",
         lines
     );
-    assert!(lines[0].ends_with("message.sigmf-meta"));
+    assert!(
+        lines[0].trim().ends_with("message.sigmf-meta"),
+        "line 0 was: {:?}",
+        lines[0]
+    );
 
     Ok(())
 }
