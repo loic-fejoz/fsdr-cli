@@ -1,0 +1,23 @@
+id: dcblock_ff
+label: DC Blocker IIR
+category: '[Core]/Filters'
+
+parameters:
+-   id: r
+    label: Pole Radius (R)
+    dtype: real
+    default: '0.998'
+
+inputs:
+-   domain: stream
+    dtype: float
+
+outputs:
+-   domain: stream
+    dtype: float
+
+templates:
+    imports: from fsdr_cli.blocks import DcBlockFf
+    make: DcBlockFf(${r})
+
+file_format: 1

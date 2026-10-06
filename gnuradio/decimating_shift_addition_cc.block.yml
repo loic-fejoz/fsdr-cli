@@ -1,0 +1,27 @@
+id: decimating_shift_addition_cc
+label: Decimating Frequency Shifter
+category: '[Core]/Math'
+
+parameters:
+-   id: rate
+    label: Shift Rate (normalized)
+    dtype: real
+    default: '0.0'
+-   id: decimation
+    label: Decimation
+    dtype: int
+    default: '1'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: complex
+
+templates:
+    imports: from fsdr_cli.blocks import DecimatingShiftAdditionCc
+    make: DecimatingShiftAdditionCc(${rate}, ${decimation})
+
+file_format: 1

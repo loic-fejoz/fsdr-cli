@@ -1,0 +1,23 @@
+id: repeat_u8
+label: Repeat Byte
+category: '[Core]/Stream Operators'
+
+parameters:
+-   id: repeat
+    label: Repeat Count
+    dtype: int
+    default: '1'
+
+inputs:
+-   domain: stream
+    dtype: byte
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from fsdr_cli.blocks import RepeatU8
+    make: RepeatU8(${repeat})
+
+file_format: 1

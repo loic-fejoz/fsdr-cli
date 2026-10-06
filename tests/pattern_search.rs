@@ -18,9 +18,9 @@ fn pattern_search_two_bytes_found() -> Result<()> {
     connect!(fg,
         src > block_under_test > vect_sink;
     );
-    Runtime::new().run(fg)?;
+    let term_fg = Runtime::new().run(fg)?;
 
-    let snk = vect_sink.get()?;
+    let snk = term_fg.block(&vect_sink)?;
     let v = snk.items();
 
     assert_eq!(v.len(), 2);
@@ -40,9 +40,9 @@ fn pattern_search_two_bytes_not_found() -> Result<()> {
     connect!(fg,
         src > block_under_test > vect_sink;
     );
-    Runtime::new().run(fg)?;
+    let term_fg = Runtime::new().run(fg)?;
 
-    let snk = vect_sink.get()?;
+    let snk = term_fg.block(&vect_sink)?;
     let v = snk.items();
 
     assert_eq!(v.len(), 0);
@@ -64,9 +64,9 @@ fn pattern_search_three_bytes_found() -> Result<()> {
     connect!(fg,
         src > block_under_test > vect_sink;
     );
-    Runtime::new().run(fg)?;
+    let term_fg = Runtime::new().run(fg)?;
 
-    let snk = vect_sink.get()?;
+    let snk = term_fg.block(&vect_sink)?;
     let v = snk.items();
 
     assert_eq!(v.len(), 3);

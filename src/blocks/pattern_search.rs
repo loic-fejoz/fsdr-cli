@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -60,7 +60,7 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let mut consumed = 0;
         let mut produced = 0;

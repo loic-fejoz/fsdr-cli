@@ -57,14 +57,14 @@ impl BlockConverter for BandPassFilterConverter {
                 let blk = FirBuilder::resampling_with_taps::<Complex32, Complex32, Vec<f32>>(
                     interp, decimation, taps,
                 );
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "fir_filter_ccc" => {
                 let taps = firdes::bandpass::<f32>(low_cutoff_freq, high_cutoff_freq, &rect_win);
                 let blk = FirBuilder::resampling_with_taps::<Complex32, Complex32, Vec<f32>>(
                     interp, decimation, taps,
                 );
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => bail!("band_pass_filter: Unhandled type {item_type}"),
         };

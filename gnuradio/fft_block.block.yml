@@ -1,0 +1,32 @@
+id: fft_block
+label: FFT (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: type
+  label: Type
+  dtype: enum
+  default: complex
+  options: [complex, float]
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '512'
+- id: every_n_samples
+  label: Every N Samples
+  dtype: int
+  default: '512'
+- id: window
+  label: Window
+  dtype: string
+  default: HAMMING
+
+inputs:
+- domain: stream
+  dtype: ${ type }
+
+outputs:
+- domain: stream
+  dtype: complex
+
+file_format: 1

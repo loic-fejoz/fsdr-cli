@@ -1,0 +1,27 @@
+id: logaveragepower_cf
+label: Log Average Power (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '512'
+- id: avg_number
+  label: Average Number
+  dtype: int
+  default: '10'
+- id: add_db
+  label: Add dB
+  dtype: real
+  default: '0.0'
+
+inputs:
+- domain: stream
+  dtype: complex
+
+outputs:
+- domain: stream
+  dtype: float
+
+file_format: 1

@@ -36,19 +36,27 @@ impl BlockConverter for FileSourceConverter {
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
             "u8" | "uchar" | "byte" => {
                 let blk = FileSource::<u8>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "s8" | "char" => {
                 let blk = FileSource::<i8>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
+            }
+            "i16" | "short" | "s16" => {
+                let blk = FileSource::<i16>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
+            }
+            "u16" => {
+                let blk = FileSource::<u16>::new(filename, repeat);
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "f32" | "float" => {
                 let blk = FileSource::<f32>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "c32" | "complex" => {
                 let blk = FileSource::<Complex32>::new(filename, repeat);
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => todo!("Unhandled FileSource Type {item_type}"),
         };

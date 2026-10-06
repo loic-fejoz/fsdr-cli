@@ -21,13 +21,15 @@ fn test_tcp_kiss_server_client() -> Result<()> {
     let mut fg_server = Flowgraph::new();
     let sent_data = vec![0x11, 0x22, 0x33, 0x44];
     // Send a message every 50ms.
-    let src = fg_server.add_block(MessageSource::new(
-        Pmt::Blob(sent_data.clone()),
-        Duration::from_millis(50),
-        None,
-    ));
-    let server = fg_server.add_block(TcpKissServer::new(&addr)?);
-    fg_server.connect_message(src, "out", server, "in_port")?;
+    let src = fg_server
+        .add(MessageSource::new(
+            Pmt::Blob(sent_data.clone()),
+            Duration::from_millis(50),
+            None,
+        ))?
+        .id();
+    let server = fg_server.add(TcpKissServer::new(&addr)?)?.id();
+    fg_server.message(src, "out", server, "in_port")?;
 
     // Client flowgraph
     let mut out_path = env::temp_dir();
@@ -35,9 +37,9 @@ fn test_tcp_kiss_server_client() -> Result<()> {
     let out_file = out_path.to_str().unwrap().to_string();
 
     let mut fg_client = Flowgraph::new();
-    let client = fg_client.add_block(TcpKissClient::new(&addr)?);
-    let snk = fg_client.add_block(KissFileSink::new(&out_file)?);
-    fg_client.connect_message(client, "out", snk, "in_port")?;
+    let client = fg_client.add(TcpKissClient::new(&addr)?)?.id();
+    let snk = fg_client.add(KissFileSink::new(&out_file)?)?.id();
+    fg_client.message(client, "out", snk, "in_port")?;
 
     // Start server
     let _server_handle = thread::spawn(move || {
@@ -71,13 +73,15 @@ fn test_tcp_kiss_multi_client() -> Result<()> {
     // Server flowgraph
     let mut fg_server = Flowgraph::new();
     let sent_data = vec![0x55, 0x66, 0x77, 0x88];
-    let src = fg_server.add_block(MessageSource::new(
-        Pmt::Blob(sent_data.clone()),
-        Duration::from_millis(50),
-        None,
-    ));
-    let server = fg_server.add_block(TcpKissServer::new(&addr)?);
-    fg_server.connect_message(src, "out", server, "in_port")?;
+    let src = fg_server
+        .add(MessageSource::new(
+            Pmt::Blob(sent_data.clone()),
+            Duration::from_millis(50),
+            None,
+        ))?
+        .id();
+    let server = fg_server.add(TcpKissServer::new(&addr)?)?.id();
+    fg_server.message(src, "out", server, "in_port")?;
 
     // Client 1
     let mut out_path1 = env::temp_dir();
@@ -85,9 +89,9 @@ fn test_tcp_kiss_multi_client() -> Result<()> {
     let out_file1 = out_path1.to_str().unwrap().to_string();
 
     let mut fg_client1 = Flowgraph::new();
-    let client1 = fg_client1.add_block(TcpKissClient::new(&addr)?);
-    let snk1 = fg_client1.add_block(KissFileSink::new(&out_file1)?);
-    fg_client1.connect_message(client1, "out", snk1, "in_port")?;
+    let client1 = fg_client1.add(TcpKissClient::new(&addr)?)?.id();
+    let snk1 = fg_client1.add(KissFileSink::new(&out_file1)?)?.id();
+    fg_client1.message(client1, "out", snk1, "in_port")?;
 
     // Client 2
     let mut out_path2 = env::temp_dir();
@@ -95,9 +99,9 @@ fn test_tcp_kiss_multi_client() -> Result<()> {
     let out_file2 = out_path2.to_str().unwrap().to_string();
 
     let mut fg_client2 = Flowgraph::new();
-    let client2 = fg_client2.add_block(TcpKissClient::new(&addr)?);
-    let snk2 = fg_client2.add_block(KissFileSink::new(&out_file2)?);
-    fg_client2.connect_message(client2, "out", snk2, "in_port")?;
+    let client2 = fg_client2.add(TcpKissClient::new(&addr)?)?.id();
+    let snk2 = fg_client2.add(KissFileSink::new(&out_file2)?)?.id();
+    fg_client2.message(client2, "out", snk2, "in_port")?;
 
     // Start server
     let _server_handle = thread::spawn(move || {

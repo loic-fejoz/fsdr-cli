@@ -1,0 +1,17 @@
+id: invert_u8_u8
+label: Invert Bit
+category: '[Core]/Digital Decoders'
+
+inputs:
+-   domain: stream
+    dtype: byte
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from fsdr_cli.blocks import InvertU8
+    make: InvertU8()
+
+file_format: 1

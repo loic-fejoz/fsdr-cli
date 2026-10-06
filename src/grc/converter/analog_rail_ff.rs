@@ -16,8 +16,8 @@ impl BlockConverter for AnalogRailFfConverter {
         let max_threshold = Grc2FutureSdr::parameter_as_f64(blk, "hi", "1.0")? as f32;
         let blk: Apply<_, f32, f32> =
             Apply::new(move |i: &f32| -> f32 { i.max(low_threshold).min(max_threshold) });
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

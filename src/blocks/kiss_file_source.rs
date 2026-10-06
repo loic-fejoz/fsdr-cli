@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -30,7 +30,9 @@ impl KissFileSource {
         for &byte in &buffer {
             if byte == 0xC0 {
                 if !current_frame.is_empty() {
-                    frames.push_back(current_frame.clone());
+                    // Strip the command byte (the first byte)
+                    let data = current_frame[1..].to_vec();
+                    frames.push_back(data);
                     current_frame.clear();
                 }
             } else if byte == 0xDB {
@@ -53,11 +55,6 @@ impl KissFileSource {
             }
         }
 
-        // Check if there is an unterminated frame at the end
-        if !current_frame.is_empty() {
-            frames.push_back(current_frame);
-        }
-
         Ok(Self { frames })
     }
 }
@@ -68,7 +65,7 @@ impl Kernel for KissFileSource {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         if let Some(frame) = self.frames.pop_front() {
             mio.post("output", Pmt::Blob(frame)).await?;

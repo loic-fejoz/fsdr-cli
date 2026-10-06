@@ -1,0 +1,27 @@
+id: bpsk_costas_loop_cc
+label: BPSK Costas Loop
+category: '[Core]/Digital Synchronizers'
+
+parameters:
+-   id: loop_bw
+    label: Loop Bandwidth
+    dtype: real
+    default: '0.05'
+-   id: damping
+    label: Damping Factor
+    dtype: real
+    default: '0.707'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: complex
+
+templates:
+    imports: from fsdr_cli.blocks import CostasLoopCc
+    make: CostasLoopCc(${loop_bw}, ${damping})
+
+file_format: 1

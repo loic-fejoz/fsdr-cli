@@ -42,7 +42,7 @@ impl BlockConverter for SatellitesKissServerSinkConverter {
         let address = address.trim_matches('"');
         let block = TcpKissServer::new(&format!("{}:{}", address, port))?;
         Ok(Box::new(TcpKissServerSinkPortAdapter {
-            blk: fg.add_block(block).into(),
+            blk: fg.add(block)?.id(),
         }))
     }
 }

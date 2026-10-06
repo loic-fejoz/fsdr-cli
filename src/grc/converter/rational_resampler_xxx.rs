@@ -1,7 +1,7 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
+use crate::blocks::TagFirBuilder;
 use anyhow::{bail, Result};
-use futuresdr::blocks::FirBuilder;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 
@@ -18,14 +18,14 @@ impl BlockConverter for RationalResamplerXxConverter {
         let kind = blk.parameter_or("type", "fff");
         let blk: Box<dyn ConnectorAdapter> = match kind {
             "fff" => {
-                let blk = FirBuilder::resampling::<f32, f32>(interp, decim);
-                let blk = fg.add_block(blk);
-                Box::new(DefaultPortAdapter::new(blk.into()))
+                let blk = TagFirBuilder::resampling::<f32, f32>(interp, decim);
+                let blk = fg.add(blk)?.id();
+                Box::new(DefaultPortAdapter::new(blk))
             }
             "ccc" => {
-                let blk = FirBuilder::resampling::<Complex32, Complex32>(interp, decim);
-                let blk = fg.add_block(blk);
-                Box::new(DefaultPortAdapter::new(blk.into()))
+                let blk = TagFirBuilder::resampling::<Complex32, Complex32>(interp, decim);
+                let blk = fg.add(blk)?.id();
+                Box::new(DefaultPortAdapter::new(blk))
             }
             _ => bail!("Unknown rational resampler type: {kind}"),
         };

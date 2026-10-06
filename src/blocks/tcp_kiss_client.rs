@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures::channel::mpsc;
 use futures::StreamExt;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::io::Read;
 use std::net::TcpStream;
@@ -31,7 +31,9 @@ impl TcpKissClient {
                     for &byte in &buffer[..n] {
                         if byte == 0xC0 {
                             if !current_frame.is_empty() {
-                                let _ = tx.unbounded_send(current_frame.clone());
+                                // Strip the command byte (the first byte)
+                                let data = current_frame[1..].to_vec();
+                                let _ = tx.unbounded_send(data);
                                 current_frame.clear();
                             }
                         } else if byte == 0xDB {
@@ -66,7 +68,7 @@ impl Kernel for TcpKissClient {
         &mut self,
         io: &mut WorkIo,
         mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         match self.rx.next().await {
             Some(frame) => {

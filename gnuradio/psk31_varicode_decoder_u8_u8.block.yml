@@ -1,0 +1,17 @@
+id: psk31_varicode_decoder_u8_u8
+label: PSK31 Varicode Decoder
+category: '[Core]/Digital Decoders'
+
+inputs:
+-   domain: stream
+    dtype: byte
+
+outputs:
+-   domain: stream
+    dtype: byte
+
+templates:
+    imports: from fsdr_cli.blocks import VaricodeDecoder
+    make: VaricodeDecoder()
+
+file_format: 1

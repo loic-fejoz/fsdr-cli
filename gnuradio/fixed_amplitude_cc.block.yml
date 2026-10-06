@@ -1,0 +1,23 @@
+id: fixed_amplitude_cc
+label: Fixed Amplitude
+category: '[Core]/Math Operators'
+
+parameters:
+-   id: amplitude
+    label: Amplitude
+    dtype: real
+    default: '1.0'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: complex
+
+templates:
+    imports: from fsdr_cli.blocks import FixedAmplitudeCc
+    make: FixedAmplitudeCc(${amplitude})
+
+file_format: 1

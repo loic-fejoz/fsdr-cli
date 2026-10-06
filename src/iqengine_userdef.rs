@@ -118,8 +118,9 @@ fn fun_name(
             let v = stream1.clone().samples_cf32()?;
 
             let src = futuresdr::blocks::VectorSource::<futuresdr::num_complex::Complex32>::new(v);
-            let blk_cvter =
-                PredefinedBlockConverter::new(move |fg: &mut Flowgraph| fg.add_block(src).into());
+            let blk_cvter = PredefinedBlockConverter::new(move |fg: &mut Flowgraph| {
+                fg.add(src).expect("msg").id()
+            });
             converter
                 .with_blocktype_conversion("blocks_file_source".to_string(), Box::new(blk_cvter));
         }
@@ -138,7 +139,7 @@ fn fun_name(
 
     // Retrieve the IQEngineOutputBlockConverter to eventually retrieve actual graph result
     let snk_builder = converter.take("blocks_file_sink").expect("msg");
-    let snk_builder = *snk_builder.downcast_iqengine().expect("msg");
+    let snk_builder = snk_builder.downcast_iqengine().expect("msg").clone();
     Ok((fg, snk_builder))
 }
 

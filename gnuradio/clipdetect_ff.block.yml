@@ -1,0 +1,13 @@
+id: clipdetect_ff
+label: Clip Detect
+category: '[FutureSDR]'
+
+inputs:
+- domain: stream
+  dtype: float
+
+outputs:
+- domain: stream
+  dtype: float
+
+file_format: 1

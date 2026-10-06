@@ -1,0 +1,15 @@
+id: dump_f
+label: Dump F
+category: '[FutureSDR]'
+
+parameters:
+- id: type
+  label: Type
+  dtype: string
+  default: 'f'
+
+inputs:
+- domain: stream
+  dtype: float
+
+file_format: 1

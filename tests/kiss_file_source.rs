@@ -5,7 +5,7 @@ use futuresdr::runtime::Runtime;
 use std::sync::{Arc, Mutex};
 
 mod test_sink {
-    use futuresdr::prelude::*;
+    use futuresdr::runtime::dev::prelude::*;
     use futuresdr::runtime::Pmt;
     use std::sync::{Arc, Mutex};
 
@@ -24,7 +24,7 @@ mod test_sink {
             &mut self,
             io: &mut WorkIo,
             _mio: &mut MessageOutputs,
-            _meta: &mut BlockMeta,
+            _meta: &BlockMeta,
             p: Pmt,
         ) -> Result<Pmt> {
             match p {
@@ -58,9 +58,9 @@ fn test_kiss_file_source() -> Result<()> {
     let received_messages = Arc::new(Mutex::new(Vec::new()));
     let sink = TestMessageSink::new(received_messages.clone());
 
-    let src_id = fg.add_block(src);
-    let sink_id = fg.add_block(sink);
-    fg.connect_message(src_id, "output", sink_id, "in_port")?;
+    let src_id = fg.add(src)?.id();
+    let sink_id = fg.add(sink)?.id();
+    fg.message(src_id, "output", sink_id, "in_port")?;
 
     // 3. Run flowgraph
     Runtime::new().run(fg)?;
@@ -69,11 +69,11 @@ fn test_kiss_file_source() -> Result<()> {
     let msgs = received_messages.lock().unwrap();
     assert_eq!(msgs.len(), 2);
 
-    // Frame 1 decoded: 00 AA BB
-    assert_eq!(msgs[0], vec![0x00, 0xAA, 0xBB]);
+    // Frame 1 decoded: AA BB (00 stripped)
+    assert_eq!(msgs[0], vec![0xAA, 0xBB]);
 
-    // Frame 2 decoded: 00 CC C0 DD
-    assert_eq!(msgs[1], vec![0x00, 0xCC, 0xC0, 0xDD]);
+    // Frame 2 decoded: CC C0 DD (00 stripped)
+    assert_eq!(msgs[1], vec![0xCC, 0xC0, 0xDD]);
 
     Ok(())
 }

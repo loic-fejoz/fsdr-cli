@@ -1,0 +1,23 @@
+id: pattern_search
+label: Pattern Search (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: values_after
+  label: Values After
+  dtype: int
+  default: '240'
+- id: pattern_values
+  label: Pattern Values (CSV)
+  dtype: string
+  default: '1,0,1,1'
+
+inputs:
+- domain: stream
+  dtype: byte
+
+outputs:
+- domain: stream
+  dtype: byte
+
+file_format: 1

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 
 #[derive(Block)]
 pub struct DCBlocker<
@@ -41,7 +41,7 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let m;
         let ilen;
@@ -53,15 +53,15 @@ where
             m = std::cmp::min(ilen, o.len());
 
             if m > self.min_bufsize {
-                let sum: f32 = i.iter().sum();
-                let avg = sum / (ilen as f32);
-                let avgdiff = avg - self.last_dc_level;
+                let sum: f32 = i[..m].iter().sum();
+                let avg = sum / (m as f32);
+                let avgdiff = unsafe { core::intrinsics::fsub_fast(avg, self.last_dc_level) };
+                let step = avgdiff / (m as f32);
 
-                let input_size = m as f32;
-                for (index, (v, r)) in i.iter().zip(o.iter_mut()).enumerate() {
-                    let linear_dc_level_change = avgdiff * ((index as f32) / input_size);
-                    let dc_removal_level = self.last_dc_level + linear_dc_level_change;
-                    *r = *v - dc_removal_level;
+                let mut current_dc = self.last_dc_level;
+                for (v, r) in i[..m].iter().zip(o[..m].iter_mut()) {
+                    *r = unsafe { core::intrinsics::fsub_fast(*v, current_dc) };
+                    current_dc = unsafe { core::intrinsics::fadd_fast(current_dc, step) };
                 }
 
                 self.last_dc_level = avg;

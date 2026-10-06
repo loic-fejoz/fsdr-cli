@@ -14,8 +14,8 @@ impl BlockConverter for DsbConverter {
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let q_value = Grc2FutureSdr::parameter_as_f32(blk, "q_value", "0.0")?;
         let blk = dsb_fc(q_value);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

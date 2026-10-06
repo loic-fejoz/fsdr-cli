@@ -53,7 +53,7 @@ tcp_kiss_client_cmd = { "tcp_kiss_client" ~ filepath }
 fixedlen_to_pdu_cmd = { "fixedlen_to_pdu" ~ number_or_paren_expr ~ ident? }
 limit_cmd = {"limit_ff" ~ number_or_paren_expr? }
 octave_complex_cmd = { "octave_complex_c" ~ number_or_paren_expr ~ number_or_paren_expr }
-pack_bits_cmd = { "pack_bits_8to1_u8_u8" }
+pack_bits_cmd = { "pack_bits_8to1_u8_u8" | "pack_bits_1to8_u8_u8" }
 pattern_search_cmd = { "pattern_search_u8_u8" ~ number_or_paren_expr ~ number_or_paren_expr+ }
 resampler_types = { "ff" | "cc" }
 rational_resampler_cmd = { "rational_resampler_" ~ resampler_types ~ number_or_paren_expr ~ number_or_paren_expr ~ (number_or_paren_expr ~ ident?)? }
@@ -61,10 +61,123 @@ realpart_cmd = {"realpart_cf"}
 shift_addition_cmd = { "shift_addition_cc" ~ number_or_paren_expr }
 timing_recovery_cmd = { "timing_recovery_cc" ~ ident ~ number_or_paren_expr ~ number_or_paren_expr ~ number_or_paren_expr }
 throttle_cmd = { "throttle_cc" | "throttle_ff" }
+flowcontrol_cmd = { "flowcontrol" ~ number_or_paren_expr ~ number_or_paren_expr? }
+clone_cmd = { "clone" | "through" }
+none_cmd = { "none" }
+repeat_u8_cmd = { ("repeat_u8" | "repeat") ~ number_or_paren_expr }
 weaver_lsb_cmd = { "weaver_lsb_cf" ~ number_or_paren_expr }
 weaver_usb_cmd = { "weaver_usb_cf" ~ number_or_paren_expr }
+cat_server_port_param = { ^"--port" ~ number_or_paren_expr }
+cat_server_rx_freq_param = { ^"--rx_freq" ~ number_or_paren_expr }
+cat_server_tx_freq_param = { ^"--tx_freq" ~ number_or_paren_expr }
+cat_server_ctcss_tone_param = { ^"--ctcss_tone" ~ number_or_paren_expr }
+cat_server_cmd = { "cat_server" ~ (cat_server_port_param | cat_server_rx_freq_param | cat_server_tx_freq_param | cat_server_ctcss_tone_param)* }
+ctcss_gen_cmd = { "ctcss_gen" ~ number_or_paren_expr? }
+fft_opt_flag = { ^"--octave" | ^"--benchmark" }
+fft_cc_cmd = { ("fft_cc" | "fft") ~ number_or_paren_expr ~ number_or_paren_expr ~ ident? ~ fft_opt_flag* }
+fft_fc_cmd = { "fft_fc" ~ number_or_paren_expr ~ number_or_paren_expr ~ ident? ~ fft_opt_flag* }
+logpower_add_db_flag = { (^"--add_db=" | ^"--add_db" | ^"-a") ~ number_or_paren_expr }
+logpower_cf_cmd = { ("logpower_cf" | "logpower") ~ (logpower_add_db_flag | number_or_paren_expr)? }
+logavg_add_db_flag = { (^"--add=" | ^"--add" | ^"-a") ~ number_or_paren_expr }
+logaveragepower_cf_cmd = { ("logaveragepower_cf" | "logaveragepower") ~ number_or_paren_expr ~ number_or_paren_expr ~ (logavg_add_db_flag | number_or_paren_expr)? }
+fft_exchange_sides_ff_cmd = { ("fft_exchange_sides_ff" | "fftswap") ~ number_or_paren_expr }
+dcblock_cmd = { ("dcblock_ff" | "dcblock") ~ number_or_paren_expr? }
+decimating_shift_addition_cmd = { "decimating_shift_addition_cc" ~ number_or_paren_expr ~ number_or_paren_expr }
+add_dcoffset_cc_cmd = { ("add_dcoffset_cc" | "add_dcoffset") ~ number_or_paren_expr? ~ number_or_paren_expr? }
+mono2stereo_s16_cmd = { "mono2stereo_s16" | "mono2stereo" }
+dbpsk_cmd = { "dbpsk_decoder_c_u8" | "dbpskdecoder" | "dbpskdecode" }
+psk31_varicode_decoder_cmd = { "psk31_varicode_decoder_u8_u8" | "varicodedecode" }
+psk31_varicode_encoder_cmd = { "psk31_varicode_encoder_u8_u8" | "varicodeencode" }
+bpsk_costas_loop_cmd = { ("bpsk_costas_loop_cc" | "costas_loop_cc") ~ number_or_paren_expr? ~ number_or_paren_expr? }
+pll_cmd = { "pll_cc" ~ number_or_paren_expr? ~ number_or_paren_expr? }
+fmmod_fc_cmd = { "fmmod_fc" | "fmmod" }
+fixed_amplitude_cc_cmd = { ("fixed_amplitude_cc" | "fixed_amplitude") ~ number_or_paren_expr? }
+add_const_cc_cmd = { ("add_const_cc" | "add_const") ~ number_or_paren_expr? ~ number_or_paren_expr? }
+differential_encoder_u8_u8_cmd = { "differential_encoder_u8_u8" }
+differential_decoder_u8_u8_cmd = { "differential_decoder_u8_u8" }
+invert_u8_u8_cmd = { "invert_u8_u8" }
+bfsk_demod_cf_cmd = { "bfsk_demod_cf" | "bfskdemod" }
+detect_nan_ff_cmd = { "detect_nan_ff" }
+yes_f_cmd = { "yes_f" ~ number_or_paren_expr? }
+encode_ima_adpcm_i16_u8_cmd = { "encode_ima_adpcm_i16_u8" | ("adpcm" ~ "--encode") }
+decode_ima_adpcm_u8_i16_cmd = { "decode_ima_adpcm_u8_i16" | ("adpcm" ~ "--decode") }
+compress_fft_adpcm_f_u8_cmd = { ("compress_fft_adpcm_f_u8" | "fftadpcm") ~ number_or_paren_expr }
+single_quoted_string = @{ "'" ~ (!"'" ~ ANY)* ~ "'" }
+double_quoted_string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+unquoted_token = @{ (!(" " | "\t" | "\r" | "\n" | "|" | "!") ~ ANY)+ }
+param_val = { single_quoted_string | double_quoted_string | unquoted_token }
 
-any_csdr_cmd = _{ "csdr"? ~ (agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | binary_slicer_cmd | clipdetect_cmd | convert_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | dsb_cmd | dump_cmd | eval_cmd | fastdcblock_cmd | fir_decimate_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fractional_decimator_cmd | gain_cmd | load_cmd | load_kiss_cmd | save_kiss_cmd | tcp_kiss_server_cmd | tcp_kiss_client_cmd | fixedlen_to_pdu_cmd | limit_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | rational_resampler_cmd | realpart_cmd | shift_addition_cmd | timing_recovery_cmd | throttle_cmd | weaver_lsb_cmd | weaver_usb_cmd) }
+power_tagger_samp_rate = { ^"--samp-rate" ~ param_val }
+power_tagger_threshold = { ^"--threshold" ~ param_val }
+power_tagger_off_threshold = { ^"--off-threshold" ~ param_val }
+power_tagger_on_threshold = { ^"--on-threshold" ~ param_val }
+power_tagger_snr_off = { ^"--snr-off" ~ param_val }
+power_tagger_snr_on = { ^"--snr-on" ~ param_val }
+power_tagger_noise_alpha = { ^"--noise-alpha" ~ param_val }
+power_tagger_delay = { ^"--delay" ~ param_val }
+power_tagger_off_delay = { ^"--off-delay" ~ param_val }
+power_tagger_on_delay = { ^"--on-delay" ~ param_val }
+power_tagger_window = { ^"--window-size" ~ param_val }
+power_tagger_off_tag = { ^"--off-tag" ~ param_val }
+power_tagger_on_tag = { ^"--on-tag" ~ param_val }
+power_tagger_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+power_tagger_param = _{
+    power_tagger_samp_rate
+    | power_tagger_off_threshold
+    | power_tagger_on_threshold
+    | power_tagger_snr_off
+    | power_tagger_snr_on
+    | power_tagger_noise_alpha
+    | power_tagger_threshold
+    | power_tagger_off_delay
+    | power_tagger_on_delay
+    | power_tagger_delay
+    | power_tagger_window
+    | power_tagger_off_tag
+    | power_tagger_on_tag
+    | power_tagger_debug
+}
+power_tagger_cc_cmd = { ("power_tagger_cc" | "power_tagger") ~ power_tagger_param* }
+
+afc_alpha_param = { ^"--alpha" ~ number_or_paren_expr }
+afc_limit_param = { ^"--limit" ~ number_or_paren_expr }
+afc_gain_param = { ^"--gain" ~ number_or_paren_expr }
+afc_max_freq_param = { ^"--max-freq" ~ number_or_paren_expr }
+afc_samp_rate_param = { ^"--samp-rate" ~ number_or_paren_expr }
+
+afc_ff_cmd = { "afc_ff" ~ (afc_alpha_param | afc_limit_param)* }
+afc_cc_cmd = { "afc_cc" ~ (afc_alpha_param | afc_gain_param | afc_max_freq_param | afc_samp_rate_param)* }
+
+ctcss_samp_rate = { ^"--samp-rate" ~ param_val }
+ctcss_tone = { (^"--tone" | ^"--tone-freq") ~ param_val }
+ctcss_threshold = { ^"--threshold" ~ param_val }
+ctcss_duration = { ^"--duration" ~ param_val }
+ctcss_tag = { (^"--tag" | ^"--tag-name") ~ param_val }
+ctcss_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+ctcss_param = _{ ctcss_samp_rate | ctcss_tone | ctcss_threshold | ctcss_duration | ctcss_tag | ctcss_debug }
+ctcss_detect_ff_cmd = { ("ctcss_detect_ff" | "ctcss_detect") ~ ctcss_param* }
+
+timer_samp_rate = { ^"--samp-rate" ~ param_val }
+timer_duration = { ^"--duration" ~ param_val }
+timer_start = { (^"--start" | ^"--start-tag") ~ param_val }
+timer_end = { (^"--end" | ^"--end-tag") ~ param_val }
+timer_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+timer_param = _{ timer_samp_rate | timer_duration | timer_start | timer_end | timer_debug }
+timer_tagger_ff_cmd = { ("timer_tagger_ff" | "timer_tagger") ~ timer_param* }
+
+cmd_raw_token = @{ (!("!" | "|" | ("--" ~ ASCII_ALPHA)) ~ ANY)+ }
+cmd_param_val = { single_quoted_string | double_quoted_string | cmd_raw_token }
+
+cmd_trig_samp_rate = { ^"--samp-rate" ~ param_val }
+cmd_trig_start = { ^"--start-tag" ~ param_val }
+cmd_trig_end = { ^"--end-tag" ~ param_val }
+cmd_trig_cmd = { ^"--cmd" ~ cmd_param_val }
+cmd_trig_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
+cmd_trig_param = _{ cmd_trig_samp_rate | cmd_trig_start | cmd_trig_end | cmd_trig_cmd | cmd_trig_debug }
+cmd_trigger_f_cmd = { ("cmd_trigger_f" | "cmd_trigger") ~ cmd_trig_param* }
+
+any_csdr_cmd = _{ "csdr"? ~ (add_const_cc_cmd | add_dcoffset_cc_cmd | afc_ff_cmd | afc_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | bfsk_demod_cf_cmd | binary_slicer_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | cmd_trigger_f_cmd | ctcss_detect_ff_cmd | ctcss_gen_cmd | clipdetect_cmd | compress_fft_adpcm_f_u8_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | decode_ima_adpcm_u8_i16_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | detect_nan_ff_cmd | differential_encoder_u8_u8_cmd | differential_decoder_u8_u8_cmd | dsb_cmd | dump_cmd | encode_ima_adpcm_i16_u8_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fixed_amplitude_cc_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fmmod_fc_cmd | fractional_decimator_cmd | gain_cmd | invert_u8_u8_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | pll_cmd | power_tagger_cc_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timer_tagger_ff_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd | yes_f_cmd) }
+
 
 
 cmd_sep = _{ "|" | "!" }

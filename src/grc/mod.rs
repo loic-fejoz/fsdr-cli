@@ -14,30 +14,27 @@ pub struct Grc {
     pub metadata: Metadata,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Default)]
-pub struct Options {
-    parameters: Parameters,
-    states: States,
-}
-
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct Parameters {
-    author: String,
-    // catch_exceptions: String,
-    // category: String,
-    // comment: String,
-    // copyright: String,
-    // description: String,
-    id: String,
-    title: String,
+pub struct Options {
+    pub parameters: BTreeMap<String, String>,
+    pub states: States,
 }
 
-impl Default for Parameters {
+impl Default for Options {
     fn default() -> Self {
-        Parameters {
-            author: "fsdr-cli".to_string(),
-            id: "fsdrcli".to_string(),
-            title: "Created by fsdr-cli".to_string(),
+        let mut parameters = BTreeMap::new();
+        parameters.insert("author".to_string(), "fsdr-cli".to_string());
+        parameters.insert("id".to_string(), "fsdrcli".to_string());
+        parameters.insert("title".to_string(), "Created by fsdr-cli".to_string());
+        parameters.insert("generate_options".to_string(), "qt_gui".to_string());
+        parameters.insert("output_language".to_string(), "python".to_string());
+        parameters.insert("window_size".to_string(), "(1000,1000)".to_string());
+        parameters.insert("run".to_string(), "True".to_string());
+        parameters.insert("catch_exceptions".to_string(), "True".to_string());
+
+        Options {
+            parameters,
+            states: States::default(),
         }
     }
 }

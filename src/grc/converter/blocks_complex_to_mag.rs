@@ -14,8 +14,8 @@ impl BlockConverter for ComplexToMagConverter {
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let blk: Apply<_, Complex32, f32> = Apply::new(|i: &Complex32| -> f32 { i.norm() });
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

@@ -1,0 +1,2 @@
+#!/bin/bash
+rtl_sdr -f 435166900 -s 2400000 -g 38 -  | ~/projets/fsdr-cli/target/release/fsdr-cli csdr convert_u8_f ! shift_addition_cc "((435166900-435200000)/2400000)" ! fmdemod_quadri_cf ! afc_ff --alpha 0.01 ! dcblock_ff ! rational_resampler_ff 1 50 ! agc_ff --reference 0.8 ! dsb_fc ! timing_recovery_cc GARDNER 20 0.5 2 ! realpart_cf ! binary_slicer_f_u8 ! pattern_search_u8_u8 "(8*240)" 1 0 1 1 1 0 1 1 1 1 1 1 0 0 1 0 0 1 1 0 0 0 0 0 1 0 0 1 1 1 ! pack_bits_8to1_u8_u8 ! fixedlen_to_pdu 240 ! tcp_kiss_server 0.0.0.0:8002

@@ -1,0 +1,27 @@
+id: add_dcoffset_cc
+label: Add DC Offset
+category: '[Core]/Math'
+
+parameters:
+-   id: offset_re
+    label: Offset Real (I)
+    dtype: real
+    default: '1.0'
+-   id: offset_im
+    label: Offset Imag (Q)
+    dtype: real
+    default: '0.0'
+
+inputs:
+-   domain: stream
+    dtype: complex
+
+outputs:
+-   domain: stream
+    dtype: complex
+
+templates:
+    imports: from fsdr_cli.blocks import AddDcOffsetCc
+    make: AddDcOffsetCc(Complex32::new(${offset_re}, ${offset_im}))
+
+file_format: 1

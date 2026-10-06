@@ -16,6 +16,18 @@ use std::collections::BTreeMap;
 use std::collections::HashMap;
 
 use super::converter_helper::*;
+pub mod analog_power_tagger;
+use self::analog_power_tagger::AnalogPowerTaggerConverter;
+pub mod analog_afc_ff;
+use self::analog_afc_ff::AnalogAfcFfConverter;
+pub mod analog_afc_cc;
+use self::analog_afc_cc::AnalogAfcCcConverter;
+pub mod analog_ctcss_detect;
+use self::analog_ctcss_detect::AnalogCtcssDetectConverter;
+pub mod blocks_timer_tagger;
+use self::blocks_timer_tagger::BlocksTimerTaggerConverter;
+pub mod blocks_cmd_trigger;
+use self::blocks_cmd_trigger::BlocksCmdTriggerConverter;
 pub mod analog_agc_xx;
 use self::analog_agc_xx::AnalogAgcXxConverter;
 pub mod analog_fm_deemph;
@@ -42,7 +54,11 @@ use self::blocks_complex_to_real::RealpartCfConverter;
 pub mod convert;
 use self::convert::ConvertBlockConverter;
 pub mod blocks_file_sink;
+pub mod cat_server;
+use self::cat_server::CatServerConverter;
+pub mod ctcss_generator;
 use self::blocks_file_sink::FileSinkConverter;
+use self::ctcss_generator::CtcssGeneratorConverter;
 pub mod blocks_file_source;
 use self::blocks_file_source::FileSourceConverter;
 pub mod blocks_float_to_complex;
@@ -55,6 +71,8 @@ pub mod blocks_null_sink;
 use self::blocks_null_sink::NullSinkConverter;
 pub mod blocks_pack_k_bits;
 use self::blocks_pack_k_bits::PackBitsConverter;
+pub mod blocks_unpack_k_bits;
+use self::blocks_unpack_k_bits::UnpackBitsConverter;
 pub mod blocks_throttle;
 use self::blocks_throttle::ThrottleConverter;
 pub mod blocks_complex_to_mag;
@@ -91,6 +109,48 @@ pub mod satellites_kiss_server_sink;
 use self::satellites_kiss_server_sink::SatellitesKissServerSinkConverter;
 pub mod satellites_kiss_client_source;
 use self::satellites_kiss_client_source::SatellitesKissClientSourceConverter;
+pub mod fft_block;
+use self::fft_block::FftBlockConverter;
+pub mod logpower_cf;
+use self::logpower_cf::LogPowerCfConverter;
+pub mod logaveragepower_cf;
+use self::logaveragepower_cf::LogAveragePowerCfConverter;
+pub mod fft_exchange_sides_ff;
+use self::fft_exchange_sides_ff::FftExchangeSidesFfConverter;
+pub mod dcblock_ff;
+use self::dcblock_ff::DcBlockFfConverter;
+pub mod decimating_shift_addition_cc;
+use self::decimating_shift_addition_cc::DecimatingShiftAdditionCcConverter;
+pub mod add_dcoffset_cc;
+use self::add_dcoffset_cc::AddDcOffsetCcConverter;
+pub mod repeat_u8;
+use self::repeat_u8::RepeatU8Converter;
+pub mod mono2stereo_s16;
+use self::mono2stereo_s16::Mono2StereoS16Converter;
+pub mod dbpsk_decoder;
+use self::dbpsk_decoder::DBPskDecoderConverter;
+pub mod varicode;
+use self::varicode::{VaricodeDecoderConverter, VaricodeEncoderConverter};
+pub mod costas_loop;
+use self::costas_loop::CostasLoopConverter;
+pub mod fmmod;
+use self::fmmod::FmModFcConverter;
+pub mod fixed_amplitude;
+use self::fixed_amplitude::FixedAmplitudeConverter;
+pub mod add_const;
+use self::add_const::AddConstConverter;
+pub mod differential_coding;
+use self::differential_coding::{
+    DifferentialDecoderConverter, DifferentialEncoderConverter, InvertU8Converter,
+};
+pub mod bfsk;
+use self::bfsk::BfskDemodConverter;
+pub mod detect_nan;
+use self::detect_nan::DetectNanConverter;
+pub mod yes_source;
+use self::yes_source::YesFConverter;
+pub mod adpcm;
+use self::adpcm::{AdpcmDecoderConverter, AdpcmEncoderConverter, CompressFftAdpcmConverter};
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -121,12 +181,31 @@ impl Grc2FutureSdr {
     fn block_converter(blk_def: &BlockInstance) -> Result<Box<dyn BlockConverter>> {
         let blk_type = &(blk_def.id[..]);
         let cvter: Box<dyn BlockConverter> = match blk_type {
+            "analog_power_tagger_cc"
+            | "analog_power_tagger"
+            | "power_tagger_cc"
+            | "power_tagger" => Box::new(AnalogPowerTaggerConverter {}),
+            "analog_afc_ff" | "afc_ff" => Box::new(AnalogAfcFfConverter {}),
+            "analog_afc_cc" | "afc_cc" => Box::new(AnalogAfcCcConverter {}),
+            "analog_ctcss_detect_ff"
+            | "analog_ctcss_detect"
+            | "ctcss_detect_ff"
+            | "ctcss_detect" => Box::new(AnalogCtcssDetectConverter {}),
+            "blocks_timer_tagger_ff"
+            | "blocks_timer_tagger"
+            | "timer_tagger_ff"
+            | "timer_tagger" => Box::new(BlocksTimerTaggerConverter {}),
+            "blocks_cmd_trigger_f" | "blocks_cmd_trigger" | "cmd_trigger_f" | "cmd_trigger" => {
+                Box::new(BlocksCmdTriggerConverter {})
+            }
             "analog_agc_xx" => Box::new(AnalogAgcXxConverter {}),
             "analog_quadrature_demod_cf" => Box::new(AnalogQuadratureDemoConverter {}),
             "analog_rail_ff" => Box::new(AnalogRailFfConverter {}),
             "band_pass_filter" => Box::new(BandPassFilterConverter {}),
             "audio_sink" => Box::new(AudioSinkConverter {}),
             "blocks_add_const_vxx" => Box::new(AddConstVxConverter {}),
+            "cat_server" => Box::new(CatServerConverter {}),
+            "ctcss_gen" => Box::new(CtcssGeneratorConverter {}),
             "blocks_deinterleave" => Box::new(DeinterleaveBlockConverter {}),
             "digital_binary_slicer_fb" => Box::new(DigitalBinarySlicerConverter {}),
             "dsb" => Box::new(DsbConverter {}),
@@ -150,12 +229,17 @@ impl Grc2FutureSdr {
             "blocks_complex_to_mag" => Box::new(ComplexToMagConverter {}),
             "clipdetect_ff" => Box::new(ClipDetectFfConverter {}),
             "dc_blocker_xx" => Box::new(DcBlockerXx {}),
+            "dcblock_ff" | "dcblock" => Box::new(DcBlockFfConverter {}),
+            "decimating_shift_addition_cc" => Box::new(DecimatingShiftAdditionCcConverter {}),
+            "add_dcoffset_cc" | "add_dcoffset" => Box::new(AddDcOffsetCcConverter {}),
             "deemphasis_nfm_ff" | "analog_nfm_deemph" => Box::new(DeemphasisNfmConverter {}),
             "analog_fm_deemph" => Box::new(AnalogFmDeemphConverter {}),
             "fir_filter_xxx" => Box::new(FirFilterXxConverter {}),
             "low_pass_filter" => Box::new(LowPassFilterConverter {}),
             "octave_complex_c" => Box::new(OctaveComplexConverter {}),
             "blocks_pack_k_bits_bb" => Box::new(PackBitsConverter {}),
+            "blocks_unpack_k_bits_bb" => Box::new(UnpackBitsConverter {}),
+            "repeat_u8" => Box::new(RepeatU8Converter {}),
             "pattern_search" => Box::new(PatternSearchConverter {}),
             "rational_resampler_xxx" => Box::new(RationalResamplerXxConverter {}),
             "satellites_kiss_file_source" => Box::new(SatellitesKissFileSourceConverter {}),
@@ -165,6 +249,35 @@ impl Grc2FutureSdr {
             "satellites_kiss_client_source" => Box::new(SatellitesKissClientSourceConverter {}),
             "timing_recovery" => Box::new(TimingRecoveryConverter {}),
             "weaver_usb_cf" | "weaver_lsb_cf" => Box::new(WeaverSsbConverter {}),
+            "fft_block" | "fft_vxx" | "fft_cc" | "fft_fc" => Box::new(FftBlockConverter {}),
+            "logpower_cf" | "logpower" => Box::new(LogPowerCfConverter {}),
+            "logaveragepower_cf" | "logaveragepower" => Box::new(LogAveragePowerCfConverter {}),
+            "fft_exchange_sides_ff" | "fftswap" => Box::new(FftExchangeSidesFfConverter {}),
+            "mono2stereo_s16" | "mono2stereo" => Box::new(Mono2StereoS16Converter {}),
+            "dbpsk_decoder_c_u8" | "dbpskdecoder" | "dbpskdecode" => {
+                Box::new(DBPskDecoderConverter {})
+            }
+            "psk31_varicode_decoder_u8_u8" | "varicodedecode" => {
+                Box::new(VaricodeDecoderConverter {})
+            }
+            "psk31_varicode_encoder_u8_u8" | "varicodeencode" => {
+                Box::new(VaricodeEncoderConverter {})
+            }
+            "bpsk_costas_loop_cc" | "digital_costas_loop_cc" | "pll_cc" => {
+                Box::new(CostasLoopConverter {})
+            }
+            "fmmod_fc" | "fmmod" => Box::new(FmModFcConverter {}),
+            "fixed_amplitude_cc" | "fixed_amplitude" => Box::new(FixedAmplitudeConverter {}),
+            "add_const_cc" | "add_const" => Box::new(AddConstConverter {}),
+            "differential_encoder_u8_u8" => Box::new(DifferentialEncoderConverter {}),
+            "differential_decoder_u8_u8" => Box::new(DifferentialDecoderConverter {}),
+            "invert_u8_u8" => Box::new(InvertU8Converter {}),
+            "bfsk_demod_cf" | "bfskdemod" => Box::new(BfskDemodConverter {}),
+            "detect_nan_ff" => Box::new(DetectNanConverter {}),
+            "yes_f" => Box::new(YesFConverter {}),
+            "encode_ima_adpcm_i16_u8" | "adpcm_encoder" => Box::new(AdpcmEncoderConverter {}),
+            "decode_ima_adpcm_u8_i16" | "adpcm_decoder" => Box::new(AdpcmDecoderConverter {}),
+            "compress_fft_adpcm_f_u8" | "fftadpcm" => Box::new(CompressFftAdpcmConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)
@@ -215,14 +328,69 @@ impl Grc2FutureSdr {
             let tgt_port = connection[3].clone();
             let (tgt_blk, tgt_port) = tgt_blk.adapt_input_port(&tgt_port)?;
 
-            if fg
-                .connect_dyn(src_blk, src_port, tgt_blk, tgt_port)
-                .is_err()
-            {
-                fg.connect_message(src_blk, src_port, tgt_blk, tgt_port)
+            if fg.stream_dyn(src_blk, src_port, tgt_blk, tgt_port).is_err() {
+                fg.message(src_blk, src_port, tgt_blk, tgt_port)
                     .context("connecting message {connection}")?;
             }
         }
+
+        // Automatic wiring of dynamic variables from CatServer to VariableEvaluator
+        let cat_server_name = grc
+            .blocks
+            .iter()
+            .find(|b| b.id == "cat_server")
+            .map(|b| b.name.clone());
+
+        if let Some(cat_name) = cat_server_name {
+            if let Some(cat_adapter) = names_to_adapter.get(&cat_name) {
+                // Get the CatServer BlockId
+                if let Ok((cat_id, _)) = cat_adapter.adapt_output_port("0") {
+                    for blk in &grc.blocks {
+                        if blk.id == "blocks_freqshift_cc" {
+                            let freq_expr = blk.parameter_or("freq", "1.0");
+                            // Simple heuristic to detect if the expression contains a variable
+                            if freq_expr
+                                .chars()
+                                .any(|c| c.is_ascii_alphabetic() && c != 'e' && c != 'E')
+                            {
+                                let eval_blk =
+                                    crate::blocks::VariableEvaluator::new(freq_expr.to_string());
+                                let eval_id = fg.add(eval_blk)?.id();
+
+                                if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
+                                    if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
+                                    {
+                                        let _ =
+                                            fg.message(cat_id, "variables", eval_id, "update_var");
+                                        let _ =
+                                            fg.message(eval_id, "out", target_id, "set_frequency");
+                                    }
+                                }
+                            }
+                        }
+
+                        if blk.id == "ctcss_gen" {
+                            let tone_expr = blk.parameter_or("tone", "0.0");
+                            if tone_expr.chars().any(|c| c.is_ascii_alphabetic()) {
+                                let eval_blk =
+                                    crate::blocks::VariableEvaluator::new(tone_expr.to_string());
+                                let eval_id = fg.add(eval_blk)?.id();
+
+                                if let Some(target_adapter) = names_to_adapter.get(&blk.name) {
+                                    if let Ok((target_id, _)) = target_adapter.adapt_input_port("0")
+                                    {
+                                        let _ =
+                                            fg.message(cat_id, "variables", eval_id, "update_var");
+                                        let _ = fg.message(eval_id, "out", target_id, "set_tone");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Ok(fg)
     }
 

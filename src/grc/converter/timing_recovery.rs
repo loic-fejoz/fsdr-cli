@@ -26,8 +26,8 @@ impl BlockConverter for TimingRecoveryConverter {
             _ => bail!("Unknown timing recovery algorithm: {algo}"),
         };
         let blk = TimingRecovery::<Complex32>::new(algo, decim, mu, max_error);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

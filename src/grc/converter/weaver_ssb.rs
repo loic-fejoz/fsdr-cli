@@ -24,8 +24,8 @@ impl BlockConverter for WeaverSsbConverter {
                 let term2 = v.im * osc.im;
                 term1 - term2 // substraction for LSB
             });
-            let blk = fg.add_block(blk);
-            Box::new(DefaultPortAdapter::new(blk.into()))
+            let blk = fg.add(blk)?.id();
+            Box::new(DefaultPortAdapter::new(blk))
         } else {
             let blk: Apply<_, Complex32, f32> = Apply::new(move |v: &Complex32| -> f32 {
                 osc *= shift;
@@ -33,8 +33,8 @@ impl BlockConverter for WeaverSsbConverter {
                 let term2 = v.im * osc.im;
                 term1 + term2 // addition for USB
             });
-            let blk = fg.add_block(blk);
-            Box::new(DefaultPortAdapter::new(blk.into()))
+            let blk = fg.add(blk)?.id();
+            Box::new(DefaultPortAdapter::new(blk))
         };
         Ok(blk)
     }

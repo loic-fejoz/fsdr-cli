@@ -14,11 +14,25 @@ The intermediate graph must be 100% compatible with GNU Radio Companion. This me
 
 - **Tech Stack**: Rust (edition 2021), FutureSDR, anynow, pest (Grc/Command grammar).
 - **Core Dependencies**: `futuresdr`, `fsdr-blocks`, `cpal` (audio).
+- **Fast-Math Performance**: Crucial DSP inner loops utilize `core::intrinsics` (`fadd_fast`, `fsub_fast`, `fmul_fast`) with `#![feature(core_intrinsics)]` and `#![allow(internal_features)]` for maximum throughput, following SatDump/GNU Radio fast_math practices.
 
 ## Critical Commands
 - **Build:** `cargo build` / `cargo build --release`
-- **Test:** `make test` (runs both `cargo test` and `csdr` verification checks), `cargo test`
-- **Typecheck & Lint:** `cargo clippy -- -D warnings`, `cargo fmt`
+- **Test & CI Verification:**
+  - Standard test suite: `cargo test --all-targets --workspace`
+  - Full Makefile verification (csdr byte-stream comparison): `make test`
+  - Strict CI Linter check: `cargo clippy --all-targets --workspace -- -D warnings`
+  - Strict CI Formatter check: `cargo fmt --check`
+  - **Isolated CI Environment Test (without local `.cargo/config.toml` overrides):**
+    `bash -c "mv .cargo/config.toml .cargo/config.tmp && cargo clippy --all-targets --workspace -- -D warnings && cargo test --all-targets --workspace ; STATUS=\$? ; mv .cargo/config.tmp .cargo/config.toml ; exit \$STATUS"`
+
+## Multi-Repository & Dependency Workflow
+When developing `fsdr-cli` alongside sibling repositories (such as `fsdr-blocks` or `FutureSDR`):
+1. **Local Overrides in `.cargo/config.toml` (git-ignored):** Use `.cargo/config.toml` for local `[patch]` directives pointing to local relative paths (e.g. `../fsdr-blocks` or `../FutureSDR`). Always include both `[patch.crates-io]` and `[patch."https://github.com/..."]` sections so local paths override both crates.io dependencies and git dependencies. Never place local file paths in `Cargo.toml`.
+2. **Upstream Alignment:** Ensure all dependent local changes in sibling crates (`fsdr-blocks`) are committed and pushed to their remote branches on GitHub before pushing `fsdr-cli`.
+3. **Explicit Rev / Branch Pinning:** In `Cargo.toml`, explicitly declare dependencies using standard crates.io versions (`version = "0.9.0"`) or pin git dependencies to their matching remote `rev` or `branch` (e.g. `fsdr-blocks = { git = "...", branch = "main" }`) to prevent Cargo from resolving duplicate versions of transitive dependencies on CI.
+4. **Lockfile Synchronization:** Run `cargo update -p <crate>` after updating remote branches to sync `Cargo.lock`.
+5. **Pre-Push CI Validation:** Always run tests with local `.cargo/config.toml` disabled temporarily (`mv .cargo/config.toml .cargo/config.tmp`) to ensure CI will build cleanly.
 
 ## Directory Map
 - `src/`: Core logic (`main.rs`, `lib.rs`) and CLI parsing (`cmd_line.pest`, `cmd_grammar.rs`, `cmd_line.rs`).
@@ -36,7 +50,7 @@ Please read the following documents in `agent_docs/` for targeted context before
 3. **`agent_docs/testing_guidelines.md`**: For instructions on how to replicate and test `csdr` DSP functionality.
 
 ## Verification
-**CRITICAL:** ALWAYS verify your work using the project's test suite (`cargo test` and specifically `make test` for csdr comparisons) before concluding any task. Ensure no breaking changes to expected byte streams occur unless intended.
+**CRITICAL:** ALWAYS verify your work using the full CI check suite (`cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test`, and `make test`) before concluding any task. Ensure no breaking changes to expected byte streams occur unless intended.
 
 ---
 *Note: This file is optimized for AI consumption. For human contributors, see [CONTRIBUTING.md](file:///home/loic/projets/fsdr-cli/CONTRIBUTING.md).*

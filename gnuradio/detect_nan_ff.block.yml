@@ -1,0 +1,17 @@
+id: detect_nan_ff
+label: Detect NaN / Inf
+category: '[Core]/Filters'
+
+inputs:
+-   domain: stream
+    dtype: float
+
+outputs:
+-   domain: stream
+    dtype: float
+
+templates:
+    imports: from fsdr_cli.blocks import DetectNanFf
+    make: DetectNanFf()
+
+file_format: 1

@@ -28,8 +28,8 @@ impl<'i> HighLevelCmdLine<'i> for Pair<'i, Rule> {
 
     fn as_csdr_cmd(&self) -> Option<&Self> {
         match self.as_rule() {
-            Rule::csdr_cmd => Some(self),
-            _ => None,
+            Rule::grc_cmd | Rule::iqengine_cmd | Rule::help_cmd => None,
+            _ => Some(self),
         }
     }
 

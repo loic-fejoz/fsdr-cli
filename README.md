@@ -1,5 +1,8 @@
 # fsdr-cli
 
+[![CI](https://github.com/loic-fejoz/fsdr-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/loic-fejoz/fsdr-cli/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/loic-fejoz/fsdr-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/loic-fejoz/fsdr-cli)
+
 A command line interface based on [FutureSDR](http://www.futuresdr.org) meant to be
 
 * a line-for-line replacement of [csdr](https://github.com/jketterl/csdr) ([original](https://github.com/ha7ilm/csdr)),
@@ -226,6 +229,46 @@ Connects to a distant TCP server using `<host>:<port>`, reads KISS frames, and d
 Example to connect to a distant tcp kiss server and serve it again locally: 
 `cargo run -- csdr tcp_kiss_client 192.168.2.45:8045 ! tcp_kiss_server 127.0.0.1:8001`
 
+### [cat_server](#cat_server)
+
+Syntax:
+
+```bash
+cat_server [--port 4532] [--rx_freq 145830000] [--tx_freq 145830000] [--ctcss_tone 885]
+```
+
+Starts a CAT (Computer Aided Transceiver) server implementing the `rigctld` (Hamlib) protocol. It allows external applications like GPredict to control parameters of the flowgraph.
+
+Available parameters:
+*   `--port`: TCP port to listen on (default: 4532).
+*   `--rx_freq`: Initial receive frequency in Hz.
+*   `--tx_freq`: Initial transmit frequency in Hz.
+*   `--ctcss_tone`: Initial transmit CTCSS tone in tenths of Hz (e.g., 885 for 88.5 Hz).
+
+When a `cat_server` is present in the flowgraph, the following variables become available for use in expressions throughout the pipeline:
+
+*   `rx_freq`: Current receive frequency (set via the `F` command).
+*   `tx_freq`: Current transmit frequency (set via the `I` command).
+*   `ctcss_tone`: Current transmit CTCSS tone in Hz (set via the `C` command).
+*   `ctcss_sql`: Current receive CTCSS tone in Hz (set via the `\set_ctcss_sql` command).
+*   `dcs_code`: Current transmit DCS code (set via the `D` command).
+*   `dcs_sql`: Current receive DCS code (set via the `\set_dcs_sql` command).
+
+Example:
+```bash
+fsdr-cli cat_server 4532 ! ctcss_gen "{ctcss_tone}" ! ...
+```
+
+### [ctcss_gen](#ctcss_gen)
+
+Syntax:
+
+```bash
+ctcss_gen [tone]
+```
+
+Adds a sub-audible CTCSS tone to the input audio stream. `tone` is in Hz.
+
 ### [rational_resampler_cc](#rational_resampler_cc)
 
 Syntax:
@@ -272,23 +315,23 @@ Example to chunk a byte stream and save it to a KISS file:
 - [x] [clipdetect_ff](https://github.com/ha7ilm/csdr#clipdetect_ff)
 - [x] [limit_ff](https://github.com/ha7ilm/csdr#limit_ff) ([jketterl](https://github.com/jketterl/csdr#limit))[^2][^3][^4]
 - [x] [gain_ff](https://github.com/ha7ilm/csdr#gain_ff) ([jketterl](https://github.com/jketterl/csdr#gain))
-- [ ] [clone](https://github.com/ha7ilm/csdr#clone)
-- [ ] [through](https://github.com/ha7ilm/csdr#through)
-- [ ] [none](https://github.com/ha7ilm/csdr#none)
-- [ ] [yes_f](https://github.com/ha7ilm/csdr#yes_f)
-- [ ] [detect_nan_ff](https://github.com/ha7ilm/csdr#detect_nan_ff)
+- [x] [clone](https://github.com/ha7ilm/csdr#clone)
+- [x] [through](https://github.com/ha7ilm/csdr#through)
+- [x] [none](https://github.com/ha7ilm/csdr#none)
+- [x] [yes_f](https://github.com/ha7ilm/csdr#yes_f)
+- [x] [detect_nan_ff](https://github.com/ha7ilm/csdr#detect_nan_ff)
 - [x] [dump_f](https://github.com/ha7ilm/csdr#dump_f)
 - [x] [dump_u8](https://github.com/ha7ilm/csdr#dump_u8)
-- [ ] [flowcontrol](https://github.com/ha7ilm/csdr#flowcontrol)
+- [x] [flowcontrol](https://github.com/ha7ilm/csdr#flowcontrol)
 - [ ] [shift_math_cc](https://github.com/ha7ilm/csdr#shift_math_cc) ([jketterl](https://github.com/jketterl/csdr#shift))
 - [x] [shift_addition_cc](https://github.com/ha7ilm/csdr#shift_addition_cc) ([jketterl](https://github.com/jketterl/csdr#shift))[^2][^3][^4]
 - [ ] [shift_addition_cc_test](https://github.com/ha7ilm/csdr#shift_addition_cc_test)
 - [ ] [shift_table_cc](https://github.com/ha7ilm/csdr#shift_table_cc)
 - [ ] [shift_addfast_cc](https://github.com/ha7ilm/csdr#shift_addfast_cc)
 - [ ] [shift_unroll_cc](https://github.com/ha7ilm/csdr#shift_unroll_cc)
-- [ ] [decimating_shift_addition_cc](https://github.com/ha7ilm/csdr#decimating_shift_addition_cc)
+- [x] [decimating_shift_addition_cc](https://github.com/ha7ilm/csdr#decimating_shift_addition_cc)
 - [ ] [shift_addition_fc](https://github.com/ha7ilm/csdr#shift_addition_fc)
-- [ ] [dcblock_ff](https://github.com/ha7ilm/csdr#dcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))
+- [x] [dcblock_ff](https://github.com/ha7ilm/csdr#dcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))
 - [x] [fastdcblock_ff](https://github.com/ha7ilm/csdr#fastdcblock_ff) ([jketterl](https://github.com/jketterl/csdr#dcblock))[^3]
 - [x] [fmdemod_atan_cf](https://github.com/ha7ilm/csdr#fmdemod_atan_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))
 - [x] [fmdemod_quadri_cf](https://github.com/ha7ilm/csdr#fmdemod_quadri_cf) ([jketterl](https://github.com/jketterl/csdr#fmdemod))[^1]
@@ -297,8 +340,8 @@ Example to chunk a byte stream and save it to a KISS file:
 - [x] [deemphasis_nfm_ff](https://github.com/ha7ilm/csdr#deemphasis_nfm_ff) ([jketterl](https://github.com/jketterl/csdr#deemphasis))[^2]
 - [x] [amdemod_cf](https://github.com/ha7ilm/csdr#amdemod_cf) ([jketterl](https://github.com/jketterl/csdr#amdemod_cf))[^3]
 - [ ] [amdemod_estimator_cf](https://github.com/ha7ilm/csdr#amdemod_estimator_cf) ([jketterl](https://github.com/jketterl/csdr#amdemod_cf))
-- [ ] [firdes_lowpass_f](https://github.com/ha7ilm/csdr#firdes_lowpass_f)
-- [ ] [firdes_bandpass_c](https://github.com/ha7ilm/csdr#firdes_bandpass_c)
+- [x] [firdes_lowpass_f](https://github.com/ha7ilm/csdr#firdes_lowpass_f)
+- [x] [firdes_bandpass_c](https://github.com/ha7ilm/csdr#firdes_bandpass_c)
 - [x] [fir_decimate_cc](https://github.com/ha7ilm/csdr#fir_decimate_cc) ([jketterl](https://github.com/jketterl/csdr#firdecimate))[^2][^3][^4]
 - [ ] [fir_interpolate_cc](https://github.com/ha7ilm/csdr#fir_interpolate_cc)
 - [x] [rational_resampler_ff](https://github.com/ha7ilm/csdr#rational_resampler_ff)
@@ -307,48 +350,48 @@ Example to chunk a byte stream and save it to a KISS file:
 - [x] [bandpass_fir_fft_cc](https://github.com/ha7ilm/csdr#bandpass_fir_fft_cc) ([jketterl](https://github.com/jketterl/csdr#bandpass))[^4]
 - [x] [agc_ff](https://github.com/ha7ilm/csdr#agc_ff) ([jketterl](https://github.com/jketterl/csdr#agc))[^3][^4]
 - [ ] [fastagc_ff](https://github.com/ha7ilm/csdr#fastagc_ff) ([jketterl](https://github.com/jketterl/csdr#agc))[^2]
-- [ ] [fft_cc](https://github.com/ha7ilm/csdr#fft_cc) ([jketterl](https://github.com/jketterl/csdr#fft))
-- [ ] [fft_fc](https://github.com/ha7ilm/csdr#fft_fc) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [x] [fft_cc](https://github.com/ha7ilm/csdr#fft_cc) ([jketterl](https://github.com/jketterl/csdr#fft))
+- [x] [fft_fc](https://github.com/ha7ilm/csdr#fft_fc) ([jketterl](https://github.com/jketterl/csdr#fft))
 - [ ] [fft_benchmark](https://github.com/ha7ilm/csdr#fft_benchmark) ([jketterl](https://github.com/jketterl/csdr#fft))
-- [ ] [logpower_cf](https://github.com/ha7ilm/csdr#logpower_cf) ([jketterl](https://github.com/jketterl/csdr#logpower))
-- [ ] [encode_ima_adpcm_i16_u8](https://github.com/ha7ilm/csdr#encode_ima_adpcm_i16_u8) ([jketterl](https://github.com/jketterl/csdr#adpcm))
-- [ ] [decode_ima_adpcm_u8_i16](https://github.com/ha7ilm/csdr#decode_ima_adpcm_u8_i16) ([jketterl](https://github.com/jketterl/csdr#adpcm))
-- [ ] [compress_fft_adpcm_f_u8](https://github.com/ha7ilm/csdr#compress_fft_adpcm_f_u8) ([jketterl](https://github.com/jketterl/csdr#fftadpcm))
-- [ ] [fft_exchange_sides_ff](https://github.com/ha7ilm/csdr#fft_exchange_sides_ff) ([jketterl](https://github.com/jketterl/csdr#fftswap))
+- [x] [logpower_cf](https://github.com/ha7ilm/csdr#logpower_cf) ([jketterl](https://github.com/jketterl/csdr#logpower))
+- [x] [encode_ima_adpcm_i16_u8](https://github.com/ha7ilm/csdr#encode_ima_adpcm_i16_u8) ([jketterl](https://github.com/jketterl/csdr#adpcm))
+- [x] [decode_ima_adpcm_u8_i16](https://github.com/ha7ilm/csdr#decode_ima_adpcm_u8_i16) ([jketterl](https://github.com/jketterl/csdr#adpcm))
+- [x] [compress_fft_adpcm_f_u8](https://github.com/ha7ilm/csdr#compress_fft_adpcm_f_u8) ([jketterl](https://github.com/jketterl/csdr#fftadpcm))
+- [x] [fft_exchange_sides_ff](https://github.com/ha7ilm/csdr#fft_exchange_sides_ff) ([jketterl](https://github.com/jketterl/csdr#fftswap))
 - [x] [dsb_fc](https://github.com/ha7ilm/csdr#dsb_fc)
-- [ ] [add_dcoffset_cc](https://github.com/ha7ilm/csdr#add_dcoffset_cc)
+- [x] [add_dcoffset_cc](https://github.com/ha7ilm/csdr#add_dcoffset_cc)
 - [ ] [convert_f_samplerf](https://github.com/ha7ilm/csdr#convert_f_samplerf)
-- [ ] [fmmod_fc](https://github.com/ha7ilm/csdr#fmmod_fc)
-- [ ] [fixed_amplitude_cc](https://github.com/ha7ilm/csdr#fixed_amplitude_cc)
-- [ ] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
+- [x] [fmmod_fc](https://github.com/ha7ilm/csdr#fmmod_fc)
+- [x] [fixed_amplitude_cc](https://github.com/ha7ilm/csdr#fixed_amplitude_cc)
+- [x] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
 - [ ] [setbuf](https://github.com/ha7ilm/csdr#setbuf)
 - [ ] [fifo](https://github.com/ha7ilm/csdr#fifo)
-- [ ] [psk31_varicode_encoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_encoder_u8_u8)
-- [ ] [repeat_u8](https://github.com/ha7ilm/csdr#repeat_u8)
+- [x] [psk31_varicode_encoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_encoder_u8_u8)
+- [x] [repeat_u8](https://github.com/ha7ilm/csdr#repeat_u8)
 - [ ] [uniform_noise_f](https://github.com/ha7ilm/csdr#uniform_noise_f)
 - [ ] [gaussian_noise_c](https://github.com/ha7ilm/csdr#gaussian_noise_c)
 - [x] [pack_bits_8to1_u8_u8](https://github.com/ha7ilm/csdr#pack_bits_8to1_u8_u8)
-- [ ] [pack_bits_1to8_u8_u8](https://github.com/ha7ilm/csdr#pack_bits_1to8_u8_u8)
+- [x] [pack_bits_1to8_u8_u8](https://github.com/ha7ilm/csdr#pack_bits_1to8_u8_u8)
 - [ ] [awgn_cc](https://github.com/ha7ilm/csdr#awgn_cc)
 - [ ] [add_n_zero_samples_at_beginning_f](https://github.com/ha7ilm/csdr#add_n_zero_samples_at_beginning_f)
 - [ ] [fft_one_side_ff](https://github.com/ha7ilm/csdr#fft_one_side_ff)
-- [ ] [logaveragepower_cf](https://github.com/ha7ilm/csdr#logaveragepower_cf) ([jketterl](https://github.com/jketterl/csdr#logaveragepower))
-- [ ] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
-- [ ] [psk31_varicode_decoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_decoder_u8_u8) ([jketterl](https://github.com/jketterl/csdr#varicodedecode))
+- [x] [logaveragepower_cf](https://github.com/ha7ilm/csdr#logaveragepower_cf) ([jketterl](https://github.com/jketterl/csdr#logaveragepower))
+- [x] [mono2stereo_s16](https://github.com/ha7ilm/csdr#mono2stereo_s16)
+- [x] [psk31_varicode_decoder_u8_u8](https://github.com/ha7ilm/csdr#psk31_varicode_decoder_u8_u8) ([jketterl](https://github.com/jketterl/csdr#varicodedecode))
 - [ ] [_fft2octave](https://github.com/ha7ilm/csdr#_fft2octave)
-- [ ] [invert_u8_u8](https://github.com/ha7ilm/csdr#invert_u8_u8)
+- [x] [invert_u8_u8](https://github.com/ha7ilm/csdr#invert_u8_u8)
 - [ ] [rtty_baudot2ascii_u8_u8](https://github.com/ha7ilm/csdr#rtty_baudot2ascii_u8_u8)
 - [x] [binary_slicer_f_u8](https://github.com/ha7ilm/csdr#binary_slicer_f_u8)
 - [ ] [serial_line_decoder_f_u8](https://github.com/ha7ilm/csdr#serial_line_decoder_f_u8)
-- [ ] [pll_cc](https://github.com/ha7ilm/csdr#pll_cc)
+- [x] [pll_cc](https://github.com/ha7ilm/csdr#pll_cc)
 - [x] [timing_recovery_cc](https://github.com/ha7ilm/csdr#timing_recovery_cc) ([jketterl](https://github.com/jketterl/csdr#timingrecovery))
 - [x] [octave_complex_c](https://github.com/ha7ilm/csdr#octave_complex_c)
 - [ ] [psk_modulator_u8_c](https://github.com/ha7ilm/csdr#psk_modulator_u8_c)
 - [ ] [duplicate_samples_ntimes_u8_u8](https://github.com/ha7ilm/csdr#duplicate_samples_ntimes_u8_u8)
 - [ ] [psk31_interpolate_sine_cc](https://github.com/ha7ilm/csdr#psk31_interpolate_sine_cc)
-- [ ] [differential_encoder_u8_u8](https://github.com/ha7ilm/csdr#differential_encoder_u8_u8)
-- [ ] [differential_decoder_u8_u8](https://github.com/ha7ilm/csdr#differential_decoder_u8_u8)
-- [ ] [bpsk_costas_loop_cc](https://github.com/ha7ilm/csdr#bpsk_costas_loop_cc)
+- [x] [differential_encoder_u8_u8](https://github.com/ha7ilm/csdr#differential_encoder_u8_u8)
+- [x] [differential_decoder_u8_u8](https://github.com/ha7ilm/csdr#differential_decoder_u8_u8)
+- [x] [bpsk_costas_loop_cc](https://github.com/ha7ilm/csdr#bpsk_costas_loop_cc)
 - [ ] [simple_agc_cc](https://github.com/ha7ilm/csdr#simple_agc_cc) ([jketterl](https://github.com/jketterl/csdr#agc))
 - [ ] [peaks_fir_cc](https://github.com/ha7ilm/csdr#peaks_fir_cc)
 - [ ] [firdes_peak_c](https://github.com/ha7ilm/csdr#firdes_peak_c)
@@ -357,9 +400,9 @@ Example to chunk a byte stream and save it to a KISS file:
 - [ ] [firdes_pulse_shaping_filter_f](https://github.com/ha7ilm/csdr#firdes_pulse_shaping_filter_f)
 - [ ] [generic_slicer_f_u8](https://github.com/ha7ilm/csdr#generic_slicer_f_u8)
 - [ ] [plain_interpolate_cc](https://github.com/ha7ilm/csdr#plain_interpolate_cc)
-- [ ] [dbpsk_decoder_c_u8](https://github.com/ha7ilm/csdr#dbpsk_decoder_c_u8) ([jketterl](https://github.com/jketterl/csdr#dbpskdecoder))
-- [ ] [bfsk_demod_cf](https://github.com/ha7ilm/csdr#bfsk_demod_cf)
-- [ ] [add_const_cc](https://github.com/ha7ilm/csdr#add_const_cc)
+- [x] [dbpsk_decoder_c_u8](https://github.com/ha7ilm/csdr#dbpsk_decoder_c_u8) ([jketterl](https://github.com/jketterl/csdr#dbpskdecoder))
+- [x] [bfsk_demod_cf](https://github.com/ha7ilm/csdr#bfsk_demod_cf)
+- [x] [add_const_cc](https://github.com/ha7ilm/csdr#add_const_cc)
 - [x] [pattern_search_u8_u8](https://github.com/ha7ilm/csdr#pattern_search_u8_u8)
 - [ ] [tee](https://github.com/ha7ilm/csdr#tee)
 - [ ] [?](https://github.com/jketterl/csdr#search_the_function_list)
@@ -367,4 +410,31 @@ Example to chunk a byte stream and save it to a KISS file:
 [^1]: Used in simple WFM demodulation
 [^2]: Used in NFM demodulation
 [^3]: Used in AM demodulation
-[^4]: Used in SSB demodulation
+## GNU Radio Integration
+
+`fsdr-cli` can load and execute GNU Radio Companion (`.grc`) files. However, some blocks used by `fsdr-cli` (especially those converted from `csdr` commands) are not standard GNU Radio blocks.
+
+To open `.grc` files generated or used by `fsdr-cli` in GNU Radio Companion, you need to add the custom block definitions to your GNU Radio blocks path.
+
+### Adding Custom Block Definitions
+
+1.  Locate your GNU Radio blocks path. It is usually determined by the `GRC_BLOCKS_PATH` environment variable. If not set, it often defaults to `~/.grc_gnuradio/` or `/usr/local/share/gnuradio/grc/blocks`.
+2.  Create a symbolic link or copy the YAML files from the `gnuradio` folder of this repository to your blocks path:
+
+```bash
+# Example: adding to your local user GRC blocks path
+mkdir -p ~/.grc_gnuradio
+ln -s $(pwd)/gnuradio/*.block.yml ~/.grc_gnuradio/
+```
+
+3.  Restart GNU Radio Companion. You should now see a new category `[FutureSDR]` in the block library, and you'll be able to open `.grc` files that use these blocks without errors.
+
+### Debugging .grc files
+
+You can generate a `.grc` file from any `csdr` command line to inspect the flowgraph in GRC:
+
+```bash
+fsdr-cli csdr --output my_flowgraph.grc "convert_u8_f | fmdemod_quadri_cf | audio 48000 1"
+```
+
+Then open `my_flowgraph.grc` in GNU Radio Companion.

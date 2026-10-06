@@ -1,4 +1,3 @@
-
 [package]
 name = "fsdr-cli"
 version = "0.1.0+202406281158-alpha"
@@ -23,22 +22,20 @@ audio =  [] #["futuresdr/audio"]
 iqengine = [ 'dep:axum', 'dep:http', 'dep:tokio', 'dep:tower', 'dep:tower-http', 'dep:iqengine-plugin', 'dep:serde_derive', 'dep:simple_logger']
 
 [dependencies]
-# futuresdr = { version = "0.0", features=['audio']}
-# futuresdr = { path="../FutureSDR", features=['audio']}
-# futuresdr = {  git = "https://github.com/FutureSDR/FutureSDR", features=['audio']}
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", features=['audio']}
+futuresdr = { version = "0.9.0", features = ['audio'] }
 
 async-trait = "0.1"
-cpal = { version = "0.15.2"}
-# fsdr-blocks = {  version="0.1"}
-# fsdr-blocks = { path="../fsdr-blocks" }
-fsdr-blocks = { git = "https://github.com/FutureSDR/fsdr-blocks", branch = "main" }
+cpal = { version = "0.18.0"}
+fsdr-blocks = { git = "https://github.com/loic-fejoz/fsdr-blocks", branch = "main" }
 futures = "0.3.26"
 serde_yaml = "0.9.17"
 serde = {version="1.0.152", features=["derive"]}
 pest = "2.0"
 pest_derive = "2.0"
 anyhow = "1.0.102"
+rustfft = "6.4"
+num-complex = "0.4"
+tempfile = "3.10"
 
 # iqengine-plugin = {path="../iqengine-plugin-rs", optional = true  }
 iqengine-plugin = { git = "https://github.com/loic-fejoz/iqengine-plugin-rs/", branch = "main", optional = true   }
@@ -50,6 +47,13 @@ tokio = { version = "1.33.0", features = ["full"], optional = true }
 tower = {version="0.4.13", optional = true }
 tower-http = { version = "0.5.2", features = ["cors"], optional = true  }
 itertools = "0.14.0"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "dsp_benchmarks"
+harness = false
 
 [profile.release]
 codegen-units = 1

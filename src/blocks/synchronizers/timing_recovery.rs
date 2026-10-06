@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futuresdr::num_complex::Complex32;
-use futuresdr::prelude::*;
+use futuresdr::runtime::dev::prelude::*;
 
 #[derive(Clone, Debug)]
 pub enum TimingAlgorithm {
@@ -62,7 +62,7 @@ impl Kernel for TimingRecovery<Complex32> {
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let i_len: usize;
         let m: usize;

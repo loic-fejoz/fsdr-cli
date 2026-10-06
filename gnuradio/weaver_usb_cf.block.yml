@@ -1,0 +1,19 @@
+id: weaver_usb_cf
+label: Weaver USB (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: audio_freq
+  label: Audio Freq Rate
+  dtype: float
+  default: '1500/48000'
+
+inputs:
+- domain: stream
+  dtype: complex
+
+outputs:
+- domain: stream
+  dtype: float
+
+file_format: 1

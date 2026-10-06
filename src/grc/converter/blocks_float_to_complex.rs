@@ -45,8 +45,8 @@ impl BlockConverter for FloatToComplexConverter {
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let blk: Combine<_, f32, f32, Complex32> =
             Combine::new(|v1: &f32, v2: &f32| -> Complex32 { Complex32::new(*v1, *v2) });
-        let blk = fg.add_block(blk);
-        let blk = FloatToComplexPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = FloatToComplexPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

@@ -1,0 +1,19 @@
+id: satellites_kiss_client_source
+label: KISS TCP Client Source (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: address
+  label: Address
+  dtype: string
+  default: '127.0.0.1'
+- id: port
+  label: Port
+  dtype: int
+  default: '8045'
+
+outputs:
+- domain: message
+  id: out
+
+file_format: 1

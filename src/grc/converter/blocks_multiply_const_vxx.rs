@@ -22,11 +22,11 @@ impl BlockConverter for MulConstVxConverter {
             "u8" => {
                 let constant = constant as u8;
                 let blk: Apply<_, u8, u8> = Apply::new(move |v: &u8| -> u8 { v * constant });
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "float" => {
                 let blk: Apply<_, f32, f32> = Apply::new(move |v: &f32| -> f32 { v * constant });
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => todo!("Unhandled blocks_multiply_const_vxx Type {item_type}"),
         };

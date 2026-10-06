@@ -25,41 +25,41 @@ impl BlockConverter for FileSinkConverter {
             .context("blocks_file_sink: item type must be defined")?;
         let blk = if "-" == filename {
             match &(item_type[..]) {
-                "u8" => {
+                "u8" | "uchar" | "byte" | "char" => {
                     let blk = StdInOutBuilder::<u8>::stdout().as_ne().build();
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 "i16" | "ishort" | "short" => {
                     let blk = StdInOutBuilder::<i16>::stdout().as_ne().build();
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 "f32" | "float" => {
                     let blk = StdInOutBuilder::<f32>::stdout().as_ne().build();
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 "c32" | "complex" => {
                     let blk = StdInOutBuilder::<Complex32>::stdout().as_ne().build();
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 _ => todo!("Unhandled StdIn FileSink Type {item_type}"),
             }
         } else {
             match &(item_type[..]) {
-                "u8" => {
+                "u8" | "uchar" | "byte" | "char" => {
                     let blk = FileSink::<u8>::new(filename);
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 "i16" | "short" => {
                     let blk = FileSink::<i16>::new(filename);
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 "f32" | "float" => {
                     let blk = FileSink::<f32>::new(filename);
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 "c32" | "complex" => {
                     let blk = FileSink::<Complex32>::new(filename);
-                    Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                    Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
                 }
                 _ => todo!("Unhandled FileSink Type {item_type}"),
             }

@@ -25,7 +25,7 @@ impl BlockConverter for AnalogQuadratureDemoConverter {
                     last = *v;
                     arg * gain
                 });
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             "atan" => {
                 // Atan demodulator: differentiate the instantaneous phase.
@@ -43,7 +43,7 @@ impl BlockConverter for AnalogQuadratureDemoConverter {
                     last_phase = phase;
                     diff * gain
                 });
-                Box::new(DefaultPortAdapter::new(fg.add_block(blk).into()))
+                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => bail!("analog_quadrature_demod: Unknown algorithm: {algo}"),
         };

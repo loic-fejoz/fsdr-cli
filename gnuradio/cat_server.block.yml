@@ -1,0 +1,27 @@
+id: cat_server
+label: CAT Server (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: port
+  label: Port
+  dtype: int
+  default: '4532'
+- id: rx_freq
+  label: RX Frequency
+  dtype: float
+  default: '144500000.0'
+- id: tx_freq
+  label: TX Frequency
+  dtype: float
+  default: '144500000.0'
+- id: ctcss_tone
+  label: CTCSS Tone
+  dtype: int
+  default: '885'
+
+outputs:
+- domain: message
+  id: variables
+
+file_format: 1

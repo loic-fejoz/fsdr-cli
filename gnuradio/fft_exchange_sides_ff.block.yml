@@ -1,0 +1,19 @@
+id: fft_exchange_sides_ff
+label: FFT Exchange Sides (FutureSDR)
+category: '[FutureSDR]'
+
+parameters:
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '512'
+
+inputs:
+- domain: stream
+  dtype: float
+
+outputs:
+- domain: stream
+  dtype: float
+
+file_format: 1

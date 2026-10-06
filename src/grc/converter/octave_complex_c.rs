@@ -21,8 +21,8 @@ impl BlockConverter for OctaveComplexConverter {
             return Err(anyhow!("out_of_n_samples should be < samples_to_plot"));
         }
         let blk: OctaveComplex = OctaveComplex::new(samples_to_plot, out_of_n_samples);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

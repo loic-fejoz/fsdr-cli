@@ -19,8 +19,8 @@ impl BlockConverter for PatternSearchConverter {
             .map(|x| x.parse::<u8>().unwrap())
             .collect();
         let blk = PatternSearch::<u8>::new(values_after, pattern_values);
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }

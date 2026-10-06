@@ -55,8 +55,8 @@ impl BlockConverter for FirFilterXxConverter {
             ),
             _ => bail!("fir_filter_xxx: Unhandled type {item_type}"),
         };
-        let blk = fg.add_block(blk);
-        let blk = DefaultPortAdapter::new(blk.into());
+        let blk = fg.add(blk)?.id();
+        let blk = DefaultPortAdapter::new(blk);
         let blk = Box::new(blk);
         Ok(blk)
     }
