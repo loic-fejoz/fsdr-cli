@@ -50,8 +50,9 @@ impl Kernel for TaggedMessageSource {
 
 #[test]
 fn test_cmd_trigger_execution_and_sigmf() -> Result<()> {
-    let output_flag_path = tempfile::NamedTempFile::new()?.into_temp_path();
-    let flag_path_str = output_flag_path.to_str().unwrap().to_string();
+    let temp_dir = tempfile::tempdir()?;
+    let flag_path = temp_dir.path().join("output_flag.txt");
+    let flag_path_str = flag_path.to_str().unwrap().to_string();
 
     // Script to execute: appends input_file path into flag_path file
     let script_cmd = format!("echo $input_file >> {}", flag_path_str);
@@ -85,7 +86,7 @@ fn test_cmd_trigger_execution_and_sigmf() -> Result<()> {
     // Give background threads a short moment to finish command execution
     std::thread::sleep(std::time::Duration::from_millis(500));
 
-    let content = std::fs::read_to_string(&output_flag_path)?;
+    let content = std::fs::read_to_string(&flag_path)?;
     let lines: Vec<&str> = content.lines().collect();
 
     // Exactly 2 commands should have been executed
