@@ -28,10 +28,11 @@ The intermediate graph must be 100% compatible with GNU Radio Companion. This me
 
 ## Multi-Repository & Dependency Workflow
 When developing `fsdr-cli` alongside sibling repositories (such as `fsdr-blocks` or `FutureSDR`):
-1. **Local Overrides in `.cargo/config.toml` (git-ignored):** Use `.cargo/config.toml` for local `[patch]` directives pointing to local paths (e.g. `../fsdr-blocks`). Never place local file paths in `Cargo.toml`.
-2. **Upstream Alignment:** Ensure all dependent local changes in sibling crates (`fsdr-blocks`) are committed and pushed to their remote branches before pushing `fsdr-cli`.
-3. **Explicit Rev / Branch Pinning:** In `Cargo.toml`, explicitly pin git dependencies to their matching remote `rev` or `branch` (e.g. `fsdr-blocks = { git = "...", branch = "feat/perf" }`) to prevent Cargo from resolving duplicate versions of transitive dependencies on CI.
+1. **Local Overrides in `.cargo/config.toml` (git-ignored):** Use `.cargo/config.toml` for local `[patch]` directives pointing to local relative paths (e.g. `../fsdr-blocks` or `../FutureSDR`). Always include both `[patch.crates-io]` and `[patch."https://github.com/..."]` sections so local paths override both crates.io dependencies and git dependencies. Never place local file paths in `Cargo.toml`.
+2. **Upstream Alignment:** Ensure all dependent local changes in sibling crates (`fsdr-blocks`) are committed and pushed to their remote branches on GitHub before pushing `fsdr-cli`.
+3. **Explicit Rev / Branch Pinning:** In `Cargo.toml`, explicitly declare dependencies using standard crates.io versions (`version = "0.9.0"`) or pin git dependencies to their matching remote `rev` or `branch` (e.g. `fsdr-blocks = { git = "...", branch = "main" }`) to prevent Cargo from resolving duplicate versions of transitive dependencies on CI.
 4. **Lockfile Synchronization:** Run `cargo update -p <crate>` after updating remote branches to sync `Cargo.lock`.
+5. **Pre-Push CI Validation:** Always run tests with local `.cargo/config.toml` disabled temporarily (`mv .cargo/config.toml .cargo/config.tmp`) to ensure CI will build cleanly.
 
 ## Directory Map
 - `src/`: Core logic (`main.rs`, `lib.rs`) and CLI parsing (`cmd_line.pest`, `cmd_grammar.rs`, `cmd_line.rs`).
