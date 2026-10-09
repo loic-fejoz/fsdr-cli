@@ -37,6 +37,7 @@ use iqengine_cmd::IQEngineCmd;
 pub mod blocks;
 pub mod iqengine_blockconverter;
 mod iqengine_plugin;
+pub mod math;
 
 fn usage() -> Result<Grc> {
     let msg = "Usage:\n\

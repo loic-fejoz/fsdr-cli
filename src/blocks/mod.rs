@@ -75,3 +75,5 @@ pub mod timer_tagger;
 pub use timer_tagger::TimerTagger;
 pub mod cmd_trigger;
 pub use cmd_trigger::CmdTrigger;
+pub mod quadrature_demod;
+pub use quadrature_demod::{QuadratureDemodAlgo, QuadratureDemodCf};

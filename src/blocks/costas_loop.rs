@@ -74,7 +74,7 @@ where
             let min_freq = self.min_freq;
 
             for (src, dst) in in_slice[..m].iter().zip(out_slice[..m].iter_mut()) {
-                let (sin_val, cos_val) = phase.sin_cos();
+                let (sin_val, cos_val) = crate::math::fast_sincos(phase);
 
                 // Rotate sample by -phase using FMA
                 let rot_re = src.re.mul_add(cos_val, src.im.algebraic_mul(sin_val));

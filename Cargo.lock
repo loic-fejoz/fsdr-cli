@@ -926,7 +926,6 @@ dependencies = [
 [[package]]
 name = "fsdr-blocks"
 version = "0.2.0"
-source = "git+https://github.com/loic-fejoz/fsdr-blocks?branch=main#7c21f1090c248a58e77d064c17da2601d8956ea1"
 dependencies = [
  "async-fs",
  "futuresdr",
@@ -966,8 +965,6 @@ dependencies = [
 [[package]]
 name = "futuredsp"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a2aea098765064b7265e82bcd12300a4e1e6a114a742f71da045f346b49aee0"
 dependencies = [
  "num-complex",
  "num-traits",
@@ -1078,8 +1075,6 @@ dependencies = [
 [[package]]
 name = "futuresdr"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e02054ff577ffdc154244e3f9370d9a5a1deb40524a9bae61992d5e8ff5c555b"
 dependencies = [
  "anyhow",
  "async-executor",
@@ -1134,8 +1129,6 @@ dependencies = [
 [[package]]
 name = "futuresdr-macros"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75ef255f47b3d775eca26f4408844352f9b620f5640908316e964e77f560aeee"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1145,8 +1138,6 @@ dependencies = [
 [[package]]
 name = "futuresdr-types"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b4db1ddb7a7d786a427092f6fde616e3c7d701ccc17f86ae4b2299910fb060a"
 dependencies = [
  "dyn-clone",
  "num-complex",
@@ -2715,7 +2706,6 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "sigmf"
 version = "0.1.0"
-source = "git+https://github.com/loic-fejoz/fsdr-blocks?branch=main#7c21f1090c248a58e77d064c17da2601d8956ea1"
 dependencies = [
  "hex",
  "quickcheck",
