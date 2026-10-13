@@ -1,0 +1,149 @@
+[hardware.pluto]
+uri = "ip:192.168.2.1"
+sample_rate = 1_000_000        # 1 MSPS (couvre les 250 kHz/500 kHz du transpondeur NB)
+rx_freq = 739_750_000          # FI en sortie LNB (10489.750 MHz - 9750 MHz)
+rx_gain = 50.0
+tx_freq = 2_400_250_000        # Fréquence centrale TX (2.4 GHz)
+tx_gain = -10.0                # Atténuation initiale sécurisée
+
+[beacon_tracker]
+enabled = true
+cat_port = 4532                # Port CAT Hamlib maître (pour décalage global ou monitoring)
+beacon_freq_offset = -200_000  # Balise BPSK centrale à 10489.550 MHz (-200 kHz relatif au centre 739.750 MHz)
+mode = "costas_bpsk"           # "costas_bpsk" ou "manual"
+max_drift_hz = 15_000          # Plage max de capture LNB
+holdover_on_loss = true        # Maintient le dernier offset en cas de fading
+
+# -----------------------------------------------------------------------------
+# CANAL 1 : FT8 (WSJT-X) via périphériques virtuels PulseAudio / PipeWire
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ft8"
+type = "audio_transceiver"
+cat_port = 4533
+frequency_offset = -140_000    # 10489.610 MHz (140 kHz sous le centre)
+priority = 10                  # Priorité basse (s'efface devant la SSB)
+
+[channels.audio]
+# Périphériques configurés via `pactl load-module module-null-sink`
+sink_name = "QO100_FT8_TX"     # Sink où WSJT-X injecte son audio TX
+source_name = "QO100_FT8_RX"   # Source captée par WSJT-X en RX
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local -> Décimation 1MSPS vers 48kSPS -> USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+shift_addition_cc "(-{offset}/1_000_000)" ! \
+rational_resampler_cc 48000 1000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "QO100_FT8_RX"
+"""
+
+[channels.tx]
+# Entrée Pulse -> Modulateur Weaver USB -> Interpolation -> NCO TX -> Mixeur RF
+pipeline = """
+pulse_source "QO100_FT8_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 1000000 48000 ! \
+shift_addition_cc "({offset}/1_000_000)"
+"""
+
+# -----------------------------------------------------------------------------
+# CANAL 2 : Voie SSB Phonique
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ssb_voice"
+type = "audio_transceiver"
+cat_port = 4534
+frequency_offset = -50_000     # Fréquence nominale (modifiable dynamiquement via CAT)
+priority = 50                  # Priorité haute (préempte les flux digitaux)
+
+[channels.audio]
+sink_name = "QO100_SSB_TX"     # Micro de l'opérateur
+source_name = "QO100_SSB_RX"   # Casque / HP de l'opérateur
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+shift_addition_cc "(-{offset}/1_000_000)" ! \
+rational_resampler_cc 48000 1000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "QO100_SSB_RX"
+"""
+
+[channels.tx]
+# Pré-accentuation / Filtre bande passante phonie (300-2700 Hz)
+pipeline = """
+pulse_source "QO100_SSB_TX" ! \
+bandpass_fir_fft_cc 0.006 0.056 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+gain_ff 1.2 ! \
+rational_resampler_cc 1000000 48000 ! \
+shift_addition_cc "({offset}/1_000_000)"
+"""
+
+# -----------------------------------------------------------------------------
+# CANAL 3 : Données Paquet OQPSK (Interface Réseau KISS)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "packet_oqpsk"
+type = "packet_transceiver"
+cat_port = 4535
+frequency_offset = 50_000      # 10489.800 MHz (Segment données numériques)
+priority = 20
+
+[channels.kiss]
+tcp_port = 8001                # Serveur TCP KISS pour soundmodem / AX.25 stack
+
+[channels.rx]
+# Démodulation OQPSK : NCO -> RRC Filter -> Gardner Timing -> Costas Loop -> Slicer -> PDU KISS
+pipeline = """
+shift_addition_cc "(-{offset}/1_000_000)" ! \
+rational_resampler_cc 96000 1000000 ! \
+pulse_shaping_filter_cc RRC 0.35 4 ! \
+timing_recovery_cc GARDNER 4 0.5 2 ! \
+oqpsk_costas_loop_cc 0.02 ! \
+oqpsk_demod_c_u8 ! \
+pdu_deframing_g3ruh ! \
+tcp_kiss_server 8001
+"""
+
+[channels.tx]
+# Modulation OQPSK : Trames KISS TCP -> PDU G3RUH -> Modulateur OQPSK -> RRC -> Interpolation
+pipeline = """
+tcp_kiss_client 8001 ! \
+pdu_framing_g3ruh ! \
+oqpsk_modulator_u8_c ! \
+pulse_shaping_filter_cc RRC 0.35 4 ! \
+rational_resampler_cc 1000000 96000 ! \
+shift_addition_cc "({offset}/1_000_000)"
+"""
+
+# -----------------------------------------------------------------------------
+# MONITORING & IHM WEB BOKEH
+# -----------------------------------------------------------------------------
+[telemetry.bokeh]
+listen_addr = "127.0.0.1:5006"
+fps = 20
+
+# 1. FFT Pleine Bande QO-100 (Panorama global 1 MHz)
+[[telemetry.bokeh.probes]]
+name = "full_band_fft"
+type = "waterfall"
+source_node = "rf_corrected_bus"
+fft_size = 4096
+averaging = 4
+pipeline = "logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 4096 20"
+
+# 2. FFT Haute Résolution centrée sur la sous-bande SSB
+[[telemetry.bokeh.probes]]
+name = "ssb_zoom_fft"
+type = "spectrum"
+source_node = "channels.ssb_voice.rx"
+fft_size = 1024
+pipeline = "logpower_cf ! bokeh_spectrum_sink 1024 30"

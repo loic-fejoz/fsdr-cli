@@ -44,6 +44,7 @@ use self::fmdemod_quadri_cmd::FmDemodQuadriCmd;
 use self::fmmod_cmd::FmModCmd;
 use self::fractional_decimator_cmd::FractionalDecimatorCmd;
 use self::gain_cmd::GainCmd;
+use self::hub_blocks_cmd::HubBlocksCmd;
 use self::limit_cmd::LimitCmd;
 use self::load_cmd::LoadCmd;
 use self::load_kiss_cmd::LoadKissCmd;
@@ -107,6 +108,7 @@ mod fmdemod_quadri_cmd;
 mod fmmod_cmd;
 mod fractional_decimator_cmd;
 mod gain_cmd;
+mod hub_blocks_cmd;
 mod limit_cmd;
 mod load_cmd;
 mod load_kiss_cmd;
@@ -142,12 +144,15 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::add_dcoffset_cc_cmd => self.build_add_dcoffset_cc(grc),
             Rule::afc_ff_cmd => self.build_afc_ff(grc),
             Rule::afc_cc_cmd => self.build_afc_cc(grc),
+            Rule::afsk1200_demod_f_u8_cmd => self.build_afsk1200_demod(grc),
+            Rule::afsk1200_mod_u8_f_cmd => self.build_afsk1200_mod(grc),
             Rule::agc_cmd => self.build_agc(grc),
             Rule::amdemod_cmd => self.build_amdemod(grc),
             Rule::audio_cmd => self.build_audio_sink(grc),
             Rule::bandpass_fir_fft_cc_cmd => self.build_bandpass_fir_fft_cc(grc),
             Rule::bfsk_demod_cf_cmd => self.build_bfsk_demod(grc),
             Rule::binary_slicer_cmd => self.build_binary_slicer(grc),
+            Rule::bokeh_spectrum_sink_cmd => self.build_bokeh_spectrum_sink(grc),
             Rule::bpsk_costas_loop_cmd | Rule::pll_cmd => self.build_costas_loop(grc),
             Rule::cat_server_cmd => CatServerCmd::build_cat_server(self, grc),
             Rule::clone_cmd => self.build_clone(grc),
@@ -177,14 +182,18 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::fft_cc_cmd => self.build_fft_cc(grc),
             Rule::fft_fc_cmd => self.build_fft_fc(grc),
             Rule::fft_exchange_sides_ff_cmd => self.build_fft_exchange_sides_ff(grc),
+            Rule::firdes_pulse_shaping_filter_f_cmd => self.build_firdes_pulse_shaping(grc),
+            Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
+            Rule::fir_interpolate_cc_cmd => self.build_fir_interpolate(grc),
             Rule::fixed_amplitude_cc_cmd => self.build_fixed_amplitude(grc),
             Rule::flowcontrol_cmd => self.build_flowcontrol(grc),
             Rule::fmdemod_quadri_cmd => self.build_fm_demod_quadri(grc),
             Rule::fmdemod_atan_cmd => self.build_fm_demod_atan(grc),
             Rule::fmmod_fc_cmd => self.build_fmmod(grc),
             Rule::fractional_decimator_cmd => self.build_fractional_decimator(grc),
-            Rule::fir_decimate_cmd => self.build_fir_decimate(grc),
             Rule::gain_cmd => self.build_gain(grc),
+            Rule::hdlc_deframing_u8_pdu_cmd => self.build_hdlc_deframing(grc),
+            Rule::hdlc_framing_pdu_u8_cmd => self.build_hdlc_framing(grc),
             Rule::invert_u8_u8_cmd => self.build_invert_u8(grc),
             Rule::limit_cmd => self.build_limit(grc),
             Rule::load_cmd => self.build_load(grc),
@@ -194,6 +203,17 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::fixedlen_to_pdu_cmd => self.build_fixedlen_to_pdu(grc),
             Rule::mono2stereo_s16_cmd => self.build_mono2stereo_s16(grc),
             Rule::none_cmd => self.build_none(grc),
+            Rule::oqpsk_costas_loop_cc_cmd => self.build_oqpsk_costas_loop(grc),
+            Rule::oqpsk_demod_c_u8_cmd => self.build_oqpsk_demod(grc),
+            Rule::oqpsk_modulator_u8_c_cmd => self.build_oqpsk_modulator(grc),
+            Rule::pdu_deframing_g3ruh_cmd => self.build_pdu_deframing_g3ruh(grc),
+            Rule::pdu_framing_g3ruh_cmd => self.build_pdu_framing_g3ruh(grc),
+            Rule::pulse_shaping_filter_cc_cmd => self.build_pulse_shaping_filter(grc),
+            Rule::pulse_sink_cmd => self.build_pulse_sink(grc),
+            Rule::pulse_source_cmd => self.build_pulse_source(grc),
+            Rule::qpsk_costas_loop_cc_cmd => self.build_qpsk_costas_loop(grc),
+            Rule::qpsk_demod_c_u8_cmd => self.build_qpsk_demod(grc),
+            Rule::qpsk_modulator_u8_c_cmd => self.build_qpsk_modulator(grc),
             Rule::save_kiss_cmd => self.build_save_kiss(grc),
             Rule::tcp_kiss_server_cmd => self.build_tcp_kiss_server(grc),
             Rule::tcp_kiss_client_cmd => self.build_tcp_kiss_client(grc),
@@ -207,10 +227,12 @@ impl<'i> AnyCmd<'i> for Pair<'i, Rule> {
             Rule::realpart_cmd => self.build_realpart(grc),
             Rule::repeat_u8_cmd => self.build_repeat_u8(grc),
             Rule::shift_addition_cmd => self.build_shift_addition(grc),
+            Rule::synthetic_sdr_source_cmd => self.build_synthetic_sdr_source(grc),
             Rule::throttle_cmd => self.build_throttle(grc),
             Rule::timer_tagger_ff_cmd => self.build_timer_tagger(grc),
             Rule::timing_recovery_cmd => self.build_timing_recovery(grc),
             Rule::weaver_lsb_cmd | Rule::weaver_usb_cmd => self.build_weaver(grc),
+            Rule::weaver_usb_fc_cmd => self.build_weaver_usb_fc(grc),
             Rule::yes_f_cmd => self.build_yes_f(grc),
 
             Rule::csdr_save_opt => Ok(grc),
@@ -250,7 +272,7 @@ impl<'i> CsdrCmd<'i> for Pair<'i, Rule> {
 
     fn parse(&self) -> Result<Option<Grc>> {
         let mut grc_builder = GrcBuilder::new();
-        if self.as_rule() == Rule::csdr_cmd {
+        if self.as_rule() == Rule::csdr_cmd || self.as_rule() == Rule::csdr_pipeline {
             for sub_cmd in self.clone().into_inner() {
                 grc_builder = AnyCmd::parse(&sub_cmd, grc_builder)?;
             }

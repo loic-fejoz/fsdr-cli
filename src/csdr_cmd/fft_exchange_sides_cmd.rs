@@ -1,6 +1,6 @@
 use crate::cmd_grammar::Rule;
 use crate::grc::builder::{GraphLevel, GrcBuilder, GrcItemType};
-use anyhow::{bail, Result};
+use anyhow::Result;
 use pest::iterators::Pair;
 
 pub trait FftExchangeSidesCmd<'i> {
@@ -28,7 +28,7 @@ impl<'i> FftExchangeSidesCmd<'i> for Pair<'i, Rule> {
         if let Some(value) = inner.next() {
             Ok(value.as_str())
         } else {
-            bail!("missing mandatory <fft_size> parameter for fft_exchange_sides_ff")
+            Ok("4096")
         }
     }
 }

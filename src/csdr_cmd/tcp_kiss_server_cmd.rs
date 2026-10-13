@@ -14,7 +14,13 @@ impl<'i> TcpKissServerCmd<'i> for Pair<'i, Rule> {
 
         let (address, port) = match target.rsplit_once(':') {
             Some((addr, p)) => (addr, p),
-            None => (target, "8100"),
+            None => {
+                if target.parse::<u16>().is_ok() {
+                    ("127.0.0.1", target)
+                } else {
+                    (target, "8100")
+                }
+            }
         };
 
         let grc = grc

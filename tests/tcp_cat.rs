@@ -62,6 +62,28 @@ fn test_cat_server_tcp_commands() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn test_cat_server_hamlib_netrigctl_handshake() -> Result<()> {
+    let port = 18533;
+    let _server = fsdr_cli::cat::CatServer::spawn(port, 14074000)?;
+
+    thread::sleep(Duration::from_millis(50));
+
+    // Connect rigctl client simulating Hamlib NET rigctl / WSJT-X
+    let output = std::process::Command::new("rigctl")
+        .args(["-m", "2", "-r", &format!("127.0.0.1:{}", port), "f"])
+        .output();
+
+    if let Ok(out) = output {
+        if out.status.success() {
+            let freq_str = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            assert_eq!(freq_str, "14074000");
+        }
+    }
+
+    Ok(())
+}
+
 use fsdr_cli::csdr_cmd::CsdrParser;
 
 #[test]

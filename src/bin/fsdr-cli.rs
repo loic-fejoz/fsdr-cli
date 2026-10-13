@@ -1,43 +1,15 @@
-#![feature(core_intrinsics)]
-#![allow(internal_features)]
-
-pub extern crate async_trait;
-
-#[macro_use]
-extern crate pest_derive;
-
-extern crate serde;
-
-extern crate axum;
-
-use cmd_grammar::Rule;
+use anyhow::{bail, Context, Result};
+use fsdr_cli::cmd_grammar::{self, Rule};
+use fsdr_cli::cmd_line::HighLevelCmdLine;
+use fsdr_cli::csdr_cmd::CsdrCmd;
+use fsdr_cli::grc::converter::Grc2FutureSdr;
+use fsdr_cli::grc::{Grc, GrcParser};
+use fsdr_cli::grc_cmd::GrcCmd;
+use fsdr_cli::iqengine_cmd::IQEngineCmd;
+use futuresdr::runtime::{Flowgraph, Runtime};
+use itertools::join;
 use pest::error::ErrorVariant;
 use std::{eprintln, println};
-
-use self::grc::GrcParser;
-use anyhow::{bail, Context, Ok, Result};
-use cmd_line::HighLevelCmdLine;
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Runtime;
-use itertools::join;
-mod grc;
-use grc::Grc;
-// mod csdr;
-// use csdr::CsdrParser;
-use grc::converter::Grc2FutureSdr;
-
-pub mod cmd_line;
-pub mod csdr_cmd;
-use crate::csdr_cmd::CsdrCmd;
-pub mod cmd_grammar;
-pub mod grc_cmd;
-use grc_cmd::GrcCmd;
-pub mod iqengine_cmd;
-use iqengine_cmd::IQEngineCmd;
-pub mod blocks;
-pub mod iqengine_blockconverter;
-mod iqengine_plugin;
-pub mod math;
 
 fn usage() -> Result<Grc> {
     let msg = "Usage:\n\
@@ -56,14 +28,7 @@ fn main() -> Result<()> {
 
     // Get back all the arguments as a big one command line ready to be parsed
     let one_liner = join(input, " ");
-    // let one_liner = input.fold(String::new(), |mut a, b| {
-    //     a.reserve(b.len() + 1);
-    //     a.push(' ');
-    //     a.push_str(&b);
-    //     a
-    // });
     let one_liner = one_liner.trim();
-    //println!("actual input: '{input}'");
     let input = cmd_grammar::CommandsParser::parse_main(one_liner);
 
     if let Err(err) = input {
@@ -110,15 +75,14 @@ fn main() -> Result<()> {
         {
             bail!("iqengine feature not available. Please download another version.");
         }
-        //#[cfg(feature = "iqengine")]
+        #[cfg(feature = "iqengine")]
         {
             let filename = iqengine_cmd.iqengine_configuration();
-            return iqengine_plugin::start_iqengine_daemon(filename);
+            return fsdr_cli::iqengine_plugin::start_iqengine_daemon(filename);
         }
     } else if let Some(grc_cmd) = input.as_grc_cmd() {
         let filename = grc_cmd.filename();
-        // println!("Loading {filename}...");
-        fg = Some(grc::GrcParser::load(filename)?);
+        fg = Some(GrcParser::load(filename)?);
     } else if let Some(csdr_cmd) = input.as_csdr_cmd() {
         fg = csdr_cmd.parse()?;
         if fg.is_none() {

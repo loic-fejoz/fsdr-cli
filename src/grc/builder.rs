@@ -32,6 +32,7 @@ pub enum GrcItemType {
     // Complex Integer 16
     // Complex Integer 8
     InterleavedF32,
+    Pdu,
 }
 
 impl GrcItemType {
@@ -45,6 +46,7 @@ impl GrcItemType {
             Self::F64 => "f64",
             Self::C32 => "c",
             Self::InterleavedF32 => "ff",
+            Self::Pdu => "pdu",
         }
     }
 
@@ -60,6 +62,7 @@ impl GrcItemType {
             Self::F64 => "float64",
             Self::C32 => "complex",
             Self::InterleavedF32 => "float",
+            Self::Pdu => "message",
         }
     }
 }
@@ -187,6 +190,13 @@ impl GrcBuilder<GraphLevel> {
                         .assert_output(GrcItemType::C32);
                     self.push_and_link_block(&mut convert_ff_c_block)?;
                 }
+                (GrcItemType::C32, GrcItemType::F32) => {
+                    let mut realpart_block = GrcBlockInstanceBuilder::new();
+                    realpart_block
+                        .with_block_type("realpart_cf")
+                        .assert_output(GrcItemType::F32);
+                    self.push_and_link_block(&mut realpart_block)?;
+                }
                 (GrcItemType::F32, GrcItemType::InterleavedF32) => {}
                 _ => {
                     if last_output_type != expected_last_output_type {
@@ -213,15 +223,21 @@ impl GrcBuilder<GraphLevel> {
 
     pub fn ensure_sink(&mut self) -> Result<&mut Self> {
         if let Some(last_output_type) = self.state.last_output_type {
-            let mut snk_block = GrcBlockInstanceBuilder::new();
-            snk_block
-                .with_block_type("blocks_file_sink")
-                .with_parameter("file", "-")
-                .with_parameter("type", last_output_type.as_grc());
-            self.push_and_link_block(&mut snk_block)?;
+            if last_output_type != GrcItemType::Pdu {
+                let mut snk_block = GrcBlockInstanceBuilder::new();
+                snk_block
+                    .with_block_type("blocks_file_sink")
+                    .with_parameter("file", "-")
+                    .with_parameter("type", last_output_type.as_grc());
+                self.push_and_link_block(&mut snk_block)?;
+            }
             self.state.last_output_type = None;
         }
         Ok(self)
+    }
+
+    pub fn last_output_type(&self) -> Option<GrcItemType> {
+        self.state.last_output_type
     }
 
     pub fn create_block_instance(&self, block_type: impl Into<String>) -> GrcBuilder<BlockLevel> {

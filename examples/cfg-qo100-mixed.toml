@@ -1,0 +1,100 @@
+[hardware.sdr]
+device = "plutosdr"
+uri = "ip:192.168.2.1"
+sample_rate = 1_000_000
+rx_freq = 739_750_000          # FI 10 GHz après LNB
+tx_freq = 2_400_250_000        # Utilisé si le Pluto assure aussi le TX
+
+[beacon_tracker]
+enabled = true
+cat_port = 4532                # CAT master pour monitorer/forcer le calage global LNB
+beacon_freq = 10_489_550_000   # Fréquence absolue balise BPSK
+mode = "costas_bpsk"
+
+# -----------------------------------------------------------------------------
+# CANAL 1 : FT8 (WSJT-X en mode Split ou deux instances CAT distinctes)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ft8"
+type = "transceiver"
+frequency_rx = 10_489_610_000  # Fréquence satellite absolue d'écoute
+frequency_tx = 10_489_610_000  # Fréquence satellite absolue d'émission
+priority = 10
+
+# Serveur CAT dédié à la voie RX (modifie le NCO logiciel du DDC)
+[channels.cat_rx]
+type = "server"
+listen_port = 4533
+
+# Serveur CAT dédié à la voie TX (modifie le NCO TX ou pilote un exciter dédié)
+[channels.cat_tx]
+type = "server"
+listen_port = 4534
+
+[channels.audio]
+sink_name = "QO100_FT8_TX"
+source_name = "QO100_FT8_RX"
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+shift_addition_cc "(-{offset_rx}/1_000_000)" ! \
+rational_resampler_cc 48000 1000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "QO100_FT8_RX"
+"""
+
+[channels.tx]
+# Cas A : TX généré numériquement via le Pluto
+pipeline = """
+pulse_source "QO100_FT8_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 1000000 48000 ! \
+shift_addition_cc "({offset_tx}/1_000_000)"
+"""
+
+# -----------------------------------------------------------------------------
+# CANAL 2 : Voie SSB Phonique avec FT-817 externe + Upconverter
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ssb_voice"
+type = "transceiver"
+frequency_rx = 10_489_700_000
+frequency_tx = 10_489_700_000
+priority = 50
+
+# CAT RX : serveur rigctld virtuel local (ex: pour Gqrx ou logbook)
+[channels.cat_rx]
+type = "server"
+listen_port = 4535
+
+# CAT TX : Passerelle série vers un transceiver matériel externe (FT-817)
+# Le binaire convertit la fréquence satellite 10.4 GHz vers la FI du FT817 (ex: 432 MHz)
+[channels.cat_tx]
+type = "rigctld_client"        # ou "serial"
+target = "127.0.0.1:4531"      # rigctld connecté physiquement au FT-817
+lo_multiplier = 1
+lo_offset = 10_057_000_000     # Offset de l'upconverter : 10489.700M - 10057.000M = 432.700 MHz sur le poste
+track_rx_tuning = true         # Si l'opérateur règle son écoute, le FT-817 s'aligne automatiquement
+
+[channels.audio]
+sink_name = "QO100_SSB_TX"
+source_name = "QO100_SSB_RX"
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+shift_addition_cc "(-{offset_rx}/1_000_000)" ! \
+rational_resampler_cc 48000 1000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "QO100_SSB_RX"
+"""
+
+[channels.tx]
+# Pipeline vide ou bypass si la modulation SSB est directement générée par le FT-817
+enabled = false
