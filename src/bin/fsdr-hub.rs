@@ -427,16 +427,20 @@ fn main() -> Result<()> {
     let r = running.clone();
     let tokio_rt = tokio::runtime::Runtime::new()?;
     tokio_rt.spawn(async move {
+        #[cfg(unix)]
         let mut sigterm =
             tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).ok();
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {},
             _ = async {
+                #[cfg(unix)]
                 if let Some(ref mut st) = sigterm {
                     st.recv().await;
                 } else {
                     futures::future::pending::<()>().await;
                 }
+                #[cfg(not(unix))]
+                futures::future::pending::<()>().await;
             } => {},
         }
         println!("\n[fsdr-hub] Shutdown signal received, cleaning up virtual audio sinks...");
