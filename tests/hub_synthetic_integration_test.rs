@@ -12,7 +12,7 @@ static TEST_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 #[test]
 fn test_synthetic_sdr_source_and_bokeh_websocket() -> Result<()> {
-    let _guard = TEST_MUTEX.lock().unwrap();
+    let _guard = TEST_MUTEX.lock().unwrap_or_else(|p| p.into_inner());
 
     // 1. Setup Bokeh Telemetry Server on a dedicated test port
     let test_port = 15006;
@@ -122,7 +122,7 @@ fn test_synthetic_source_full_demod_pipeline() -> Result<()> {
 
 #[test]
 fn test_synthetic_full_config_20m_with_telemetry() -> Result<()> {
-    let _guard = TEST_MUTEX.lock().unwrap();
+    let _guard = TEST_MUTEX.lock().unwrap_or_else(|p| p.into_inner());
 
     let config = fsdr_cli::config::HubConfig::load_from_file("examples/cfg-synthetic.toml")?;
     let mut fg = Flowgraph::new();
@@ -283,11 +283,33 @@ fn test_synthetic_full_config_20m_with_telemetry() -> Result<()> {
 
 #[test]
 fn test_hub_synthetic_audio_level() -> Result<()> {
-    let _guard = TEST_MUTEX.lock().unwrap();
+    let _guard = TEST_MUTEX.lock().unwrap_or_else(|p| p.into_inner());
 
-    let test_sink = "TEST_INTEG_RX";
+    // Check if parec is available on the system
+    let parec_available = std::process::Command::new("parec")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if !parec_available {
+        eprintln!("[test_hub_synthetic_audio_level] Skipping test: 'parec' is not available in environment");
+        return Ok(());
+    }
+
+    let pid = std::process::id();
+    let test_sink = format!("TEST_INTEG_RX_{}", pid);
     let mut pa_guard = fsdr_cli::audio::PulseAudioGuard::new();
-    let _ = pa_guard.load_null_sink(test_sink, Some("Test Integ RX"));
+    let _module_id = match pa_guard.load_null_sink(&test_sink, Some("Test Integ RX")) {
+        Ok(Some(id)) => id,
+        _ => {
+            eprintln!("[test_hub_synthetic_audio_level] Skipping test: PulseAudio null sink could not be loaded");
+            return Ok(());
+        }
+    };
+
+    // Give PulseAudio/PipeWire daemon a moment to register the new sink
+    thread::sleep(Duration::from_millis(200));
 
     let mut fg = Flowgraph::new();
     // f_ssb is at +50 kHz (+0.025 normalized frequency). Downconvert by -0.025 to baseband.
@@ -309,7 +331,7 @@ fn test_hub_synthetic_audio_level() -> Result<()> {
     });
 
     // Give the runtime a brief moment to produce and stream audio samples to PulseAudio/PipeWire
-    thread::sleep(Duration::from_millis(1200));
+    thread::sleep(Duration::from_millis(1500));
 
     // Run python audio level meter on the virtual monitor sink
     let monitor_name = format!("{}.monitor", test_sink);

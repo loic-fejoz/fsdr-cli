@@ -19,6 +19,7 @@ eula = false
 [features]
 default=['iqengine']
 audio =  [] #["futuresdr/audio"]
+soapy = ['futuresdr/seify', 'futuresdr/soapy']
 iqengine = [ 'dep:axum', 'dep:http', 'dep:tower', 'dep:tower-http', 'dep:iqengine-plugin', 'dep:serde_derive', 'dep:simple_logger']
 
 [[bin]]
@@ -30,7 +31,7 @@ name = "fsdr-hub"
 path = "src/bin/fsdr-hub.rs"
 
 [dependencies]
-futuresdr = { version = "0.9.0", features = ['audio', 'seify', 'soapy'] }
+futuresdr = { version = "0.9.0", features = ['audio'] }
 
 async-trait = "0.1"
 cpal = { version = "0.18.0"}

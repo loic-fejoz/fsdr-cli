@@ -187,53 +187,63 @@ fn main() -> Result<()> {
         );
         (Some(id), "output")
     } else if let Some(ref dev_name) = hw.device {
-        let sample_rate = hw.sample_rate.unwrap_or(2_000_000) as f64;
-        let rx_freq = hw.rx_freq.unwrap_or(14_200_000) as f64;
-        let seify_args = if let Some(ref uri) = hw.uri {
-            if uri.contains('=') {
-                uri.clone()
-            } else if let Some((driver, dev_id)) = uri.split_once(':') {
-                format!(
-                    "driver=soapy,soapy:driver={},soapy:{}={}",
-                    driver, driver, dev_id
-                )
+        #[cfg(feature = "soapy")]
+        {
+            let sample_rate = hw.sample_rate.unwrap_or(2_000_000) as f64;
+            let rx_freq = hw.rx_freq.unwrap_or(14_200_000) as f64;
+            let seify_args = if let Some(ref uri) = hw.uri {
+                if uri.contains('=') {
+                    uri.clone()
+                } else if let Some((driver, dev_id)) = uri.split_once(':') {
+                    format!(
+                        "driver=soapy,soapy:driver={},soapy:{}={}",
+                        driver, driver, dev_id
+                    )
+                } else {
+                    format!("driver=soapy,soapy:driver={}", uri)
+                }
             } else {
-                format!("driver=soapy,soapy:driver={}", uri)
+                format!("driver=soapy,soapy:driver={}", dev_name)
+            };
+
+            println!(
+                "[fsdr-hub] Connecting to hardware SDR device '{}' via Seify/Soapy (args: '{}')...",
+                dev_name, seify_args
+            );
+            let mut builder = futuresdr::blocks::seify::Builder::new(seify_args.as_str())
+                .with_context(|| {
+                    format!(
+                        "Failed to open SDR device '{}' with args '{}'",
+                        dev_name, seify_args
+                    )
+                })?
+                .sample_rate(sample_rate)
+                .frequency(rx_freq);
+
+            if let Some(gain) = hw.rx_gain {
+                builder = builder.gain(gain);
             }
-        } else {
-            format!("driver=soapy,soapy:driver={}", dev_name)
-        };
 
-        println!(
-            "[fsdr-hub] Connecting to hardware SDR device '{}' via Seify/Soapy (args: '{}')...",
-            dev_name, seify_args
-        );
-        let mut builder = futuresdr::blocks::seify::Builder::new(seify_args.as_str())
-            .with_context(|| {
+            let src = builder.build_source().with_context(|| {
                 format!(
-                    "Failed to open SDR device '{}' with args '{}'",
-                    dev_name, seify_args
+                    "Failed to configure and build Seify source for device '{}'",
+                    dev_name
                 )
-            })?
-            .sample_rate(sample_rate)
-            .frequency(rx_freq);
-
-        if let Some(gain) = hw.rx_gain {
-            builder = builder.gain(gain);
+            })?;
+            let id = active_fg.add(src)?.id();
+            println!(
+                "[fsdr-hub] Successfully initialized Hardware SDR Source '{}' at {} SPS, {} Hz",
+                dev_name, sample_rate, rx_freq
+            );
+            (Some(id), "outputs[0]")
         }
-
-        let src = builder.build_source().with_context(|| {
-            format!(
-                "Failed to configure and build Seify source for device '{}'",
+        #[cfg(not(feature = "soapy"))]
+        {
+            anyhow::bail!(
+                "Hardware SDR device '{}' was configured, but fsdr-hub was compiled without the 'soapy' feature. Recompile with `--features soapy`.",
                 dev_name
-            )
-        })?;
-        let id = active_fg.add(src)?.id();
-        println!(
-            "[fsdr-hub] Successfully initialized Hardware SDR Source '{}' at {} SPS, {} Hz",
-            dev_name, sample_rate, rx_freq
-        );
-        (Some(id), "outputs[0]")
+            );
+        }
     } else {
         println!("[fsdr-hub] Notice: No SDR device specified. DSP pipelines will read from STDIN.");
         (None, "output")

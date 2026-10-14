@@ -12,7 +12,11 @@ def measure_sink(sink_name="HF_SSB_RX.monitor", duration_sec=2.0):
         "-d", sink_name,
     ]
     
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        print(f"[measure] ERROR: parec executable not found on system!")
+        return False
     raw_data = bytearray()
     start_time = time.time()
     
