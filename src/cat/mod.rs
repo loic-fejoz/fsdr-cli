@@ -30,6 +30,7 @@ impl CatServer {
         let running = Arc::new(AtomicBool::new(true));
 
         let listener = TcpListener::bind(format!("0.0.0.0:{}", port))?;
+        let bound_port = listener.local_addr()?.port();
         listener.set_nonblocking(true)?;
 
         let freq_c = freq.clone();
@@ -41,6 +42,7 @@ impl CatServer {
             while running_c.load(Ordering::Relaxed) {
                 match listener.accept() {
                     Ok((stream, _)) => {
+                        let _ = stream.set_nonblocking(false);
                         let freq_inner = freq_c.clone();
                         let ptt_inner = ptt_c.clone();
                         let cb_inner = cb_outer.clone();
@@ -57,7 +59,7 @@ impl CatServer {
         });
 
         Ok(Self {
-            port,
+            port: bound_port,
             freq,
             ptt,
             running,

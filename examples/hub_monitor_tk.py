@@ -27,6 +27,9 @@ import asyncio
 import json
 import os
 import queue
+import re
+import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -105,6 +108,127 @@ DEFAULT_CHANNEL_COLORS = [
     "#ffca28", "#42a5f5", "#26c6da", "#66bb6a",
     "#ffa726", "#8d6e63"
 ]
+
+
+# =============================================================================
+# Gestionnaire d'Écoute Audio Directe (parec | pacat)
+# =============================================================================
+
+class AudioPlayer:
+    """Gère l'écoute audio en direct du pipeline sélectionné via parec | pacat."""
+
+    def __init__(self):
+        self.p_rec = None
+        self.p_play = None
+        self.current_device = None
+        self.current_channel_name = None
+        self.enabled = True
+        self.volume_pct = 80
+        self.is_muted = False
+        self._lock = threading.Lock()
+        self._last_retry_time = 0.0
+
+    @staticmethod
+    def is_available():
+        return shutil.which("parec") is not None and shutil.which("pacat") is not None
+
+    def is_active(self):
+        with self._lock:
+            return (
+                self.enabled
+                and not self.is_muted
+                and self.p_rec is not None
+                and self.p_rec.poll() is None
+                and self.p_play is not None
+                and self.p_play.poll() is None
+            )
+
+    def set_enabled(self, enabled):
+        with self._lock:
+            self.enabled = enabled
+            if not self.enabled:
+                self._stop_process()
+            else:
+                self._start_process()
+
+    def toggle_mute(self):
+        with self._lock:
+            self.is_muted = not self.is_muted
+            if self.is_muted:
+                self._stop_process()
+            else:
+                if self.enabled:
+                    self._start_process()
+            return self.is_muted
+
+    def set_volume(self, volume_pct):
+        with self._lock:
+            self.volume_pct = max(0, min(150, int(volume_pct)))
+            if self.enabled and not self.is_muted and self.current_device:
+                self._start_process()
+
+    def switch_device(self, device_name, channel_name=None):
+        with self._lock:
+            if self.current_device == device_name and self.p_rec and self.p_rec.poll() is None:
+                self.current_channel_name = channel_name
+                return
+            self.current_device = device_name
+            self.current_channel_name = channel_name
+            if self.enabled and not self.is_muted:
+                self._start_process()
+            else:
+                self._stop_process()
+
+    def tick(self):
+        """Relance automatiquement le flux si fsdr-hub a créé le sink après coup."""
+        with self._lock:
+            if not self.enabled or self.is_muted or not self.current_device:
+                return
+            now = time.time()
+            if self.p_rec is None or self.p_rec.poll() is not None:
+                if now - self._last_retry_time > 1.5:
+                    self._last_retry_time = now
+                    self._start_process()
+
+    def _start_process(self):
+        self._stop_process()
+        if not self.current_device or not self.is_available() or self.is_muted or not self.enabled:
+            return
+        try:
+            vol_int = int(65536 * (self.volume_pct / 100.0))
+            self.p_rec = subprocess.Popen(
+                ["parec", "-d", self.current_device, "--latency-msec=40"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL
+            )
+            self.p_play = subprocess.Popen(
+                ["pacat", "--playback", "--latency-msec=40", f"--volume={vol_int}"],
+                stdin=self.p_rec.stdout,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            self.p_rec.stdout.close()
+        except Exception:
+            self._stop_process()
+
+    def _stop_process(self):
+        for p in (self.p_play, self.p_rec):
+            if p:
+                try:
+                    p.terminate()
+                    p.wait(timeout=0.08)
+                except Exception:
+                    try:
+                        p.kill()
+                    except Exception:
+                        pass
+        self.p_rec = None
+        self.p_play = None
+
+    def close(self):
+        with self._lock:
+            self.enabled = False
+            self._stop_process()
 
 
 # =============================================================================
@@ -199,6 +323,20 @@ def load_hub_config(config_path):
 
         audio_sr = (ch.get("audio") or {}).get("sample_rate", 48000)
 
+        # Détection du sink audio RX pour l'écoute directe
+        audio_cfg = ch.get("audio", {}) or {}
+        raw_rx_pipe = (ch.get("rx") or {}).get("pipeline", "")
+        audio_sink = None
+        m = re.search(r'pulse_sink\s+["\']?([^"\'\s!]+)["\']?', raw_rx_pipe)
+        if m:
+            audio_sink = m.group(1).strip()
+        if not audio_sink:
+            audio_sink = audio_cfg.get("source_name") or audio_cfg.get("sink_name")
+
+        audio_monitor = None
+        if audio_sink:
+            audio_monitor = audio_sink if audio_sink.endswith(".monitor") else f"{audio_sink}.monitor"
+
         # Heuristique mode
         mode = "USB"
         rx_pipe = (ch.get("rx") or {}).get("pipeline", "").lower()
@@ -224,6 +362,8 @@ def load_hub_config(config_path):
             "freq": f,
             "mode": mode,
             "audio_sr": audio_sr,
+            "audio_sink": audio_sink,
+            "audio_monitor": audio_monitor,
             "color": col,
             "is_vfo": is_vfo,
         })
@@ -256,6 +396,22 @@ def load_hub_config(config_path):
             vfo_mode = ch.get("mode", "USB")
             break
 
+    # Monitor audio initial
+    initial_audio_monitor = None
+    initial_audio_name = None
+    target_id = zoom_channel_id or vfo_channel_id
+    for ch in channels:
+        if ch["id"] == target_id and ch.get("audio_monitor"):
+            initial_audio_monitor = ch["audio_monitor"]
+            initial_audio_name = ch["name"]
+            break
+    if not initial_audio_monitor:
+        for ch in channels:
+            if ch.get("audio_monitor"):
+                initial_audio_monitor = ch["audio_monitor"]
+                initial_audio_name = ch["name"]
+                break
+
     return {
         "config_path": config_path,
         "center_freq": center_freq,
@@ -271,6 +427,8 @@ def load_hub_config(config_path):
         "initial_vfo_freq": initial_vfo_freq,
         "zoom_bw": zoom_bw,
         "vfo_mode": vfo_mode,
+        "initial_audio_monitor": initial_audio_monitor,
+        "initial_audio_name": initial_audio_name,
     }
 
 
@@ -292,6 +450,14 @@ class FsdrHubClient(threading.Thread):
         self.send_queue.put(cmd_dict)
         if self.loop and self.loop.is_running():
             self.loop.call_soon_threadsafe(lambda: None)
+
+    def stop(self):
+        self.running = False
+        if self.active_ws:
+            try:
+                self.active_ws.close()
+            except Exception:
+                pass
 
     def run(self):
         self.loop = asyncio.new_event_loop()
@@ -418,12 +584,22 @@ class FsdrTkApp:
 
         self.inbound_queue = queue.Queue()
 
+        # Écoute Audio Directe
+        self.audio_player = AudioPlayer()
+        init_dev = self.cfg.get("initial_audio_monitor")
+        init_name = self.cfg.get("initial_audio_name")
+        if init_dev:
+            self.audio_player.switch_device(init_dev, channel_name=init_name)
+
         self._build_ui()
 
         # Démarrage WebSocket
         ws_url = custom_ws_url or os.environ.get("FSDR_WS_URL") or f"ws://{self.cfg['listen_addr']}/ws"
         self.ws_client = FsdrHubClient(ws_url, self.inbound_queue)
         self.ws_client.start()
+
+        # Nettoyage à la fermeture de la fenêtre
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         # Boucle d'animation fluide à ~25 FPS (40 ms)
         self.root.after(40, self._render_loop)
@@ -490,7 +666,80 @@ class FsdrTkApp:
         self.scale_vfo.set(self.current_vfo_hz / 1e6)
         self.scale_vfo.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=8)
 
-        # 4. Ajustements Dynamique & Couleurs (FFT + Waterfalls)
+        # 4. Écoute Audio Directe (parec | pacat)
+        audio_box = ttk.Frame(self.root, padding="8 2 8 4")
+        audio_box.pack(fill=tk.X)
+
+        self.audio_available = AudioPlayer.is_available()
+        self.audio_enabled_var = tk.BooleanVar(value=self.audio_available)
+
+        self.chk_audio = ttk.Checkbutton(
+            audio_box,
+            text="🔊 Écoute Audio",
+            variable=self.audio_enabled_var,
+            command=self._on_toggle_audio
+        )
+        if not self.audio_available:
+            self.chk_audio.config(state="disabled")
+        self.chk_audio.pack(side=tk.LEFT, padx=(0, 8))
+
+        ttk.Label(audio_box, text="Canal :", font=("Sans", 9, "bold")).pack(side=tk.LEFT, padx=(0, 4))
+
+        self.audio_channels = [c for c in self.channels if c.get("audio_monitor")]
+        self.audio_channel_labels = [f"{c['name']} [{c['audio_monitor']}]" for c in self.audio_channels]
+        self.audio_channel_map = {f"{c['name']} [{c['audio_monitor']}]": c for c in self.audio_channels}
+
+        self.combo_audio = ttk.Combobox(
+            audio_box,
+            values=self.audio_channel_labels,
+            state="readonly" if self.audio_available else "disabled",
+            width=28
+        )
+        init_audio_idx = 0
+        target_audio_ch = self.cfg.get("initial_audio_monitor")
+        for i, c in enumerate(self.audio_channels):
+            if c.get("audio_monitor") == target_audio_ch:
+                init_audio_idx = i
+                break
+        if self.audio_channel_labels:
+            self.combo_audio.current(init_audio_idx)
+        self.combo_audio.bind("<<ComboboxSelected>>", self._on_combo_audio_select)
+        self.combo_audio.pack(side=tk.LEFT, padx=(0, 10))
+
+        # Indicateur d'état du flux audio
+        self.lbl_audio_status = ttk.Label(
+            audio_box,
+            text="Connexion...",
+            font=("Sans", 9),
+            foreground="#26a69a" if self.audio_available else "#e53935"
+        )
+        self.lbl_audio_status.pack(side=tk.LEFT, padx=(0, 12))
+
+        # Volume
+        ttk.Label(audio_box, text="Vol :").pack(side=tk.LEFT, padx=(0, 2))
+        self.lbl_volume = ttk.Label(audio_box, text="80%", width=5)
+        self.scale_volume = ttk.Scale(
+            audio_box,
+            from_=0,
+            to=150,
+            orient=tk.HORIZONTAL,
+            length=100,
+            command=self._on_volume_change
+        )
+        self.scale_volume.pack(side=tk.LEFT, padx=(0, 4))
+        self.lbl_volume.pack(side=tk.LEFT, padx=(0, 6))
+        self.scale_volume.set(80)
+
+        # Bouton Mute
+        self.btn_mute = ttk.Button(
+            audio_box,
+            text="🔇 Mute",
+            width=7,
+            command=self._on_btn_mute
+        )
+        self.btn_mute.pack(side=tk.LEFT)
+
+        # 5. Ajustements Dynamique & Couleurs (FFT + Waterfalls)
         col_box = ttk.Frame(self.root, padding="8 2 8 4")
         col_box.pack(fill=tk.X)
         ttk.Label(col_box, text="Min (dB):").pack(side=tk.LEFT, padx=(0, 2))
@@ -571,7 +820,7 @@ class FsdrTkApp:
     # ---------- Gestion des interactions utilisateur ----------
 
     def _on_channel_btn(self, ch_cfg):
-        """Sélectionne un canal et règle le VFO sur sa fréquence."""
+        """Sélectionne un canal, règle le VFO sur sa fréquence et bascule l'écoute audio."""
         self.vfo_channel_id = ch_cfg["id"]
         self.vfo_mode = ch_cfg.get("mode", "USB")
         if ch_cfg.get("audio_sr"):
@@ -579,6 +828,70 @@ class FsdrTkApp:
         # Toujours propager le changement au canal zoom s'il correspond au mode audio
         target_ch = self.zoom_channel_id or ch_cfg["id"]
         self.set_vfo_frequency(ch_cfg["freq"], channel_id=target_ch)
+
+        # Basculer automatiquement l'écoute audio sur ce canal
+        self._switch_audio_to_channel(ch_cfg)
+
+    # ---------- Gestion de l'écoute audio directe ----------
+
+    def _on_toggle_audio(self):
+        enabled = self.audio_enabled_var.get()
+        self.audio_player.set_enabled(enabled)
+        self._update_audio_status_ui()
+
+    def _on_combo_audio_select(self, _=None):
+        selected_text = self.combo_audio.get()
+        ch = self.audio_channel_map.get(selected_text)
+        if ch:
+            self.audio_player.switch_device(ch.get("audio_monitor"), channel_name=ch.get("name"))
+            self._update_audio_status_ui()
+
+    def _on_volume_change(self, val):
+        if not hasattr(self, "lbl_volume") or self.lbl_volume is None:
+            return
+        vol = int(float(val))
+        self.lbl_volume.config(text=f"{vol}%")
+        if hasattr(self, "audio_player"):
+            self.audio_player.set_volume(vol)
+
+    def _on_btn_mute(self):
+        is_muted = self.audio_player.toggle_mute()
+        if is_muted:
+            self.btn_mute.config(text="🔊 Écouter")
+        else:
+            self.btn_mute.config(text="🔇 Mute")
+        self._update_audio_status_ui()
+
+    def _switch_audio_to_channel(self, ch_cfg):
+        if not ch_cfg:
+            return
+        mon = ch_cfg.get("audio_monitor")
+        name = ch_cfg.get("name")
+        if mon:
+            self.audio_player.switch_device(mon, channel_name=name)
+            for idx, label in enumerate(self.audio_channel_labels):
+                c = self.audio_channel_map.get(label)
+                if c and c.get("id") == ch_cfg["id"]:
+                    self.combo_audio.current(idx)
+                    break
+            self._update_audio_status_ui()
+
+    def _update_audio_status_ui(self):
+        if not self.audio_available:
+            self.lbl_audio_status.config(text="(parec/pacat non disponibles)", foreground="#e53935")
+            return
+        if not self.audio_player.enabled:
+            self.lbl_audio_status.config(text="○ Audio inactif", foreground="#7e8b9b")
+        elif self.audio_player.is_muted:
+            self.lbl_audio_status.config(text="🔇 Muet", foreground="#ffa726")
+        elif self.audio_player.is_active():
+            dev = self.audio_player.current_device or ""
+            ch_name = self.audio_player.current_channel_name or ""
+            txt = f"● Écoute : {ch_name} ({dev})" if ch_name else f"● Écoute : {dev}"
+            self.lbl_audio_status.config(text=txt, foreground="#26a69a")
+        else:
+            dev = self.audio_player.current_device or ""
+            self.lbl_audio_status.config(text=f"◌ En attente ({dev})...", foreground="#ffb74d")
 
     def set_vfo_frequency(self, freq_hz, channel_id=None):
         """Met à jour la fréquence du VFO et transmet l'ordre au canal cible dans fsdr-hub."""
@@ -871,7 +1184,20 @@ class FsdrTkApp:
             if self.canvas_zoom_wf is not None:
                 self._draw_zoom_waterfall()
 
+        # 4. Rafraîchissement périodique du flux audio
+        self.audio_player.tick()
+        self._update_audio_status_ui()
+
         self.root.after(40, self._render_loop)
+
+    def _on_close(self):
+        """Ferme proprement le lecteur audio et le client WebSocket avant de quitter."""
+        self.audio_player.close()
+        try:
+            self.ws_client.stop()
+        except Exception:
+            pass
+        self.root.destroy()
 
     def _draw_wide_fft(self, frame):
         c = self.canvas_wide

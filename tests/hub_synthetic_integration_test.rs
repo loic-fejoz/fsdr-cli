@@ -585,14 +585,14 @@ fn test_flowgraph_vfo_frequency_propagation() -> Result<()> {
     assert_eq!(call_res, Pmt::Ok);
 
     // 4. Test Propagation via Hamlib CAT Server
-    let cat_port = 15012;
     let shared_freq = Arc::new(std::sync::atomic::AtomicU64::new(14_260_000));
     let ctrl_cat = controller.clone();
     let on_freq_change = Arc::new(move |new_freq: u64| {
         ctrl_cat.set_frequency("ssb_test", new_freq);
     });
-    let _cat_server =
-        CatServer::spawn_with_shared_freq(cat_port, shared_freq.clone(), Some(on_freq_change))?;
+    let cat_server =
+        CatServer::spawn_with_shared_freq(0, shared_freq.clone(), Some(on_freq_change))?;
+    let cat_port = cat_server.port();
 
     thread::sleep(Duration::from_millis(50));
 
