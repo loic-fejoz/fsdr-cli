@@ -38,7 +38,6 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset_rx}/1_000_000)" ! \
 rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
@@ -52,8 +51,7 @@ pipeline = """
 pulse_source "QO100_FT8_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 1000000 48000 ! \
-shift_addition_cc "({offset_tx}/1_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -87,7 +85,6 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset_rx}/1_000_000)" ! \
 rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \

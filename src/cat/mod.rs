@@ -5,17 +5,27 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::thread;
 
+pub type FreqChangeCallback = Arc<dyn Fn(u64) + Send + Sync + 'static>;
+
 /// Hamlib rigctld CAT server for a channel
 pub struct CatServer {
     port: u16,
     freq: Arc<AtomicU64>,
     ptt: Arc<AtomicBool>,
     running: Arc<AtomicBool>,
+    on_freq_change: Option<FreqChangeCallback>,
 }
 
 impl CatServer {
     pub fn spawn(port: u16, initial_freq: u64) -> Result<Self> {
-        let freq = Arc::new(AtomicU64::new(initial_freq));
+        Self::spawn_with_shared_freq(port, Arc::new(AtomicU64::new(initial_freq)), None)
+    }
+
+    pub fn spawn_with_shared_freq(
+        port: u16,
+        freq: Arc<AtomicU64>,
+        on_freq_change: Option<FreqChangeCallback>,
+    ) -> Result<Self> {
         let ptt = Arc::new(AtomicBool::new(false));
         let running = Arc::new(AtomicBool::new(true));
 
@@ -25,6 +35,7 @@ impl CatServer {
         let freq_c = freq.clone();
         let ptt_c = ptt.clone();
         let running_c = running.clone();
+        let cb_outer = on_freq_change.clone();
 
         thread::spawn(move || {
             while running_c.load(Ordering::Relaxed) {
@@ -32,8 +43,9 @@ impl CatServer {
                     Ok((stream, _)) => {
                         let freq_inner = freq_c.clone();
                         let ptt_inner = ptt_c.clone();
+                        let cb_inner = cb_outer.clone();
                         thread::spawn(move || {
-                            let _ = handle_rigctld_client(stream, freq_inner, ptt_inner);
+                            let _ = handle_rigctld_client(stream, freq_inner, ptt_inner, cb_inner);
                         });
                     }
                     Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
@@ -49,6 +61,7 @@ impl CatServer {
             freq,
             ptt,
             running,
+            on_freq_change,
         })
     }
 
@@ -58,6 +71,17 @@ impl CatServer {
 
     pub fn frequency(&self) -> u64 {
         self.freq.load(Ordering::Relaxed)
+    }
+
+    pub fn set_frequency(&self, new_freq: u64) {
+        self.freq.store(new_freq, Ordering::Relaxed);
+        if let Some(ref cb) = self.on_freq_change {
+            cb(new_freq);
+        }
+    }
+
+    pub fn freq_handle(&self) -> Arc<AtomicU64> {
+        self.freq.clone()
     }
 
     pub fn is_ptt(&self) -> bool {
@@ -142,6 +166,7 @@ fn handle_rigctld_client(
     mut stream: TcpStream,
     freq: Arc<AtomicU64>,
     ptt: Arc<AtomicBool>,
+    on_freq_change: Option<FreqChangeCallback>,
 ) -> Result<()> {
     let mut reader = BufReader::new(stream.try_clone()?);
     let mut line = String::new();
@@ -169,6 +194,9 @@ fn handle_rigctld_client(
                 if parts.len() > 1 {
                     if let Ok(new_freq) = parts[1].parse::<u64>() {
                         freq.store(new_freq, Ordering::Relaxed);
+                        if let Some(ref cb) = on_freq_change {
+                            cb(new_freq);
+                        }
                     }
                 }
                 writeln!(stream, "RPRT 0")?;
@@ -194,6 +222,22 @@ fn handle_rigctld_client(
                 writeln!(stream, "VFOA")?;
             }
             "V" | "set_vfo" => {
+                writeln!(stream, "RPRT 0")?;
+            }
+            "j" | "get_rit" => {
+                writeln!(stream, "0")?;
+            }
+            "J" | "set_rit" => {
+                if parts.len() > 1 {
+                    if let Ok(offset) = parts[1].parse::<i64>() {
+                        let current = freq.load(Ordering::Relaxed);
+                        let new_freq = (current as i64 + offset).max(0) as u64;
+                        freq.store(new_freq, Ordering::Relaxed);
+                        if let Some(ref cb) = on_freq_change {
+                            cb(new_freq);
+                        }
+                    }
+                }
                 writeln!(stream, "RPRT 0")?;
             }
             "s" | "get_split_vfo" => {

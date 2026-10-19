@@ -6,8 +6,8 @@
 [hardware.sdr]
 device = "sdrplay"
 uri = "sdrplay:0"
-# 2 MSPS de bande passante : couvre largement de 13.2 MHz à 15.2 MHz (centre à 14.200 MHz)
-sample_rate = 2_000_000
+# 1 MSPS de bande passante : couvre de 13.7 MHz à 14.7 MHz (centre à 14.200 MHz)
+sample_rate = 1_000_000
 rx_freq = 14_200_000            # Fréquence centrale matérielle LO (14.200 MHz)
 rx_gain = 40.0
 tx_freq = 14_200_000
@@ -33,10 +33,9 @@ source_name = "HF_FT8_RX"       # Source virtuelle WSJT-X RX
 sample_rate = 48_000
 
 [channels.rx]
-# NCO local (+126 kHz, up-conversion du canal à -126 kHz) -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur USB Weaver -> AGC -> Sortie Pulse
+# NCO local automatique -> Resampler 1 MSPS -> 48 kSPS -> Démodulateur USB Weaver -> AGC -> Sortie Pulse
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
-rational_resampler_cc 48000 2000000 ! \
+rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
 limit_ff ! \
@@ -44,13 +43,12 @@ pulse_sink "HF_FT8_RX"
 """
 
 [channels.tx]
-# Entrée Pulse -> Modulateur Weaver USB -> Resampler 48 kSPS -> 2 MSPS -> NCO local
+# Entrée Pulse -> Modulateur Weaver USB -> Resampler 48 kSPS -> 1 MSPS -> NCO local automatique
 pipeline = """
 pulse_source "HF_FT8_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -70,10 +68,9 @@ source_name = "HF_SSTV_RX"      # Source MMSSTV / QSSTV
 sample_rate = 48_000
 
 [channels.rx]
-# NCO local (-30 kHz, down-conversion du canal à +30 kHz) -> Resampler 2 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
+# NCO local automatique -> Resampler 1 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
-rational_resampler_cc 48000 2000000 ! \
+rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
 limit_ff ! \
@@ -85,8 +82,7 @@ pipeline = """
 pulse_source "HF_SSTV_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -105,10 +101,9 @@ priority = 15
 tcp_port = 8001
 
 [channels.rx]
-# NCO local (+95 kHz, up-conversion du canal à -95 kHz) -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur LSB Weaver -> Démod AFSK -> Dépaquetage HDLC -> Serveur KISS
+# NCO local automatique -> Resampler 1 MSPS -> 48 kSPS -> Démodulateur LSB Weaver -> Démod AFSK -> Dépaquetage HDLC -> Serveur KISS
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
-rational_resampler_cc 48000 2000000 ! \
+rational_resampler_cc 48000 1000000 ! \
 weaver_lsb_cf "(1700/48_000)" ! \
 afsk1200_demod_f_u8 48000 ! \
 hdlc_deframing_u8_pdu ! \
@@ -121,8 +116,7 @@ tcp_kiss_client 8001 ! \
 hdlc_framing_pdu_u8 ! \
 afsk1200_mod_u8_f 48000 ! \
 weaver_usb_mod_fc "(1700/48_000)" ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -142,10 +136,9 @@ source_name = "HF_SSB_RX"
 sample_rate = 48_000
 
 [channels.rx]
-# NCO local (-50 kHz, down-conversion du canal à +50 kHz) -> Resampler 2 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
+# NCO local automatique -> Resampler 1 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
-rational_resampler_cc 48000 2000000 ! \
+rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
 limit_ff ! \
@@ -157,8 +150,7 @@ pipeline = """
 pulse_source "HF_SSB_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -179,8 +171,7 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
-rational_resampler_cc 48000 2000000 ! \
+rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
 limit_ff ! \
@@ -194,7 +185,7 @@ pulse_sink "HF_WSPR_RX"
 listen_addr = "127.0.0.1:5006"
 fps = 20
 
-# 1. FFT Pleine bande 20m (2 MHz panoramique, 13.2 à 15.2 MHz)
+# 1. FFT Pleine bande 20m (1 MHz panoramique, 13.7 à 14.7 MHz)
 [[telemetry.bokeh.probes]]
 name = "panoramic_20m"
 type = "waterfall"
@@ -209,4 +200,4 @@ name = "ssb_voice_zoom"
 type = "spectrum"
 source_node = "channels.ssb_voice_20m.rx"
 fft_size = 1024
-pipeline = "fft_cc 1024 1024 HAMMING ! logpower_cf ! bokeh_spectrum_sink 1024 20"
+pipeline = "fft_cc 1024 1024 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 1024 20"

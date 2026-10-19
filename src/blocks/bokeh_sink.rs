@@ -58,7 +58,7 @@ where
         let m = in_slice.len();
 
         if m > 0 {
-            if self.sender.is_none() {
+            if self.sender.as_ref().map(|s| s.is_closed()).unwrap_or(true) {
                 self.sender = get_global_bokeh_sender();
             }
 

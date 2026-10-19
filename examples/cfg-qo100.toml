@@ -31,9 +31,8 @@ source_name = "QO100_FT8_RX"   # Source captée par WSJT-X en RX
 sample_rate = 48_000
 
 [channels.rx]
-# NCO local -> Décimation 1MSPS vers 48kSPS -> USB Weaver -> AGC -> Sortie Pulse
+# NCO local automatique -> Décimation 1MSPS vers 48kSPS -> USB Weaver -> AGC -> Sortie Pulse
 pipeline = """
-shift_addition_cc "(-{offset}/1_000_000)" ! \
 rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
@@ -42,13 +41,12 @@ pulse_sink "QO100_FT8_RX"
 """
 
 [channels.tx]
-# Entrée Pulse -> Modulateur Weaver USB -> Interpolation -> NCO TX -> Mixeur RF
+# Entrée Pulse -> Modulateur Weaver USB -> Interpolation -> NCO TX automatique -> Mixeur RF
 pipeline = """
 pulse_source "QO100_FT8_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 1000000 48000 ! \
-shift_addition_cc "({offset}/1_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -68,7 +66,6 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset}/1_000_000)" ! \
 rational_resampler_cc 48000 1000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
@@ -83,8 +80,7 @@ pulse_source "QO100_SSB_TX" ! \
 bandpass_fir_fft_cc 0.006 0.056 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
 gain_ff 1.2 ! \
-rational_resampler_cc 1000000 48000 ! \
-shift_addition_cc "({offset}/1_000_000)"
+rational_resampler_cc 1000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -101,9 +97,8 @@ priority = 20
 tcp_port = 8001                # Serveur TCP KISS pour soundmodem / AX.25 stack
 
 [channels.rx]
-# Démodulation OQPSK : NCO -> RRC Filter -> Gardner Timing -> Costas Loop -> Slicer -> PDU KISS
+# Démodulation OQPSK : NCO automatique -> RRC Filter -> Gardner Timing -> Costas Loop -> Slicer -> PDU KISS
 pipeline = """
-shift_addition_cc "(-{offset}/1_000_000)" ! \
 rational_resampler_cc 96000 1000000 ! \
 pulse_shaping_filter_cc RRC 0.35 4 ! \
 timing_recovery_cc GARDNER 4 0.5 2 ! \
@@ -114,14 +109,13 @@ tcp_kiss_server 8001
 """
 
 [channels.tx]
-# Modulation OQPSK : Trames KISS TCP -> PDU G3RUH -> Modulateur OQPSK -> RRC -> Interpolation
+# Modulation OQPSK : Trames KISS TCP -> PDU G3RUH -> Modulateur OQPSK -> RRC -> Interpolation -> NCO automatique
 pipeline = """
 tcp_kiss_client 8001 ! \
 pdu_framing_g3ruh ! \
 oqpsk_modulator_u8_c ! \
 pulse_shaping_filter_cc RRC 0.35 4 ! \
-rational_resampler_cc 1000000 96000 ! \
-shift_addition_cc "({offset}/1_000_000)"
+rational_resampler_cc 1000000 96000
 """
 
 # -----------------------------------------------------------------------------
@@ -138,7 +132,7 @@ type = "waterfall"
 source_node = "rf_corrected_bus"
 fft_size = 4096
 averaging = 4
-pipeline = "logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 4096 20"
+pipeline = "fft_cc 4096 4096 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 4096 20"
 
 # 2. FFT Haute Résolution centrée sur la sous-bande SSB
 [[telemetry.bokeh.probes]]
@@ -146,4 +140,4 @@ name = "ssb_zoom_fft"
 type = "spectrum"
 source_node = "channels.ssb_voice.rx"
 fft_size = 1024
-pipeline = "logpower_cf ! bokeh_spectrum_sink 1024 30"
+pipeline = "fft_cc 1024 1024 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 1024 30"

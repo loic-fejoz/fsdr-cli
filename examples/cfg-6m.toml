@@ -1,0 +1,204 @@
+# =============================================================================
+# fsdr-hub Configuration : Bande 6 mètres / 50 MHz ("The Magic Band")
+# Couverture IARU Région 1 : 50.000 MHz à 52.000 MHz (Bande passante : 2 MHz)
+# Fréquence centrale LO : 50.500 MHz (couvre de 49.500 à 51.500 MHz à 2 MSPS)
+# Compatible SDRplay RSP1 / RTL-SDR / HackRF / PlutoSDR
+# =============================================================================
+
+[hardware.sdr]
+device = "sdrplay"
+uri = "sdrplay:0"
+sample_rate = 2_000_000        # 2 MSPS : couvre de 49.500 à 51.500 MHz
+rx_freq = 50_500_000          # Centre LO à 50.500 MHz
+rx_gain = 40.0
+tx_freq = 50_500_000
+tx_gain = -10.0
+
+[beacon_tracker]
+enabled = false                # Pas de balise géostationnaire sur 50 MHz
+
+# -----------------------------------------------------------------------------
+# 1. CANAL FT8 (50.313 MHz USB) - Activité principale DX / E-sporadique
+# Décalage LO : 50.313M - 50.500M = -187 kHz (-187_000 Hz)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ft8_6m"
+type = "audio_transceiver"
+cat_port = 4533
+frequency = 50_313_000
+priority = 10
+
+[channels.audio]
+sink_name = "VHF_FT8_TX"         # Sink virtuel WSJT-X TX
+source_name = "VHF_FT8_RX"       # Source virtuelle WSJT-X RX
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_FT8_RX"
+"""
+
+[channels.tx]
+# Entrée Pulse -> Modulateur Weaver USB -> Resampler 48 kSPS -> 2 MSPS -> NCO local automatique
+pipeline = """
+pulse_source "VHF_FT8_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 2. CANAL APPEL PHONIE SSB (50.150 MHz USB) - Appel DX international
+# Décalage LO : 50.150M - 50.500M = -350 kHz (-350_000 Hz)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ssb_call_6m"
+type = "audio_transceiver"
+cat_port = 4534
+frequency = 50_150_000
+priority = 50                  # Priorité phonie supérieure
+
+[channels.audio]
+sink_name = "VHF_SSB_TX"
+source_name = "VHF_SSB_RX"
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_SSB_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "VHF_SSB_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 3. CANAL WSPR (50.293 MHz USB) - Balises d'étude de propagation ionosphérique
+# Fréquence WSPR : 50.293 MHz (tonalités 50.294400 à 50.294600 MHz)
+# Décalage LO : 50.293M - 50.500M = -207 kHz (-207_000 Hz)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "wspr_6m"
+type = "audio_transceiver"
+cat_port = 4535
+frequency = 50_293_000
+priority = 5
+
+[channels.audio]
+source_name = "VHF_WSPR_RX"
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_WSPR_RX"
+"""
+
+# -----------------------------------------------------------------------------
+# 4. CANAL MSK144 / METEOR SCATTER (50.360 MHz USB) - Réflexions météoritiques
+# Décalage LO : 50.360M - 50.500M = -140 kHz (-140_000 Hz)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "msk144_6m"
+type = "audio_transceiver"
+cat_port = 4536
+frequency = 50_360_000
+priority = 10
+
+[channels.audio]
+sink_name = "VHF_MSK144_TX"
+source_name = "VHF_MSK144_RX"
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_MSK144_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "VHF_MSK144_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 5. CANAL APPEL FM (51.510 MHz FM simplex) - Fréquence d'appel FM internationale
+# Décalage LO : 51.510M - 50.500M = +1010 kHz (+1_010_000 Hz)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "fm_call_6m"
+type = "audio_transceiver"
+cat_port = 4537
+frequency = 51_510_000
+priority = 30
+
+[channels.audio]
+sink_name = "VHF_FM_TX"
+source_name = "VHF_FM_RX"
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur FM Quadrature -> Deemphasis NFM -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+fmdemod_quadri_cf ! \
+deemphasis_nfm_ff 48000 ! \
+limit_ff ! \
+pulse_sink "VHF_FM_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "VHF_FM_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+fmmod_fc ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# MONITORING & TÉLÉMÉTRIE SPECTRE WEB (BOKEH)
+# -----------------------------------------------------------------------------
+[telemetry.bokeh]
+listen_addr = "127.0.0.1:5006"
+fps = 20
+
+# 1. FFT Pleine bande 6m (2 MHz panoramique, 49.5 à 51.5 MHz)
+[[telemetry.bokeh.probes]]
+name = "panoramic_6m"
+type = "waterfall"
+source_node = "sdr_raw_bus"
+fft_size = 4096
+averaging = 4
+pipeline = "fft_cc 4096 4096 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 4096 20"
+
+# 2. FFT Zoom sur le segment d'appel SSB / Télégraphie (autour de 50.150 MHz)
+[[telemetry.bokeh.probes]]
+name = "ssb_call_zoom_6m"
+type = "spectrum"
+source_node = "channels.ssb_call_6m.rx"
+fft_size = 1024
+pipeline = "fft_cc 1024 1024 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 1024 20"

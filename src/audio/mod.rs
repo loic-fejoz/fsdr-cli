@@ -95,6 +95,64 @@ impl PulseAudioGuard {
         Ok(())
     }
 
+    /// Unload an existing null sink matching the specified sink name, if present.
+    pub fn unload_sink_by_name(sink_name: &str) -> Result<bool> {
+        if !Self::is_pactl_available() {
+            return Ok(false);
+        }
+
+        let output = Command::new("pactl")
+            .arg("list")
+            .arg("modules")
+            .output()
+            .context("Failed to list pactl modules")?;
+
+        if !output.status.success() {
+            return Ok(false);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let mut current_id: Option<u32> = None;
+        let mut unlinked = false;
+
+        for line in stdout.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("Module #") {
+                if let Some(id_str) = trimmed.strip_prefix("Module #") {
+                    current_id = id_str.trim().parse::<u32>().ok();
+                }
+            } else if trimmed.contains(&format!("sink_name={}", sink_name)) {
+                if let Some(id) = current_id {
+                    let _ = Command::new("pactl")
+                        .args(["unload-module", &id.to_string()])
+                        .status();
+                    info!(
+                        "Unloaded existing null sink '{}' (module ID: {})",
+                        sink_name, id
+                    );
+                    unlinked = true;
+                    current_id = None;
+                }
+            }
+        }
+
+        Ok(unlinked)
+    }
+
+    /// Cleanup all sinks defined in a HubConfig by name
+    pub fn cleanup_config_sinks(config: &HubConfig) {
+        for channel in &config.channels {
+            if let Some(audio) = &channel.audio {
+                if let Some(sink_name) = &audio.sink_name {
+                    let _ = Self::unload_sink_by_name(sink_name);
+                }
+                if let Some(source_name) = &audio.source_name {
+                    let _ = Self::unload_sink_by_name(source_name);
+                }
+            }
+        }
+    }
+
     /// Cleanup all loaded modules
     pub fn cleanup(&mut self) {
         let modules: Vec<u32> = std::mem::take(&mut self.created_modules);
@@ -109,9 +167,12 @@ impl PulseAudioGuard {
         for channel in &config.channels {
             if let Some(audio) = &channel.audio {
                 if let Some(sink_name) = &audio.sink_name {
+                    // Unload previous module if already present with same sink_name
+                    let _ = Self::unload_sink_by_name(sink_name);
                     let _ = guard.load_null_sink(sink_name, Some(sink_name))?;
                 }
                 if let Some(source_name) = &audio.source_name {
+                    let _ = Self::unload_sink_by_name(source_name);
                     let _ = guard.load_null_sink(source_name, Some(source_name))?;
                 }
             }

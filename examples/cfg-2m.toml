@@ -29,7 +29,6 @@ sample_rate = 48_000
 [channels.rx]
 # NCO local -> Décimation vers 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
 rational_resampler_cc 48000 2000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
@@ -43,8 +42,7 @@ pipeline = """
 pulse_source "VHF_FT8_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 2000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -65,7 +63,6 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
 rational_resampler_cc 48000 2000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
@@ -79,8 +76,7 @@ pulse_source "VHF_SSB_TX" ! \
 bandpass_fir_fft_cc 0.006 0.056 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
 gain_ff 1.2 ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 2000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -100,7 +96,6 @@ tcp_port = 8001                # Connecteur TCP KISS pour Direwolf / Xastir / AP
 [channels.rx]
 # Démodulation NFM -> Démodulation AFSK Bell 202 (1200/2200 Hz) -> Slicer -> HDLC/AX.25 -> Serveur KISS
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
 rational_resampler_cc 48000 2000000 ! \
 fmdemod_quadri_cf ! \
 limit_ff ! \
@@ -116,8 +111,7 @@ tcp_kiss_client 8001 ! \
 hdlc_framing_pdu_u8 ! \
 afsk1200_mod_u8_f ! \
 fmmod_fc ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 2000000 48000
 """
 
 # -----------------------------------------------------------------------------
@@ -138,7 +132,6 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
 rational_resampler_cc 48000 2000000 ! \
 fmdemod_quadri_cf ! \
 deemphasis_nfm_ff 48_000 ! \
@@ -154,8 +147,7 @@ pulse_source "VHF_FM_TX" ! \
 bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
 gain_ff 1.0 ! \
 fmmod_fc ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 2000000 48000
 """
 
 # -----------------------------------------------------------------------------

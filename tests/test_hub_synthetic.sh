@@ -10,8 +10,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
 # 1. Compilation
-echo "[1/6] Compilation de fsdr-hub..."
-cargo build --bin fsdr-hub
+echo "[1/6] Compilation de fsdr-hub (avec support soapy)..."
+cargo build --bin fsdr-hub --features soapy
 
 # 2. Lancement en arrière-plan
 echo "[2/6] Démarrage de fsdr-hub avec examples/cfg-synthetic.toml..."

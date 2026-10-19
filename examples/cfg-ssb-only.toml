@@ -31,7 +31,6 @@ sample_rate = 48_000
 
 [channels.rx]
 pipeline = """
-shift_addition_cc "(-{offset}/2_000_000)" ! \
 rational_resampler_cc 48000 2000000 ! \
 weaver_usb_cf "(1500/48_000)" ! \
 agc_ff ! \
@@ -44,6 +43,5 @@ pipeline = """
 pulse_source "HF_SSB_TX" ! \
 bandpass_fir_fft_cc 0.006 0.056 0.005 ! \
 weaver_usb_mod_fc "(1500/48_000)" ! \
-rational_resampler_cc 2000000 48000 ! \
-shift_addition_cc "({offset}/2_000_000)"
+rational_resampler_cc 2000000 48000
 """

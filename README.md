@@ -438,3 +438,32 @@ fsdr-cli csdr --output my_flowgraph.grc "convert_u8_f | fmdemod_quadri_cf | audi
 ```
 
 Then open `my_flowgraph.grc` in GNU Radio Companion.
+
+## fsdr-hub : Multi-Channel SDR Transceiver Hub
+
+`fsdr-hub` is a high-performance multi-channel SDR transceiver daemon that orchestrates:
+- Hardware SDR input/output (SDRplay, RTL-SDR, HackRF, LimeSDR, PlutoSDR) via Seify/Soapy.
+- Multi-channel parallel RX and TX DSP pipelines (FT8, SSTV, APRS HF, SSB Voice, WSPR).
+- Independent per-channel frequency shifting (NCO) and dynamic runtime retuning.
+- PulseAudio / PipeWire virtual audio sinks and sources.
+- Emulated Hamlib TCP CAT servers and client proxies.
+- Unified Bokeh WebSocket telemetry for real-time panoramic FFT, waterfalls, and point-and-click VFO tuning.
+
+### Building `fsdr-hub`
+
+When building the release version of `fsdr-hub`, you **must include the `soapy` feature** to enable hardware SDR support:
+
+```bash
+cargo build --release --bin fsdr-hub --features soapy
+```
+
+### Running `fsdr-hub`
+
+```bash
+# Run with a 20m HF configuration
+./target/release/fsdr-hub --config examples/cfg-20m.toml
+
+# Or run with synthetic multi-carrier source for testing
+./target/release/fsdr-hub --config examples/cfg-synthetic.toml -v
+```
+

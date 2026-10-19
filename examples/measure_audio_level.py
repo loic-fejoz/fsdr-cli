@@ -9,6 +9,7 @@ def measure_sink(sink_name="HF_SSB_RX.monitor", duration_sec=2.0):
     print(f"[measure] Recording {duration_sec}s from {sink_name} via parec...")
     cmd = [
         "parec",
+        "--latency-msec=50",
         "-d", sink_name,
     ]
     

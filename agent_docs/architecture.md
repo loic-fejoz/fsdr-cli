@@ -20,6 +20,14 @@ It acts as an intelligent command-line parser that constructs and executes `Futu
 - **Pest Parsing:** See `src/cmd_grammar.rs` and `src/cmd_line.rs` for how the rules defined in `.pest` are evaluated.
 - **csdr equivalence:** `src/csdr_cmd/` is the central hub mapping legacy `csdr` commands to modern SDR block representations. Look at existing definitions for implementing a new command.
 
+## Binaries & Feature Flags
+- **`fsdr-cli`**: Command-line single-process DSP pipeline runner and GRC file interpreter.
+- **`fsdr-hub`**: Multi-channel SDR transceiver hub orchestrating hardware SDR input/output, per-channel NCO frequency shifting, virtual PulseAudio routing, TCP CAT servers, and Bokeh WebSocket telemetry.
+- **Mandatory Release Feature for `fsdr-hub`**: Release builds of `fsdr-hub` **MUST** be compiled with the `soapy` feature:
+  `cargo build --release --bin fsdr-hub --features soapy`
+  This enables Seify/Soapy hardware SDR drivers (SDRplay, HackRF, RTL-SDR, etc.).
+
 ## Extension Patterns
 - **New CSDR Command**: Add a rule to `cmd_line.pest`, create a new module in `src/csdr_cmd/`, and update `AnyCmd` in `src/csdr_cmd/any_cmd.rs`.
 - **New GRC Block**: Implement `BlockConverter` in `src/grc/converter/` and register it in `src/grc/converter/mod.rs`.
+

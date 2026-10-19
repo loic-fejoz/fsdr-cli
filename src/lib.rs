@@ -16,6 +16,7 @@ pub mod blocks;
 pub mod csdr_cmd;
 pub mod grc;
 pub mod grc_cmd;
+pub mod hub;
 pub mod iqengine_blockconverter;
 pub mod iqengine_cmd;
 #[cfg(feature = "iqengine")]

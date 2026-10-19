@@ -48,6 +48,7 @@ tempfile = "3.10"
 toml = "0.8"
 tokio = { version = "1.33.0", features = ["full"] }
 tungstenite = "0.30"
+serde_json = "1.0"
 
 # iqengine-plugin = {path="../iqengine-plugin-rs", optional = true  }
 iqengine-plugin = { git = "https://github.com/loic-fejoz/iqengine-plugin-rs/", branch = "main", optional = true   }

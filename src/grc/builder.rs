@@ -240,6 +240,10 @@ impl GrcBuilder<GraphLevel> {
         self.state.last_output_type
     }
 
+    pub fn blocks(&self) -> &[BlockInstance] {
+        &self.state.blocks
+    }
+
     pub fn create_block_instance(&self, block_type: impl Into<String>) -> GrcBuilder<BlockLevel> {
         let mut block_builder = GrcBlockInstanceBuilder::new();
         block_builder.with_block_type(block_type);
