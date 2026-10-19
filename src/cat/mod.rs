@@ -42,7 +42,12 @@ impl CatServer {
             while running_c.load(Ordering::Relaxed) {
                 match listener.accept() {
                     Ok((stream, _)) => {
+                        let _ = stream.set_nodelay(true);
+                        #[cfg(target_os = "linux")]
+                        let _ = stream.set_nonblocking(true);
+                        #[cfg(not(target_os = "linux"))]
                         let _ = stream.set_nonblocking(false);
+
                         let freq_inner = freq_c.clone();
                         let ptt_inner = ptt_c.clone();
                         let cb_inner = cb_outer.clone();
@@ -173,121 +178,127 @@ fn handle_rigctld_client(
     let mut reader = BufReader::new(stream.try_clone()?);
     let mut line = String::new();
 
-    while let Ok(n) = reader.read_line(&mut line) {
-        if n == 0 {
-            break;
-        }
-        let trimmed = line.trim();
-        let parts: Vec<&str> = trimmed.split_whitespace().collect();
-        if parts.is_empty() {
-            line.clear();
-            continue;
-        }
+    loop {
+        match reader.read_line(&mut line) {
+            Ok(0) => break,
+            Ok(_) => {
+                let trimmed = line.trim();
+                let parts: Vec<&str> = trimmed.split_whitespace().collect();
+                if parts.is_empty() {
+                    line.clear();
+                    continue;
+                }
 
-        let cmd = parts[0];
-        let stripped_cmd = cmd.strip_prefix('\\').unwrap_or(cmd);
+                let cmd = parts[0];
+                let stripped_cmd = cmd.strip_prefix('\\').unwrap_or(cmd);
 
-        match stripped_cmd {
-            "f" | "get_freq" => {
-                let current_freq = freq.load(Ordering::Relaxed);
-                writeln!(stream, "{current_freq}")?;
-            }
-            "F" | "set_freq" => {
-                if parts.len() > 1 {
-                    if let Ok(new_freq) = parts[1].parse::<u64>() {
-                        freq.store(new_freq, Ordering::Relaxed);
-                        if let Some(ref cb) = on_freq_change {
-                            cb(new_freq);
+                match stripped_cmd {
+                    "f" | "get_freq" => {
+                        let current_freq = freq.load(Ordering::Relaxed);
+                        writeln!(stream, "{current_freq}")?;
+                    }
+                    "F" | "set_freq" => {
+                        if parts.len() > 1 {
+                            if let Ok(new_freq) = parts[1].parse::<u64>() {
+                                freq.store(new_freq, Ordering::Relaxed);
+                                if let Some(ref cb) = on_freq_change {
+                                    cb(new_freq);
+                                }
+                            }
                         }
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "t" | "get_ptt" => {
+                        let current_ptt = if ptt.load(Ordering::Relaxed) { 1 } else { 0 };
+                        writeln!(stream, "{current_ptt}")?;
+                    }
+                    "T" | "set_ptt" => {
+                        if parts.len() > 1 {
+                            let val = parts[1] == "1";
+                            ptt.store(val, Ordering::Relaxed);
+                        }
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "m" | "get_mode" => {
+                        writeln!(stream, "USB\n2400")?;
+                    }
+                    "M" | "set_mode" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "v" | "get_vfo" => {
+                        writeln!(stream, "VFOA")?;
+                    }
+                    "V" | "set_vfo" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "j" | "get_rit" => {
+                        writeln!(stream, "0")?;
+                    }
+                    "J" | "set_rit" => {
+                        if parts.len() > 1 {
+                            if let Ok(offset) = parts[1].parse::<i64>() {
+                                let current = freq.load(Ordering::Relaxed);
+                                let new_freq = (current as i64 + offset).max(0) as u64;
+                                freq.store(new_freq, Ordering::Relaxed);
+                                if let Some(ref cb) = on_freq_change {
+                                    cb(new_freq);
+                                }
+                            }
+                        }
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "s" | "get_split_vfo" => {
+                        writeln!(stream, "0\nVFOA")?;
+                    }
+                    "S" | "set_split_vfo" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "chk_vfo" => {
+                        writeln!(stream, "0")?;
+                    }
+                    "dump_state" => {
+                        write!(stream, "{HAMLIB_DUMP_STATE}")?;
+                    }
+                    "get_powerstat" => {
+                        writeln!(stream, "1")?;
+                    }
+                    "set_powerstat" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "l" | "get_level" => {
+                        writeln!(stream, "0")?;
+                    }
+                    "L" | "set_level" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "u" | "get_func" => {
+                        writeln!(stream, "0")?;
+                    }
+                    "U" | "set_func" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "p" | "get_parm" => {
+                        writeln!(stream, "0")?;
+                    }
+                    "P" | "set_parm" => {
+                        writeln!(stream, "RPRT 0")?;
+                    }
+                    "q" => {
+                        writeln!(stream, "RPRT 0")?;
+                        break;
+                    }
+                    _ => {
+                        writeln!(stream, "RPRT 0")?;
                     }
                 }
-                writeln!(stream, "RPRT 0")?;
+                stream.flush()?;
+                line.clear();
             }
-            "t" | "get_ptt" => {
-                let current_ptt = if ptt.load(Ordering::Relaxed) { 1 } else { 0 };
-                writeln!(stream, "{current_ptt}")?;
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                thread::sleep(std::time::Duration::from_millis(1));
             }
-            "T" | "set_ptt" => {
-                if parts.len() > 1 {
-                    let val = parts[1] == "1";
-                    ptt.store(val, Ordering::Relaxed);
-                }
-                writeln!(stream, "RPRT 0")?;
-            }
-            "m" | "get_mode" => {
-                writeln!(stream, "USB\n2400")?;
-            }
-            "M" | "set_mode" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "v" | "get_vfo" => {
-                writeln!(stream, "VFOA")?;
-            }
-            "V" | "set_vfo" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "j" | "get_rit" => {
-                writeln!(stream, "0")?;
-            }
-            "J" | "set_rit" => {
-                if parts.len() > 1 {
-                    if let Ok(offset) = parts[1].parse::<i64>() {
-                        let current = freq.load(Ordering::Relaxed);
-                        let new_freq = (current as i64 + offset).max(0) as u64;
-                        freq.store(new_freq, Ordering::Relaxed);
-                        if let Some(ref cb) = on_freq_change {
-                            cb(new_freq);
-                        }
-                    }
-                }
-                writeln!(stream, "RPRT 0")?;
-            }
-            "s" | "get_split_vfo" => {
-                writeln!(stream, "0\nVFOA")?;
-            }
-            "S" | "set_split_vfo" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "chk_vfo" => {
-                writeln!(stream, "0")?;
-            }
-            "dump_state" => {
-                write!(stream, "{HAMLIB_DUMP_STATE}")?;
-            }
-            "get_powerstat" => {
-                writeln!(stream, "1")?;
-            }
-            "set_powerstat" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "l" | "get_level" => {
-                writeln!(stream, "0")?;
-            }
-            "L" | "set_level" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "u" | "get_func" => {
-                writeln!(stream, "0")?;
-            }
-            "U" | "set_func" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "p" | "get_parm" => {
-                writeln!(stream, "0")?;
-            }
-            "P" | "set_parm" => {
-                writeln!(stream, "RPRT 0")?;
-            }
-            "q" => {
-                writeln!(stream, "RPRT 0")?;
-                break;
-            }
-            _ => {
-                writeln!(stream, "RPRT 0")?;
-            }
+            Err(_) => break,
         }
-        stream.flush()?;
-        line.clear();
     }
     Ok(())
 }
