@@ -49,8 +49,11 @@ where
         let m = cmp::min(i.len(), o.len());
         if m > 0 {
             let c = self.constant;
-            for (k, &s) in i.iter().enumerate().take(m) {
-                o[k] = s + c;
+            for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                *dst = Complex32::new(
+                    f32::algebraic_add(src.re, c.re),
+                    f32::algebraic_add(src.im, c.im),
+                );
             }
             self.input.consume(m);
             self.output.produce(m);

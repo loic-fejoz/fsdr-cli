@@ -1,8 +1,7 @@
 use super::super::converter_helper::{BlockConverter, ConnectorAdapter, DefaultPortAdapter};
 use super::{BlockInstance, Grc2FutureSdr};
+use crate::blocks::{QuadratureDemodAlgo, QuadratureDemodCf};
 use anyhow::{bail, Result};
-use futuresdr::blocks::Apply;
-use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
 
 pub struct AnalogQuadratureDemoConverter {}
@@ -14,39 +13,15 @@ impl BlockConverter for AnalogQuadratureDemoConverter {
         fg: &mut Flowgraph,
     ) -> Result<Box<dyn ConnectorAdapter>> {
         let gain = Grc2FutureSdr::parameter_as_f64(blk, "gain", "1.0")? as f32;
-        let algo = blk.parameter_or("algorithm", "quadri");
-        let blk: Box<dyn ConnectorAdapter> = match algo {
-            "quadri" => {
-                // Quadrature demodulator: phase difference between consecutive samples.
-                // arg(x[n] * conj(x[n-1]))
-                let mut last = Complex32::new(0.0, 0.0);
-                let blk: Apply<_, Complex32, f32> = Apply::new(move |v: &Complex32| -> f32 {
-                    let arg = (v * last.conj()).arg();
-                    last = *v;
-                    arg * gain
-                });
-                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
-            }
-            "atan" => {
-                // Atan demodulator: differentiate the instantaneous phase.
-                // arg(x[n]) - arg(x[n-1])
-                let mut last_phase = 0.0f32;
-                let blk: Apply<_, Complex32, f32> = Apply::new(move |v: &Complex32| -> f32 {
-                    let phase = v.arg();
-                    let mut diff = phase - last_phase;
-                    // Wrap phase difference to [-π, π]
-                    if diff > std::f32::consts::PI {
-                        diff -= 2.0 * std::f32::consts::PI;
-                    } else if diff < -std::f32::consts::PI {
-                        diff += 2.0 * std::f32::consts::PI;
-                    }
-                    last_phase = phase;
-                    diff * gain
-                });
-                Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
-            }
-            _ => bail!("analog_quadrature_demod: Unknown algorithm: {algo}"),
+        let algo_str = blk.parameter_or("algorithm", "quadri");
+        let algo = match algo_str {
+            "quadri" => QuadratureDemodAlgo::Quadri,
+            "atan" => QuadratureDemodAlgo::Atan,
+            _ => bail!("analog_quadrature_demod: Unknown algorithm: {algo_str}"),
         };
-        Ok(blk)
+
+        let block = QuadratureDemodCf::with_algo(gain, algo);
+        let id = fg.add(block)?.id();
+        Ok(Box::new(DefaultPortAdapter::new(id)))
     }
 }

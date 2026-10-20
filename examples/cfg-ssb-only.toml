@@ -1,0 +1,47 @@
+# =============================================================================
+# MINIMAL: SSB 20m seul, source synthétique (2 tons), AUCUNE télémétrie/FFT
+# Objectif : vérifier que les 2 tons SSB sortent sur HF_SSB_RX.monitor
+#   (commandes de test : `parec -d HF_SSB_RX.monitor | pacat --playback`)
+# NCO RX en DOWN-conversion : canal à +50 kHz -> shift "(-{offset}/2_000_000)"
+# =============================================================================
+
+[hardware.sdr]
+device = "synthetic"
+uri = "sdrplay:0"
+sample_rate = 2_000_000
+rx_freq = 14_200_000
+rx_gain = 40.0
+tx_freq = 14_200_000
+tx_gain = -10.0
+
+[beacon_tracker]
+enabled = false
+
+[[channels]]
+id = "ssb_voice_20m"
+type = "audio_transceiver"
+cat_port = 4536
+frequency = 14_250_000
+priority = 50
+
+[channels.audio]
+sink_name = "HF_SSB_TX"
+source_name = "HF_SSB_RX"
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "HF_SSB_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "HF_SSB_TX" ! \
+bandpass_fir_fft_cc 0.006 0.056 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""

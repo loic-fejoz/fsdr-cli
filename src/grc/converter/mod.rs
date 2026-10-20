@@ -151,6 +151,8 @@ pub mod yes_source;
 use self::yes_source::YesFConverter;
 pub mod adpcm;
 use self::adpcm::{AdpcmDecoderConverter, AdpcmEncoderConverter, CompressFftAdpcmConverter};
+pub mod hub_blocks;
+use self::hub_blocks::*;
 
 #[derive(Default)]
 pub struct Grc2FutureSdr {
@@ -278,6 +280,18 @@ impl Grc2FutureSdr {
             "encode_ima_adpcm_i16_u8" | "adpcm_encoder" => Box::new(AdpcmEncoderConverter {}),
             "decode_ima_adpcm_u8_i16" | "adpcm_decoder" => Box::new(AdpcmDecoderConverter {}),
             "compress_fft_adpcm_f_u8" | "fftadpcm" => Box::new(CompressFftAdpcmConverter {}),
+            "pulse_source" | "pulse_sink" => Box::new(PulseAudioConverter {}),
+            "weaver_usb_fc" | "weaver_usb_mod_fc" => Box::new(WeaverUsbFcConverter {}),
+            "pulse_shaping_filter_cc" => Box::new(PulseShapingFilterCcConverter {}),
+            "qpsk_modulator_u8_c" | "oqpsk_modulator_u8_c" => Box::new(QpskModulatorConverter {}),
+            "qpsk_demod_c_u8" | "oqpsk_demod_c_u8" => Box::new(QpskDemodConverter {}),
+            "qpsk_costas_loop_cc" | "oqpsk_costas_loop_cc" => Box::new(QpskCostasLoopConverter {}),
+            "pdu_framing_g3ruh" | "pdu_deframing_g3ruh" => Box::new(G3ruhConverter {}),
+            "afsk1200_mod_u8_f" | "afsk1200_demod_f_u8" => Box::new(Afsk1200Converter {}),
+            "hdlc_framing_pdu_u8" | "hdlc_deframing_u8_pdu" => Box::new(HdlcConverter {}),
+            "fir_interpolate_cc" => Box::new(FirInterpolateConverter {}),
+            "bokeh_spectrum_sink" => Box::new(BokehSpectrumSinkConverter {}),
+            "synthetic_sdr_source" => Box::new(SyntheticSdrSourceConverter {}),
             _ => bail!("Unknown GNU Radio block {blk_type}"),
         };
         Ok(cvter)
@@ -302,10 +316,19 @@ impl Grc2FutureSdr {
 
     pub fn convert_grc(&mut self, grc: Grc) -> Result<Flowgraph> {
         let mut fg = Flowgraph::new();
+        self.convert_grc_into(grc, &mut fg)?;
+        Ok(fg)
+    }
+
+    pub fn convert_grc_into(
+        &mut self,
+        grc: Grc,
+        fg: &mut Flowgraph,
+    ) -> Result<BTreeMap<String, Box<dyn ConnectorAdapter>>> {
         let fsdr_blocks = grc
             .blocks
             .iter()
-            .map(|blk| -> Result<Box<dyn ConnectorAdapter>> { self.convert_block(&mut fg, blk) });
+            .map(|blk| -> Result<Box<dyn ConnectorAdapter>> { self.convert_block(fg, blk) });
         let names: Vec<String> = grc.blocks.iter().map(|blk| blk.name.clone()).collect();
         let mut names_to_adapter = BTreeMap::<String, Box<dyn ConnectorAdapter>>::new();
 
@@ -330,7 +353,7 @@ impl Grc2FutureSdr {
 
             if fg.stream_dyn(src_blk, src_port, tgt_blk, tgt_port).is_err() {
                 fg.message(src_blk, src_port, tgt_blk, tgt_port)
-                    .context("connecting message {connection}")?;
+                    .with_context(|| format!("Failed to connect blocks {:?}: could neither stream nor message connect ({}:{} -> {}:{})", connection, connection[0], src_port, connection[2], tgt_port))?;
             }
         }
 
@@ -391,7 +414,7 @@ impl Grc2FutureSdr {
             }
         }
 
-        Ok(fg)
+        Ok(names_to_adapter)
     }
 
     pub fn parameter_as_f32<'i>(

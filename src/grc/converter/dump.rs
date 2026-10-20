@@ -28,6 +28,14 @@ impl BlockConverter for DumpConverter {
                 let blk = fg.add(blk)?.id();
                 Box::new(DefaultPortAdapter::new(blk))
             }
+            "c" | "complex" => {
+                let blk: futuresdr::blocks::Sink<_, futuresdr::num_complex::Complex32> =
+                    Sink::new(|x: &futuresdr::num_complex::Complex32| {
+                        print!("({:e},{:e}) ", x.re, x.im)
+                    });
+                let blk = fg.add(blk)?.id();
+                Box::new(DefaultPortAdapter::new(blk))
+            }
             _ => todo!("Unhandled dump of Type {item_type}"),
         };
         Ok(blk)

@@ -15,7 +15,7 @@ use simple_logger::SimpleLogger;
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 
-use fsdr_cli::iqengine_userdef::{UserDefinedFunctionParams, USER_DEFINED_FUNCTION};
+use crate::iqengine_userdef::{UserDefinedFunctionParams, USER_DEFINED_FUNCTION};
 
 #[tokio::main]
 pub async fn start_iqengine_daemon(_filename: Option<&str>) -> Result<()> {

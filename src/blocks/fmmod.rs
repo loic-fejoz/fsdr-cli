@@ -2,7 +2,6 @@ use anyhow::Result;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::dev::prelude::*;
 use std::cmp;
-use std::f32::consts::PI;
 
 #[derive(Block)]
 pub struct FmModFc<
@@ -50,16 +49,15 @@ where
         let m = cmp::min(i.len(), o.len());
         if m > 0 {
             let mut phase = self.phase;
-            for (k, &dphase) in i.iter().enumerate().take(m) {
-                phase += dphase;
-                while phase > PI {
-                    phase -= 2.0 * PI;
+            for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                phase = f32::algebraic_add(phase, *src);
+                if phase > std::f32::consts::PI {
+                    phase -= 2.0 * std::f32::consts::PI;
+                } else if phase < -std::f32::consts::PI {
+                    phase += 2.0 * std::f32::consts::PI;
                 }
-                while phase < -PI {
-                    phase += 2.0 * PI;
-                }
-                let (sin_val, cos_val) = phase.sin_cos();
-                o[k] = Complex32::new(cos_val, sin_val);
+                let (sin_val, cos_val) = crate::math::fast_sincos(phase);
+                *dst = Complex32::new(cos_val, sin_val);
             }
             self.phase = phase;
             self.input.consume(m);

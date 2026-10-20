@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fsdr-hub — Spectre & Waterfall HF 20m (SDRplay RSP1)</title>
+    <style>
+        :root {
+            --bg-color: #0f141c;
+            --card-bg: #18202c;
+            --accent-cyan: #00e5ff;
+            --accent-amber: #ffb300;
+            --text-main: #e0e6ed;
+            --text-dim: #7e8b9b;
+            --border-color: #273548;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            box-sizing: border-box;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .title-group h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent-cyan);
+            letter-spacing: 0.5px;
+        }
+
+        .title-group p {
+            margin: 4px 0 0 0;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(0, 229, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ff3366;
+            box-shadow: 0 0 8px #ff3366;
+        }
+
+        .status-indicator.online {
+            background-color: #00e676;
+            box-shadow: 0 0 8px #00e676;
+        }
+
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: var(--accent-amber);
+            font-family: monospace;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            background-color: #05080c;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .channel-tag {
+            display: inline-block;
+            background: rgba(255, 179, 0, 0.15);
+            border: 1px solid var(--accent-amber);
+            color: var(--accent-amber);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-group">
+            <h1>fsdr-hub • Télémétrie Spectre 20m</h1>
+            <p>SDRplay RSP1 @ 14.200 MHz • WebSocket : <code>ws://127.0.0.1:5006/ws</code></p>
+        </div>
+        <div class="status-badge">
+            <span id="status-dot" class="status-indicator"></span>
+            <span id="status-text">Déconnecté</span>
+        </div>
+    </header>
+
+    <div class="grid-container">
+        <!-- 1. WATERFALL panoramique bande 20m (2 MHz) -->
+        <section class="card">
+            <div class="card-header">
+                <span class="card-title">1. Waterfall Panoramique 20m (Pleine Bande 2 MHz)</span>
+                <span class="card-subtitle">13.200 MHz ➔ 15.200 MHz (FFT: 4096 bins, 20 fps)</span>
+            </div>
+            <div>
+                <span class="channel-tag">14.074M FT8</span>
+                <span class="channel-tag">14.0956M WSPR</span>
+                <span class="channel-tag">14.105M APRS</span>
+                <span class="channel-tag">14.230M SSTV</span>
+                <span class="channel-tag">14.250M SSB</span>
+            </div>
+            <div class="canvas-container" style="height: 280px; margin-top: 8px;">
+                <canvas id="canvas-wide"></canvas>
+            </div>
+            <div class="markers">
+                <span>13.200 MHz</span>
+                <span>13.700 MHz</span>
+                <span style="color: var(--accent-cyan);">14.200 MHz (Centre LO)</span>
+                <span>14.700 MHz</span>
+                <span>15.200 MHz</span>
+            </div>
+        </section>
+
+        <!-- 2. FFT zoom fin centré sur le canal voix SSB (48 kHz) -->
+        <section class="card">
+            <div class="card-header">
+                <span class="card-title">2. Zoom Canal Phonie SSB (14.250 MHz USB)</span>
+                <span class="card-subtitle">Largeur 48 kHz (14.226 MHz ➔ 14.274 MHz, FFT: 1024 bins, 20 fps)</span>
+            </div>
+            <div class="canvas-container" style="height: 240px;">
+                <canvas id="canvas-ssb"></canvas>
+            </div>
+            <div class="markers">
+                <span>14.226 MHz</span>
+                <span>14.238 MHz</span>
+                <span style="color: var(--accent-amber);">14.250 MHz (Fréquence Portée Phonie)</span>
+                <span>14.262 MHz</span>
+                <span>14.274 MHz</span>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        "use strict";
+        const wsUrl = "ws://127.0.0.1:5006/ws";
+        let socket = null;
+
+        const statusDot = document.getElementById("status-dot");
+        const statusText = document.getElementById("status-text");
+
+        const canvasWide = document.getElementById("canvas-wide");
+        const ctxWide = canvasWide.getContext("2d");
+        const canvasSsb = document.getElementById("canvas-ssb");
+        const ctxSsb = canvasSsb.getContext("2d");
+
+        const DPR = 1;
+        const WIDE_BINS = 4096;
+        const SSB_BINS = 1024;
+        const DB_MIN_WIDE = -100, DB_MAX_WIDE = 0;
+        const DB_MIN_SSB = -90, DB_MAX_SSB = 5;
+
+        let wideW = 0, wideH = 0, ssbW = 0, ssbH = 0;
+        let wideRow = null, wideRow32 = null, wideColStart = null, widePalette = null;
+        let ssbGrad = null;
+
+        function buildPalette() {
+            const stops = [
+                [0.00, [0, 0, 0]],
+                [0.15, [12, 12, 64]],
+                [0.35, [0, 90, 200]],
+                [0.55, [0, 220, 255]],
+                [0.75, [60, 255, 60]],
+                [0.90, [255, 220, 40]],
+                [1.00, [255, 80, 40]],
+            ];
+            const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+            const lut = new Uint32Array(256);
+            for (let i = 0; i < 256; i++) {
+                const x = i / 255;
+                let lo = stops[0], hi = stops[stops.length - 1];
+                for (let s = 0; s < stops.length - 1; s++) {
+                    if (x >= stops[s][0] && x <= stops[s + 1][0]) { lo = stops[s]; hi = stops[s + 1]; break; }
+                }
+                const t = (x - lo[0]) / Math.max(1e-9, hi[0] - lo[0]);
+                const r = lerp(lo[1][0], hi[1][0], t);
+                const g = lerp(lo[1][1], hi[1][1], t);
+                const b = lerp(lo[1][2], hi[1][2], t);
+                lut[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+            }
+            return lut;
+        }
+
+        function drawGrid(ctx, w, h, dbMin, dbMax) {
+            ctx.strokeStyle = "#1b2738";
+            ctx.lineWidth = 1;
+            const span = dbMax - dbMin;
+            for (let db = Math.ceil(dbMin / 10) * 10; db < dbMax; db += 10) {
+                const y = h * (1 - (db - dbMin) / span);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+        }
+
+        function initCanvases() {
+            wideW = Math.max(64, Math.floor(canvasWide.parentElement.clientWidth * DPR));
+            wideH = Math.max(64, Math.floor(canvasWide.parentElement.clientHeight * DPR));
+            ssbW = Math.max(64, Math.floor(canvasSsb.parentElement.clientWidth * DPR));
+            ssbH = Math.max(64, Math.floor(canvasSsb.parentElement.clientHeight * DPR));
+
+            canvasWide.width = wideW; canvasWide.height = wideH;
+            canvasSsb.width = ssbW; canvasSsb.height = ssbH;
+
+            ctxWide.fillStyle = "#05080c";
+            ctxWide.fillRect(0, 0, wideW, wideH);
+            drawGrid(ctxWide, wideW, wideH, DB_MIN_WIDE, DB_MAX_WIDE);
+            drawGrid(ctxSsb, ssbW, ssbH, DB_MIN_SSB, DB_MAX_SSB);
+
+            wideRow = ctxWide.createImageData(wideW, 1);
+            wideRow32 = new Uint32Array(wideRow.data.buffer);
+            widePalette = buildPalette();
+            wideColStart = new Int32Array(wideW + 1);
+            for (let c = 0; c <= wideW; c++) wideColStart[c] = Math.floor(c * WIDE_BINS / wideW);
+
+            ssbGrad = ctxSsb.createLinearGradient(0, 0, 0, ssbH);
+            ssbGrad.addColorStop(0, "rgba(255, 179, 0, 0.30)");
+            ssbGrad.addColorStop(1, "rgba(255, 179, 0, 0)");
+        }
+
+        function renderWaterfall(bins) {
+            ctxWide.drawImage(canvasWide, 0, 0, wideW, wideH - 1, 0, 1, wideW, wideH - 1);
+            const inv = 255 / (DB_MAX_WIDE - DB_MIN_WIDE);
+            for (let c = 0; c < wideW; c++) {
+                const s = wideColStart[c], e = wideColStart[c + 1];
+                let v = bins[s];
+                for (let i = s + 1; i < e; i++) if (bins[i] > v) v = bins[i];
+                let t = (v - DB_MIN_WIDE) * inv;
+                if (t < 0) t = 0; else if (t > 1) t = 1;
+                wideRow32[c] = widePalette[(t * 255) | 0];
+            }
+            ctxWide.putImageData(wideRow, 0, 0);
+        }
+
+        function renderSpectrum(bins) {
+            const span = DB_MAX_SSB - DB_MIN_SSB;
+            const step = ssbW / (SSB_BINS - 1);
+            ctxSsb.beginPath();
+            for (let i = 0; i < SSB_BINS; i++) {
+                let db = bins[i];
+                if (db < DB_MIN_SSB) db = DB_MIN_SSB; else if (db > DB_MAX_SSB) db = DB_MAX_SSB;
+                const y = ssbH * (1 - (db - DB_MIN_SSB) / span);
+                const x = i * step;
+                if (i === 0) ctxSsb.moveTo(x, y); else ctxSsb.lineTo(x, y);
+            }
+            ctxSsb.strokeStyle = "rgb(255, 179, 0)";
+            ctxSsb.lineWidth = 1.5;
+            ctxSsb.stroke();
+            ctxSsb.lineTo(ssbW, ssbH);
+            ctxSsb.lineTo(0, ssbH);
+            ctxSsb.closePath();
+            ctxSsb.fillStyle = ssbGrad;
+            ctxSsb.fill();
+        }
+
+        function connectWebSocket() {
+            socket = new WebSocket(wsUrl);
+            socket.binaryType = "arraybuffer";
+
+            socket.onopen = () => {
+                statusDot.classList.add("online");
+                statusText.innerText = "Connecté";
+            };
+
+            socket.onclose = () => {
+                statusDot.classList.remove("online");
+                statusText.innerText = "Déconnecté — Reconnexion...";
+                setTimeout(connectWebSocket, 2000);
+            };
+
+            socket.onerror = () => socket.close();
+
+            socket.onmessage = (event) => {
+                let arr = null;
+                if (typeof event.data === "string") {
+                    const payload = JSON.parse(event.data);
+                    if (payload && payload.data) arr = new Float32Array(payload.data);
+                } else if (event.data instanceof ArrayBuffer) {
+                    arr = new Float32Array(event.data);
+                }
+                if (!arr) return;
+                if (arr.length === WIDE_BINS) renderWaterfall(arr);
+                else if (arr.length === SSB_BINS) renderSpectrum(arr);
+            };
+        }
+
+        window.addEventListener("resize", initCanvases);
+        initCanvases();
+        connectWebSocket();
+    </script>
+</body>
+</html>

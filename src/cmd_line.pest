@@ -17,7 +17,9 @@ addition = { "+" }
 minus = { "-" }
 expr1 = { expr2 ~ (addition ~ expr2 | minus ~ expr2)* }
 expr =  _{ expr1 }
-number_or_paren_expr = _{  number | ( "(" ~ expr ~ ")" ) }
+paren_expr = _{ "(" ~ expr ~ ")" }
+quoted_expr = _{ ("\"" ~ (paren_expr | expr) ~ "\"") | ("'" ~ (paren_expr | expr) ~ "'") }
+number_or_paren_expr = _{ quoted_expr | paren_expr | number }
 
 convert_typed = @{ ^"u8_f" | ^"s8_f" | ^"s16_f" | ^"f_u8" | ^"f_s8" | ^"f_s16" | ^"ff_c" }
 bigendian = { "--bigendian" }
@@ -80,7 +82,7 @@ logpower_add_db_flag = { (^"--add_db=" | ^"--add_db" | ^"-a") ~ number_or_paren_
 logpower_cf_cmd = { ("logpower_cf" | "logpower") ~ (logpower_add_db_flag | number_or_paren_expr)? }
 logavg_add_db_flag = { (^"--add=" | ^"--add" | ^"-a") ~ number_or_paren_expr }
 logaveragepower_cf_cmd = { ("logaveragepower_cf" | "logaveragepower") ~ number_or_paren_expr ~ number_or_paren_expr ~ (logavg_add_db_flag | number_or_paren_expr)? }
-fft_exchange_sides_ff_cmd = { ("fft_exchange_sides_ff" | "fftswap") ~ number_or_paren_expr }
+fft_exchange_sides_ff_cmd = { ("fft_exchange_sides_ff" | "fftswap") ~ number_or_paren_expr? }
 dcblock_cmd = { ("dcblock_ff" | "dcblock") ~ number_or_paren_expr? }
 decimating_shift_addition_cmd = { "decimating_shift_addition_cc" ~ number_or_paren_expr ~ number_or_paren_expr }
 add_dcoffset_cc_cmd = { ("add_dcoffset_cc" | "add_dcoffset") ~ number_or_paren_expr? ~ number_or_paren_expr? }
@@ -176,12 +178,34 @@ cmd_trig_debug = { ^"--debug" | ^"--verbose" | ^"-v" }
 cmd_trig_param = _{ cmd_trig_samp_rate | cmd_trig_start | cmd_trig_end | cmd_trig_cmd | cmd_trig_debug }
 cmd_trigger_f_cmd = { ("cmd_trigger_f" | "cmd_trigger") ~ cmd_trig_param* }
 
-any_csdr_cmd = _{ "csdr"? ~ (add_const_cc_cmd | add_dcoffset_cc_cmd | afc_ff_cmd | afc_cc_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | bfsk_demod_cf_cmd | binary_slicer_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | cmd_trigger_f_cmd | ctcss_detect_ff_cmd | ctcss_gen_cmd | clipdetect_cmd | compress_fft_adpcm_f_u8_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | decode_ima_adpcm_u8_i16_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | detect_nan_ff_cmd | differential_encoder_u8_u8_cmd | differential_decoder_u8_u8_cmd | dsb_cmd | dump_cmd | encode_ima_adpcm_i16_u8_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | fir_decimate_cmd | fixed_amplitude_cc_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fmmod_fc_cmd | fractional_decimator_cmd | gain_cmd | invert_u8_u8_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | pack_bits_cmd | pattern_search_cmd | pll_cmd | power_tagger_cc_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timer_tagger_ff_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd | yes_f_cmd) }
+pulse_source_cmd = { "pulse_source" ~ param_val }
+pulse_sink_cmd = { "pulse_sink" ~ param_val }
+weaver_usb_fc_cmd = { ("weaver_usb_fc" | "weaver_usb_mod_fc") ~ number_or_paren_expr }
+pulse_shaping_filter_cc_cmd = { "pulse_shaping_filter_cc" ~ ident ~ number_or_paren_expr ~ number_or_paren_expr }
+firdes_pulse_shaping_filter_f_cmd = { "firdes_pulse_shaping_filter_f" ~ ident ~ number_or_paren_expr ~ number_or_paren_expr }
+qpsk_modulator_u8_c_cmd = { "qpsk_modulator_u8_c" }
+oqpsk_modulator_u8_c_cmd = { "oqpsk_modulator_u8_c" }
+qpsk_demod_c_u8_cmd = { "qpsk_demod_c_u8" }
+oqpsk_demod_c_u8_cmd = { "oqpsk_demod_c_u8" }
+qpsk_costas_loop_cc_cmd = { "qpsk_costas_loop_cc" ~ number_or_paren_expr? ~ number_or_paren_expr? }
+oqpsk_costas_loop_cc_cmd = { "oqpsk_costas_loop_cc" ~ number_or_paren_expr? ~ number_or_paren_expr? }
+pdu_deframing_g3ruh_cmd = { "pdu_deframing_g3ruh" }
+pdu_framing_g3ruh_cmd = { "pdu_framing_g3ruh" }
+afsk1200_demod_f_u8_cmd = { "afsk1200_demod_f_u8" ~ number_or_paren_expr? }
+afsk1200_mod_u8_f_cmd = { "afsk1200_mod_u8_f" ~ number_or_paren_expr? }
+hdlc_deframing_u8_pdu_cmd = { "hdlc_deframing_u8_pdu" }
+hdlc_framing_pdu_u8_cmd = { "hdlc_framing_pdu_u8" }
+fir_interpolate_cc_cmd = { "fir_interpolate_cc" ~ number_or_paren_expr ~ (number_or_paren_expr ~ ident?)? }
+bokeh_spectrum_sink_cmd = { "bokeh_spectrum_sink" ~ number_or_paren_expr ~ number_or_paren_expr }
+synthetic_sdr_source_cmd = { "synthetic_sdr_source" ~ number_or_paren_expr? }
+
+any_csdr_cmd = _{ "csdr"? ~ (add_const_cc_cmd | add_dcoffset_cc_cmd | afc_ff_cmd | afc_cc_cmd | afsk1200_demod_f_u8_cmd | afsk1200_mod_u8_f_cmd | agc_cmd | amdemod_cmd | audio_cmd | bandpass_fir_fft_cc_cmd | bfsk_demod_cf_cmd | binary_slicer_cmd | bokeh_spectrum_sink_cmd | bpsk_costas_loop_cmd | cat_server_cmd | clone_cmd | cmd_trigger_f_cmd | ctcss_detect_ff_cmd | ctcss_gen_cmd | clipdetect_cmd | compress_fft_adpcm_f_u8_cmd | convert_cmd | dbpsk_cmd | dcblock_cmd | decimating_shift_addition_cmd | decode_ima_adpcm_u8_i16_cmd | deemphasis_nfm_cmd | deemphasis_wfm_cmd | detect_nan_ff_cmd | differential_encoder_u8_u8_cmd | differential_decoder_u8_u8_cmd | dsb_cmd | dump_cmd | encode_ima_adpcm_i16_u8_cmd | eval_cmd | fastdcblock_cmd | fft_cc_cmd | fft_fc_cmd | fft_exchange_sides_ff_cmd | firdes_pulse_shaping_filter_f_cmd | fir_decimate_cmd | fir_interpolate_cc_cmd | fixed_amplitude_cc_cmd | flowcontrol_cmd | fmdemod_atan_cmd | fmdemod_quadri_cmd | fmmod_fc_cmd | fractional_decimator_cmd | gain_cmd | hdlc_deframing_u8_pdu_cmd | hdlc_framing_pdu_u8_cmd | invert_u8_u8_cmd | limit_cmd | load_cmd | load_kiss_cmd | logaveragepower_cf_cmd | logpower_cf_cmd | mono2stereo_s16_cmd | none_cmd | octave_complex_cmd | oqpsk_costas_loop_cc_cmd | oqpsk_demod_c_u8_cmd | oqpsk_modulator_u8_c_cmd | pack_bits_cmd | pattern_search_cmd | pdu_deframing_g3ruh_cmd | pdu_framing_g3ruh_cmd | pll_cmd | power_tagger_cc_cmd | psk31_varicode_decoder_cmd | psk31_varicode_encoder_cmd | pulse_shaping_filter_cc_cmd | pulse_sink_cmd | pulse_source_cmd | qpsk_costas_loop_cc_cmd | qpsk_demod_c_u8_cmd | qpsk_modulator_u8_c_cmd | rational_resampler_cmd | realpart_cmd | repeat_u8_cmd | save_kiss_cmd | shift_addition_cmd | synthetic_sdr_source_cmd | tcp_kiss_client_cmd | tcp_kiss_server_cmd | fixedlen_to_pdu_cmd | throttle_cmd | timer_tagger_ff_cmd | timing_recovery_cmd | weaver_lsb_cmd | weaver_usb_cmd | weaver_usb_fc_cmd | yes_f_cmd) }
 
 
 
 cmd_sep = _{ "|" | "!" }
 csdr_save_opt = { ("--output" | "-o") ~ filepath }
+csdr_pipeline = { (cmd_sep? ~ any_csdr_cmd)+ }
 csdr_cmd = { "csdr" ~ csdr_save_opt? ~ (cmd_sep? ~ any_csdr_cmd)+ }
 
 not_space =  { !( " " | "\t" ) ~ ANY }
@@ -191,4 +215,4 @@ iqengine_cmd = { "iqengine" ~ filepath? }
 grc_cmd = { "grc" ~ filepath }
 help_cmd = { "--help" }
 
-main = _{ SOI ~ (help_cmd | iqengine_cmd | grc_cmd | csdr_cmd | any_csdr_cmd)   ~ EOI }
+main = _{ SOI ~ (help_cmd | iqengine_cmd | grc_cmd | csdr_cmd | csdr_pipeline | any_csdr_cmd)   ~ EOI }

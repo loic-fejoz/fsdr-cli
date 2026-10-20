@@ -18,6 +18,10 @@ The intermediate graph must be 100% compatible with GNU Radio Companion. This me
 
 ## Critical Commands
 - **Build:** `cargo build` / `cargo build --release`
+- **fsdr-hub Release Build (MANDATORY RULE):** When building the release version of `fsdr-hub`, you **MUST** include the `soapy` feature:
+  `cargo build --release --bin fsdr-hub --features soapy`
+  (or `cargo build --release --all-targets --features soapy`).
+  *Rationale:* The `soapy` feature enables the Seify/Soapy hardware SDR drivers required by `fsdr-hub` to interface with physical SDR hardware devices (SDRplay, RTL-SDR, HackRF, LimeSDR, PlutoSDR, etc.). Without `--features soapy`, hardware SDR device initializations will fail.
 - **Test & CI Verification:**
   - Standard test suite: `cargo test --all-targets --workspace`
   - Full Makefile verification (csdr byte-stream comparison): `make test`

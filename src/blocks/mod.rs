@@ -75,3 +75,27 @@ pub mod timer_tagger;
 pub use timer_tagger::TimerTagger;
 pub mod cmd_trigger;
 pub use cmd_trigger::CmdTrigger;
+pub mod quadrature_demod;
+pub use quadrature_demod::{QuadratureDemodAlgo, QuadratureDemodCf};
+pub mod weaver_mod;
+pub use weaver_mod::WeaverUsbModFc;
+pub mod rrc;
+pub use rrc::{firdes_gaussian_taps, firdes_rrc_taps, PulseShapingFilterCc};
+pub mod oqpsk;
+pub use oqpsk::{QpskCostasLoopCc, QpskDemodCU8, QpskModulatorU8C};
+pub mod g3ruh;
+pub use g3ruh::{G3ruhDescrambler, G3ruhScrambler, PduDeframingG3ruh, PduFramingG3ruh};
+pub mod afsk1200;
+pub use afsk1200::{Afsk1200DemodFU8, Afsk1200ModU8F};
+pub mod hdlc;
+pub use hdlc::{crc16_ccitt, HdlcDeframingU8Pdu, HdlcFramingPduU8};
+pub mod fir_interpolate;
+pub use fir_interpolate::FirInterpolateCc;
+pub mod pulse_audio;
+pub use pulse_audio::{PulseSink, PulseSource};
+pub mod bokeh_sink;
+pub use bokeh_sink::{
+    get_global_bokeh_sender, set_global_bokeh_sender, BokehSender, BokehSpectrumSink,
+};
+pub mod synthetic_source;
+pub use synthetic_source::SyntheticSdrSource;

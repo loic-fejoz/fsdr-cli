@@ -18,24 +18,48 @@ impl BlockConverter for NullSinkConverter {
             .get("type")
             .expect("item type must be defined");
         let blk: Box<dyn ConnectorAdapter> = match &(item_type[..]) {
-            "char" => {
+            "byte" | "char" | "u8" | "uchar" => {
                 let blk = NullSink::<u8>::new();
                 Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
-            "short" => {
+            "short" | "ishort" | "s16" | "i16" => {
                 let blk = NullSink::<i16>::new();
                 Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
-            "float" => {
+            "float" | "f32" | "f" => {
                 let blk = NullSink::<f32>::new();
                 Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
-            "complex" => {
+            "complex" | "c32" | "c" => {
                 let blk = NullSink::<Complex32>::new();
                 Box::new(DefaultPortAdapter::new(fg.add(blk)?.id()))
             }
             _ => todo!("Unhandled blocks_null_sink Type {item_type}"),
         };
         Ok(blk)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_null_sink_all_types() -> Result<()> {
+        let mut fg = Flowgraph::new();
+        let converter = NullSinkConverter {};
+
+        for type_name in &[
+            "byte", "char", "u8", "uchar", "short", "ishort", "s16", "i16", "float", "f32", "f",
+            "complex", "c32", "c",
+        ] {
+            let blk_instance =
+                BlockInstance::new("null_snk", "blocks_null_sink").with("type", type_name);
+            let adapter = converter.convert(&blk_instance, &mut fg)?;
+            let (_, in_port) = adapter.adapt_input_port("0")?;
+            assert_eq!(in_port, "input");
+        }
+
+        Ok(())
     }
 }

@@ -1,0 +1,175 @@
+[hardware.sdr]
+device = "plutosdr"
+uri = "ip:192.168.2.1"
+sample_rate = 2_000_000        # 2 MSPS : couvre l'intégralité de la bande 144.000 à 146.000 MHz
+rx_freq = 145_000_000          # Fréquence centrale matérielle (offset = 0 Hz)
+rx_gain = 45.0
+tx_freq = 145_000_000
+tx_gain = -10.0
+
+[beacon_tracker]
+enabled = false                # Pas de balise géostationnaire de calage sur 2m terrestre
+
+# -----------------------------------------------------------------------------
+# 1. FT8 (144.174 MHz) - Segment digital bande étroite
+# offset calculé : 144.174M - 145.000M = -826 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "vhf_ft8"
+type = "audio_transceiver"
+cat_port = 4533
+frequency = 144_174_000
+priority = 10
+
+[channels.audio]
+sink_name = "VHF_FT8_TX"       # Sortie WSJT-X
+source_name = "VHF_FT8_RX"     # Entrée WSJT-X
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local -> Décimation vers 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_FT8_RX"
+"""
+
+[channels.tx]
+# Entrée Pulse -> Modulateur Weaver USB -> Interpolation vers 2 MSPS -> NCO local
+pipeline = """
+pulse_source "VHF_FT8_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 2. Appel SSB (144.300 MHz USB) - Fréquence d'appel internationale
+# offset calculé : 144.300M - 145.000M = -700 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ssb_calling"
+type = "audio_transceiver"
+cat_port = 4534
+frequency = 144_300_000
+priority = 50                  # Priorité phonie supérieure aux modes automatiques
+
+[channels.audio]
+sink_name = "VHF_SSB_TX"       # Microphone
+source_name = "VHF_SSB_RX"     # Casque / Haut-parleur
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_SSB_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "VHF_SSB_TX" ! \
+bandpass_fir_fft_cc 0.006 0.056 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+gain_ff 1.2 ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 3. APRS (144.800 MHz) - Paquets AFSK 1200 bauds / AX.25
+# offset calculé : 144.800M - 145.000M = -200 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "aprs_kiss"
+type = "packet_transceiver"
+cat_port = 4535
+frequency = 144_800_000
+priority = 20
+
+[channels.kiss]
+tcp_port = 8001                # Connecteur TCP KISS pour Direwolf / Xastir / APRS-IS
+
+[channels.rx]
+# Démodulation NFM -> Démodulation AFSK Bell 202 (1200/2200 Hz) -> Slicer -> HDLC/AX.25 -> Serveur KISS
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+fmdemod_quadri_cf ! \
+limit_ff ! \
+afsk1200_demod_f_u8 ! \
+hdlc_deframing_u8_pdu ! \
+tcp_kiss_server 8001
+"""
+
+[channels.tx]
+# Réception trame KISS TCP -> Cadrage HDLC/AX.25 -> Modulateur AFSK 1200 -> Modulateur FM -> Interpolation
+pipeline = """
+tcp_kiss_client 8001 ! \
+hdlc_framing_pdu_u8 ! \
+afsk1200_mod_u8_f ! \
+fmmod_fc ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 4. Appel FM (145.500 MHz NFM) - Fréquence d'appel simplex V40
+# offset calculé : 145.500M - 145.000M = +500 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "fm_calling"
+type = "audio_transceiver"
+cat_port = 4536
+frequency = 145_500_000
+priority = 40
+
+[channels.audio]
+sink_name = "VHF_FM_TX"
+source_name = "VHF_FM_RX"
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+fmdemod_quadri_cf ! \
+deemphasis_nfm_ff 48_000 ! \
+fastdcblock_ff ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "VHF_FM_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "VHF_FM_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+gain_ff 1.0 ! \
+fmmod_fc ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# MONITORING & IHM WEB BOKEH
+# -----------------------------------------------------------------------------
+[telemetry.bokeh]
+listen_addr = "127.0.0.1:5006"
+fps = 15
+
+# 1. FFT Pleine Bande 2m (144 à 146 MHz, bande passante 2 MHz)
+[[telemetry.bokeh.probes]]
+name = "vhf_band_panoramic"
+type = "waterfall"
+source_node = "sdr_raw_bus"
+fft_size = 4096
+averaging = 4
+pipeline = "logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 4096 15"
+
+# 2. FFT fine centrée sur le segment SSB phonie (largeur 48 kHz autour de 144.300 MHz)
+[[telemetry.bokeh.probes]]
+name = "ssb_channel_waterfall"
+type = "spectrum"
+source_node = "channels.ssb_calling.rx"
+fft_size = 1024
+pipeline = "logpower_cf ! bokeh_spectrum_sink 1024 25"

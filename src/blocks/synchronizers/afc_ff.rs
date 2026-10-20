@@ -50,14 +50,20 @@ impl Kernel for AfcFf {
                 }
             }
 
+            let alpha = self.alpha;
+            let one_minus_alpha = f32::algebraic_sub(1.0, alpha);
+            let limit = self.limit;
+            let mut dc_offset = self.dc_offset;
+
             for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
                 let sample = *src;
-                self.dc_offset = (1.0 - self.alpha) * self.dc_offset + self.alpha * sample;
-                if self.limit > 0.0 {
-                    self.dc_offset = self.dc_offset.clamp(-self.limit, self.limit);
+                dc_offset = alpha.mul_add(sample, one_minus_alpha.algebraic_mul(dc_offset));
+                if limit > 0.0 {
+                    dc_offset = dc_offset.clamp(-limit, limit);
                 }
-                *dst = sample - self.dc_offset;
+                *dst = f32::algebraic_sub(sample, dc_offset);
             }
+            self.dc_offset = dc_offset;
 
             self.input.consume(m);
             self.output.produce(m);

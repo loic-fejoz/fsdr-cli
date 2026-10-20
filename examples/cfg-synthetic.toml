@@ -1,0 +1,203 @@
+# =============================================================================
+# fsdr-hub Configuration : Bande 20 mètres (14.000 à 14.350 MHz)
+# Récepteur : SDRplay RSP1
+# =============================================================================
+
+[hardware.sdr]
+device = "synthetic"
+uri = "sdrplay:0"
+# 2 MSPS de bande passante : couvre largement de 13.2 MHz à 15.2 MHz (centre à 14.200 MHz)
+sample_rate = 2_000_000
+rx_freq = 14_200_000            # Fréquence centrale matérielle LO (14.200 MHz)
+rx_gain = 40.0
+tx_freq = 14_200_000
+tx_gain = -10.0
+
+[beacon_tracker]
+enabled = false                # Pas de balise géostationnaire sur 20m
+
+# -----------------------------------------------------------------------------
+# 1. CANAL FT8 (14.074 MHz USB)
+# Décalage par rapport au centre : 14.074M - 14.200M = -126 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ft8_20m"
+type = "audio_transceiver"
+cat_port = 4533
+frequency = 14_074_000
+priority = 10
+
+[channels.audio]
+sink_name = "HF_FT8_TX"         # Sink virtuel WSJT-X TX
+source_name = "HF_FT8_RX"       # Source virtuelle WSJT-X RX
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "HF_FT8_RX"
+"""
+
+[channels.tx]
+# Entrée Pulse -> Modulateur Weaver USB -> Resampler 48 kSPS -> 2 MSPS -> NCO local automatique
+pipeline = """
+pulse_source "HF_FT8_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 2. CANAL SSTV (14.230 MHz USB - Fréquence analogique internationale Martin/Scottie)
+# Décalage par rapport au centre : 14.230M - 14.200M = +30 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "sstv_20m"
+type = "audio_transceiver"
+cat_port = 4534
+frequency = 14_230_000
+priority = 20
+
+[channels.audio]
+sink_name = "HF_SSTV_TX"        # Sink MMSSTV / QSSTV
+source_name = "HF_SSTV_RX"      # Source MMSSTV / QSSTV
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "HF_SSTV_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "HF_SSTV_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 3. CANAL APRS HF (14.105 MHz LSB / 300 bauds AFSK)
+# En HF, l'APRS utilise 300 bauds avec des tonalités 1600 Hz / 1800 Hz (shift 200 Hz) en LSB.
+# Décalage par rapport au centre : 14.105M - 14.200M = -95 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "aprs_hf"
+type = "packet_transceiver"
+cat_port = 4535
+frequency = 14_105_000
+priority = 15
+
+[channels.kiss]
+tcp_port = 8001
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> Démodulateur LSB Weaver -> Démod AFSK -> Dépaquetage HDLC -> Serveur KISS
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_lsb_cf "(1700/48_000)" ! \
+afsk1200_demod_f_u8 48000 ! \
+hdlc_deframing_u8_pdu ! \
+tcp_kiss_server 8001
+"""
+
+[channels.tx]
+pipeline = """
+tcp_kiss_client 8001 ! \
+hdlc_framing_pdu_u8 ! \
+afsk1200_mod_u8_f 48000 ! \
+weaver_usb_mod_fc "(1700/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 4. CANAL SSB Voix (14.250 MHz USB)
+# Décalage par rapport au centre : 14.250M - 14.200M = +50 kHz
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "ssb_voice_20m"
+type = "audio_transceiver"
+cat_port = 4536
+frequency = 14_250_000
+priority = 50                  # Priorité phonie supérieure
+
+[channels.audio]
+sink_name = "HF_SSB_TX"
+source_name = "HF_SSB_RX"
+sample_rate = 48_000
+
+[channels.rx]
+# NCO local automatique -> Resampler 2 MSPS -> 48 kSPS -> USB Weaver -> AGC -> Sortie Pulse
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "HF_SSB_RX"
+"""
+
+[channels.tx]
+pipeline = """
+pulse_source "HF_SSB_TX" ! \
+bandpass_fir_fft_cc 0.006 0.062 0.005 ! \
+weaver_usb_mod_fc "(1500/48_000)" ! \
+rational_resampler_cc 2000000 48000
+"""
+
+# -----------------------------------------------------------------------------
+# 5. CANAL WSPR (14.0956 MHz USB)
+# Fréquence WSPR : 14.0956 MHz (tonalités entre 14.097000 et 14.097200 MHz en USB)
+# Décalage par rapport au centre : 14.0956M - 14.200M = -104.4 kHz (-104_400 Hz)
+# -----------------------------------------------------------------------------
+[[channels]]
+id = "wspr_20m"
+type = "audio_transceiver"
+cat_port = 4537
+frequency = 14_095_600
+priority = 5
+
+[channels.audio]
+source_name = "HF_WSPR_RX"
+sample_rate = 48_000
+
+[channels.rx]
+pipeline = """
+rational_resampler_cc 48000 2000000 ! \
+weaver_usb_cf "(1500/48_000)" ! \
+agc_ff ! \
+limit_ff ! \
+pulse_sink "HF_WSPR_RX"
+"""
+
+# -----------------------------------------------------------------------------
+# MONITORING & TÉLÉMÉTRIE SPECTRE WEB
+# -----------------------------------------------------------------------------
+[telemetry.bokeh]
+listen_addr = "127.0.0.1:5006"
+fps = 20
+
+# 1. FFT Pleine bande 20m (2 MHz panoramique, 13.2 à 15.2 MHz)
+[[telemetry.bokeh.probes]]
+name = "panoramic_20m"
+type = "waterfall"
+source_node = "sdr_raw_bus"
+fft_size = 4096
+averaging = 4
+pipeline = "fft_cc 4096 4096 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 4096 20"
+
+# 2. FFT précise centrée sur le canal voix SSB (largeur 48 kHz autour de 14.250 MHz)
+[[telemetry.bokeh.probes]]
+name = "ssb_voice_zoom"
+type = "spectrum"
+source_node = "channels.ssb_voice_20m.rx"
+fft_size = 1024
+pipeline = "fft_cc 1024 1024 HAMMING ! logpower_cf ! fft_exchange_sides_ff ! bokeh_spectrum_sink 1024 20"

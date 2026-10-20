@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use futuresdr::runtime::dev::prelude::*;
 use futuresdr::runtime::Pmt;
 use std::io::Write;
@@ -19,7 +19,8 @@ pub struct TcpKissServer {
 
 impl TcpKissServer {
     pub fn new(address: &str) -> Result<Self> {
-        let listener = TcpListener::bind(address)?;
+        let listener = TcpListener::bind(address)
+            .with_context(|| format!("TcpKissServer failed to bind on address '{}'", address))?;
         let (tx, rx) = mpsc::channel::<Event>();
         let tx_acceptor = tx.clone();
 

@@ -58,19 +58,15 @@ where
             let mut xm1 = self.xm1;
             let mut ym1 = self.ym1;
 
-            for k in 0..m {
-                let mut x = i[k];
-                if x.is_nan() {
-                    x = 0.0;
-                }
+            for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
+                let x = if src.is_nan() { 0.0 } else { *src };
                 // y[n] = (x[n] - x[n-1]) + r * y[n-1]
-                let diff = unsafe { core::intrinsics::fsub_fast(x, xm1) };
-                let r_ym1 = unsafe { core::intrinsics::fmul_fast(r, ym1) };
-                let y = unsafe { core::intrinsics::fadd_fast(diff, r_ym1) };
+                let diff = f32::algebraic_sub(x, xm1);
+                let y = r.mul_add(ym1, diff);
 
                 xm1 = x;
                 ym1 = y;
-                o[k] = y;
+                *dst = y;
             }
 
             self.xm1 = xm1;

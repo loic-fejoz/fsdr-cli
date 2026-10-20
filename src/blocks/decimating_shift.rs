@@ -5,6 +5,7 @@ use std::cmp;
 use std::f32::consts::PI;
 
 #[derive(Block)]
+#[message_inputs(set_rate, set_frequency)]
 pub struct DecimatingShiftAdditionCc<
     I: CpuBufferReader<Item = Complex32> = DefaultCpuReader<Complex32>,
     O: CpuBufferWriter<Item = Complex32> = DefaultCpuWriter<Complex32>,
@@ -29,6 +30,38 @@ impl DecimatingShiftAdditionCc<DefaultCpuReader<Complex32>, DefaultCpuWriter<Com
             input: DefaultCpuReader::default(),
             output: DefaultCpuWriter::default(),
         }
+    }
+}
+
+impl<I, O> DecimatingShiftAdditionCc<I, O>
+where
+    I: CpuBufferReader<Item = Complex32>,
+    O: CpuBufferWriter<Item = Complex32>,
+{
+    async fn set_rate(
+        &mut self,
+        _io: &mut WorkIo,
+        _mio: &mut MessageOutputs,
+        _meta: &BlockMeta,
+        p: Pmt,
+    ) -> futuresdr::runtime::Result<Pmt> {
+        let rate = match p {
+            Pmt::F32(f) => f,
+            Pmt::F64(f) => f as f32,
+            _ => return Ok(Pmt::InvalidValue),
+        };
+        self.phase_increment = 2.0 * PI * rate * (self.decimation as f32);
+        Ok(Pmt::Ok)
+    }
+
+    async fn set_frequency(
+        &mut self,
+        io: &mut WorkIo,
+        mio: &mut MessageOutputs,
+        meta: &BlockMeta,
+        p: Pmt,
+    ) -> futuresdr::runtime::Result<Pmt> {
+        self.set_rate(io, mio, meta, p).await
     }
 }
 

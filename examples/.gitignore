@@ -1,0 +1,14 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary dump, test, and log files
+*.txt
+*.log
+
+# Binary/raw signal and audio dumps
+*.bin
+*.raw
+*.dat
+*.wav
